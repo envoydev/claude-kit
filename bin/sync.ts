@@ -12,7 +12,7 @@
 //     plugins switched on beside the repo's own, every other key the repo's;
 //   - shared/mcp.json as <repo>/.mcp.json only when the repo has none - it is machine-local in every repo.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
-// one edited since is kept and named.
+// one edited since is kept and named. A managed file the repo's .gitignore hides is named too.
 //
 // A shared file ending in .tmpl is written without that suffix, each {{key}} filled from the repo's own
 // .claude/kit/repo.json (a string, or an array of lines). The repo owns that file; the lock holds the filled
@@ -151,7 +151,24 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
         fs.mkdirSync(path.dirname(lockFile), { recursive: true });
         fs.writeFileSync(lockFile, lockText);
     }
+    for (const rel of ignoredByGit(repo, [...Object.keys(lock.files), '.claude/kit/lock.json']))
+        notes.push(`ignored by git: ${rel} - a commit leaves it out and kit:check fails on a fresh clone; allow it in .gitignore`);
     return notes;
+}
+
+// The managed paths the repo's .gitignore hides and the index does not track (git check-ignore skips tracked files).
+function ignoredByGit(repo: string, rels: readonly string[]): string[]
+{
+    try
+    {
+        const out = execFileSync('git', ['-C', repo, 'check-ignore', '--stdin'], { input: rels.join('\n'), encoding: 'utf8' });
+        return out.split('\n').filter((line) => line !== '');
+    }
+    catch (err)
+    {
+        if ((err as { status?: number }).status === 1) return [];
+        throw err;
+    }
 }
 
 function main(argv: string[]): number
