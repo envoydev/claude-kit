@@ -12,14 +12,19 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 | Path | What it is |
 |---|---|
 | `shared/.claude/rules/` | `auto-run`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template) |
+| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
-| `shared/mcp.json` | the `.mcp.json` a repo gets when it has none (machine-local and git-ignored in every repo) |
+| `shared/mcp.json` | the MCP servers every repo gets (`context7`) - merged into each repo's `.mcp.json` by name, the repo's own servers kept; the file is machine-local and git-ignored, so each machine runs the sync |
 
 A shared file ending in `.tmpl` is a template: it lands without the suffix, each `{{key}}` filled from the repo's own
 `.claude/kit/repo.json` (a string, or an array of lines). That is how `solve-task` and `execution.md` stay one flow
 while each repo names its own checks, commit rule and sibling scope. A key a repo does not define stops its sync before
 anything is written. The lock holds the filled file's hash, so a local edit fails `kit:check` as any other does.
+
+The `repo-audit-*` skills are one generic copy each. What they audit in a repo comes from that repo's `repo.json`
+`audit` map, one entry per kind (`skills`, `agents`, `rules`, `hooks`, `claude-md`, `plugins`, `system`, `usage`):
+`roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
+graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
 
 Each repo keeps its own `CLAUDE.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
 that repo's layout, commands and release path.
