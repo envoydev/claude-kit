@@ -11,8 +11,8 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 | Path | What it is |
 |---|---|
-| `shared/.claude/rules/` | `auto-run`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits |
+| `shared/rules/` | `auto-run`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
+| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
 | `shared/mcp.json` | the MCP servers every repo gets (`context7`) - merged into each repo's `.mcp.json` by name, the repo's own servers kept; the file is machine-local and git-ignored, so each machine runs the sync |
 | `shared/retired.json` | the plugins and MCP servers the kit shared once and dropped - both merges only add, so each sync takes these out of every repo's settings and `.mcp.json`; to drop a shared plugin, delete it from `settings.base.json` and name it here |

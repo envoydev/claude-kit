@@ -5,7 +5,7 @@
 //   node bin/sync.ts --check <repo dir>...   write nothing; exit 1 when a repo differs from the kit
 //
 // What lands in a repo:
-//   - every file under shared/.claude/ at the same path under <repo>/.claude/, overwritten;
+//   - every file in a folder under shared/ (rules/, skills/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
@@ -139,7 +139,8 @@ function without<T>(record: Readonly<Record<string, T>>, names: readonly string[
 function syncRepo(repo: string, check: boolean, kit: string): string[]
 {
     const notes: string[] = [];
-    const sources = listFiles(path.join(SHARED, '.claude')).map((rel) => `.claude/${rel}`);
+    // Every folder under shared/ is copied into <repo>/.claude/; the files beside them are merged, never copied.
+    const sources = listFiles(SHARED).filter((rel) => rel.includes('/'));
     const varsFile = path.join(repo, '.claude', 'kit', 'repo.json');
     const vars = readJson<RepoVars>(varsFile, {});
     const varsName = path.relative(repo, varsFile).split(path.sep).join('/');
@@ -152,9 +153,10 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     // Render every file before writing any, so a missing key leaves the repo untouched.
     const files = sources.map((source) =>
     {
-        if (!source.endsWith(TEMPLATE)) return { rel: source, data: fs.readFileSync(path.join(SHARED, source)) };
+        const rel = `.claude/${source}`;
+        if (!source.endsWith(TEMPLATE)) return { rel, data: fs.readFileSync(path.join(SHARED, source)) };
         const text = fs.readFileSync(path.join(SHARED, source), 'utf8');
-        return { rel: source.slice(0, -TEMPLATE.length), data: render(source, text, vars, varsName) };
+        return { rel: rel.slice(0, -TEMPLATE.length), data: render(`shared/${source}`, text, vars, varsName) };
     });
     for (const { rel, data } of files)
     {
