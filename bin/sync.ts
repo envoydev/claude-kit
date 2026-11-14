@@ -12,6 +12,8 @@
 //     plugins switched on beside the repo's own, every other key the repo's;
 //   - shared/mcp.json merged into <repo>/.mcp.json: each kit server replaces the one of its name, the repo's own
 //     servers and keys are kept. The file is machine-local and git-ignored in every repo, so each machine syncs.
+//   - shared/retired.json names the plugins and MCP servers the kit shared once and dropped: both merges only add,
+//     so each sync takes those out of the project's settings and .mcp.json. An install record is left to the CLI.
 // The kit's own dir (.) takes only the settings and the MCP merge.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
 // one edited since is kept and named. A managed file the repo's .gitignore hides is named too.
@@ -28,6 +30,7 @@ import { fileURLToPath } from 'node:url';
 type Lock = { kit: string; files: Record<string, string> };
 type RepoVars = Readonly<Record<string, string | readonly string[]>>;
 type McpConfig = Record<string, unknown> & { mcpServers?: Record<string, unknown> };
+type Retired = { plugins?: readonly string[]; mcpServers?: readonly string[] };
 type Settings = Record<string, unknown> & {
     permissions?: { deny?: string[] } & Record<string, unknown>;
     enabledPlugins?: Record<string, boolean>;
@@ -112,15 +115,25 @@ function writer(repo: string, check: boolean, notes: string[]): Write
 
 // The plugins and the MCP servers every project gets: settings.base.json into .claude/settings.json, mcp.json into
 // .mcp.json, each merged over what the project already has.
+// A merge only adds, so what the kit once shared and dropped is named in retired.json and taken out of every project.
 function syncSettings(repo: string, write: Write): void
 {
+    const retired = readJson<Retired>(path.join(SHARED, 'retired.json'), {});
     const settingsFile = path.join(repo, '.claude', 'settings.json');
     const base = readJson<Settings>(path.join(SHARED, 'settings.base.json'), {});
-    write('.claude/settings.json', `${JSON.stringify(mergeSettings(readJson<Settings>(settingsFile, {}), base), null, 2)}\n`);
+    const settings = mergeSettings(readJson<Settings>(settingsFile, {}), base);
+    settings.enabledPlugins = without(settings.enabledPlugins ?? {}, retired.plugins ?? []);
+    write('.claude/settings.json', `${JSON.stringify(settings, null, 2)}\n`);
 
     const mcp = readJson<McpConfig>(path.join(repo, '.mcp.json'), {});
     const kitMcp = readJson<McpConfig>(path.join(SHARED, 'mcp.json'), {});
-    write('.mcp.json', `${JSON.stringify({ ...mcp, mcpServers: { ...mcp.mcpServers, ...kitMcp.mcpServers } }, null, 2)}\n`);
+    const servers = without({ ...mcp.mcpServers, ...kitMcp.mcpServers }, retired.mcpServers ?? []);
+    write('.mcp.json', `${JSON.stringify({ ...mcp, mcpServers: servers }, null, 2)}\n`);
+}
+
+function without<T>(record: Readonly<Record<string, T>>, names: readonly string[]): Record<string, T>
+{
+    return Object.fromEntries(Object.entries(record).filter(([name]) => !names.includes(name)));
 }
 
 function syncRepo(repo: string, check: boolean, kit: string): string[]
