@@ -13,6 +13,10 @@
 //   - shared/mcp.json as <repo>/.mcp.json only when the repo has none - it is machine-local in every repo.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
 // one edited since is kept and named.
+//
+// A shared file ending in .tmpl is written without that suffix, each {{key}} filled from the repo's own
+// .claude/kit/repo.json (a string, or an array of lines). The repo owns that file; the lock holds the filled
+// file's hash, so a local edit fails kit:check like any other. A key the repo does not define fails the sync.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -20,6 +24,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 type Lock = { kit: string; files: Record<string, string> };
+type RepoVars = Readonly<Record<string, string | readonly string[]>>;
 type Settings = Record<string, unknown> & {
     permissions?: { deny?: string[] } & Record<string, unknown>;
     enabledPlugins?: Record<string, boolean>;
@@ -68,10 +73,29 @@ function readJson<T>(file: string, fallback: T): T
     catch (err) { if ((err as { code?: string }).code === 'ENOENT') return fallback; throw err; }
 }
 
+const TEMPLATE = '.tmpl';
+const SLOT = /\{\{([a-z_]+)\}\}/g;
+
+function render(source: string, text: string, vars: RepoVars, varsFile: string): string
+{
+    const missing = new Set<string>();
+    const out = text.replace(SLOT, (_slot, key: string) =>
+    {
+        const value = Object.hasOwn(vars, key) ? vars[key] : undefined;
+        if (value === undefined) { missing.add(key); return ''; }
+        return typeof value === 'string' ? value : value.join('\n');
+    });
+    if (missing.size) throw new Error(`${source} needs ${[...missing].join(', ')} in ${varsFile}`);
+    return out;
+}
+
 function syncRepo(repo: string, check: boolean, kit: string): string[]
 {
     const notes: string[] = [];
-    const managed = listFiles(path.join(SHARED, '.claude')).map((rel) => `.claude/${rel}`);
+    const sources = listFiles(path.join(SHARED, '.claude')).map((rel) => `.claude/${rel}`);
+    const varsFile = path.join(repo, '.claude', 'kit', 'repo.json');
+    const vars = readJson<RepoVars>(varsFile, {});
+    const varsName = path.relative(repo, varsFile).split(path.sep).join('/');
     const lockFile = path.join(repo, '.claude', 'kit', 'lock.json');
     const old = readJson<Lock>(lockFile, { kit: '', files: {} });
     const lock: Lock = { kit, files: {} };
@@ -88,9 +112,15 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
         fs.writeFileSync(target, data);
     };
 
-    for (const rel of managed)
+    // Render every file before writing any, so a missing key leaves the repo untouched.
+    const files = sources.map((source) =>
     {
-        const data = fs.readFileSync(path.join(SHARED, rel));
+        if (!source.endsWith(TEMPLATE)) return { rel: source, data: fs.readFileSync(path.join(SHARED, source)) };
+        const text = fs.readFileSync(path.join(SHARED, source), 'utf8');
+        return { rel: source.slice(0, -TEMPLATE.length), data: render(source, text, vars, varsName) };
+    });
+    for (const { rel, data } of files)
+    {
         lock.files[rel] = sha(data);
         write(rel, data);
     }
@@ -135,20 +165,30 @@ function main(argv: string[]): number
     }
     const kit = kitRevision();
     let differs = false;
+    let failed = false;
     for (const repo of repos)
     {
         if (!fs.existsSync(path.join(repo, '.git')))
         {
             console.error(`${repo}: not a git checkout - skipped`);
             differs = true;
+            failed = true;
             continue;
         }
-        const notes = syncRepo(repo, check, kit);
+        let notes: string[];
+        try { notes = syncRepo(repo, check, kit); }
+        catch (err)
+        {
+            console.error(`${path.basename(repo)}: ${(err as Error).message} - nothing written`);
+            differs = true;
+            failed = true;
+            continue;
+        }
         console.log(`${path.basename(repo)}: ${notes.length ? `${notes.length} change(s)` : 'current'}${check ? ' (check only)' : ''}`);
         for (const n of notes) console.log(`  ${n}`);
         if (notes.length) differs = true;
     }
-    return check && differs ? 1 : 0;
+    return failed || (check && differs) ? 1 : 0;
 }
 
 process.exit(main(process.argv.slice(2)));

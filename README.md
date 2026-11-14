@@ -11,13 +11,18 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 | Path | What it is |
 |---|---|
-| `shared/.claude/rules/` | `auto-run`, `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring` |
+| `shared/.claude/rules/` | `auto-run`, `execution` (a template), `refining-plans`, `skill-authoring`, `superpowers-location` |
+| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template) |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
 | `shared/mcp.json` | the `.mcp.json` a repo gets when it has none (machine-local and git-ignored in every repo) |
 
-Each repo keeps its own `CLAUDE.md`, its `repo-*` rules and skills, `solve-task`, `execution.md` and
-`plugin-handling.md`: they name that repo's layout, commands and release path.
+A shared file ending in `.tmpl` is a template: it lands without the suffix, each `{{key}}` filled from the repo's own
+`.claude/kit/repo.json` (a string, or an array of lines). That is how `solve-task` and `execution.md` stay one flow
+while each repo names its own checks, commit rule and sibling scope. A key a repo does not define stops its sync before
+anything is written. The lock holds the filled file's hash, so a local edit fails `kit:check` as any other does.
+
+Each repo keeps its own `CLAUDE.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
+that repo's layout, commands and release path.
 
 ## Use
 
@@ -35,7 +40,7 @@ Requires Node 22.18 or newer (the sync script is TypeScript run by Node's type s
 
 ## Changing a shared file
 
-1. Edit it under `shared/`, commit here.
+1. Edit it under `shared/`, commit here. A repo-specific line goes into a `{{key}}` and each repo's `repo.json`.
 2. `npm run sync`, then commit in each repo (`chore(kit): sync claude-kit@<sha>`).
 
 A file removed from `shared/` is removed from each repo on the next sync while it still matches its lock entry; one
