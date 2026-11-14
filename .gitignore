@@ -1,0 +1,4 @@
+# Machine-local: the MCP servers (from shared/mcp.json, the same merge the sync does) and personal settings
+.mcp.json
+.claude/settings.local.json
+.DS_Store
