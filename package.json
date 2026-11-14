@@ -6,7 +6,7 @@
   "type": "module",
   "engines": { "node": "^22.18.0 || >=23.6.0" },
   "scripts": {
-    "sync": "node bin/sync.ts ../alfred-code ../alfred-mods ../alfred-tools",
-    "check": "node bin/sync.ts --check ../alfred-code ../alfred-mods ../alfred-tools"
+    "sync": "node bin/sync.ts . ../alfred-code ../alfred-mods ../alfred-tools",
+    "check": "node bin/sync.ts --check . ../alfred-code ../alfred-mods ../alfred-tools"
   }
 }

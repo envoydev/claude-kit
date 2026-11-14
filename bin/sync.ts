@@ -12,6 +12,7 @@
 //     plugins switched on beside the repo's own, every other key the repo's;
 //   - shared/mcp.json merged into <repo>/.mcp.json: each kit server replaces the one of its name, the repo's own
 //     servers and keys are kept. The file is machine-local and git-ignored in every repo, so each machine syncs.
+// The kit's own dir (.) takes only the settings and the MCP merge.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
 // one edited since is kept and named. A managed file the repo's .gitignore hides is named too.
 //
@@ -91,6 +92,37 @@ function render(source: string, text: string, vars: RepoVars, varsFile: string):
     return out;
 }
 
+type Write = (rel: string, data: Buffer | string) => void;
+
+// Writes a file only when its bytes change, naming each change; under --check it names and writes nothing.
+function writer(repo: string, check: boolean, notes: string[]): Write
+{
+    return (rel, data) =>
+    {
+        const target = path.join(repo, rel);
+        let have: Buffer | null = null;
+        try { have = fs.readFileSync(target); } catch { /* absent */ }
+        if (have && sha(have) === sha(data)) return;
+        notes.push(`${have ? 'update' : 'add'} ${rel}`);
+        if (check) return;
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, data);
+    };
+}
+
+// The plugins and the MCP servers every project gets: settings.base.json into .claude/settings.json, mcp.json into
+// .mcp.json, each merged over what the project already has.
+function syncSettings(repo: string, write: Write): void
+{
+    const settingsFile = path.join(repo, '.claude', 'settings.json');
+    const base = readJson<Settings>(path.join(SHARED, 'settings.base.json'), {});
+    write('.claude/settings.json', `${JSON.stringify(mergeSettings(readJson<Settings>(settingsFile, {}), base), null, 2)}\n`);
+
+    const mcp = readJson<McpConfig>(path.join(repo, '.mcp.json'), {});
+    const kitMcp = readJson<McpConfig>(path.join(SHARED, 'mcp.json'), {});
+    write('.mcp.json', `${JSON.stringify({ ...mcp, mcpServers: { ...mcp.mcpServers, ...kitMcp.mcpServers } }, null, 2)}\n`);
+}
+
 function syncRepo(repo: string, check: boolean, kit: string): string[]
 {
     const notes: string[] = [];
@@ -102,17 +134,7 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     const old = readJson<Lock>(lockFile, { kit: '', files: {} });
     const lock: Lock = { kit, files: {} };
 
-    const write = (rel: string, data: Buffer | string): void =>
-    {
-        const target = path.join(repo, rel);
-        let have: Buffer | null = null;
-        try { have = fs.readFileSync(target); } catch { /* absent */ }
-        if (have && sha(have) === sha(data)) return;
-        notes.push(`${have ? 'update' : 'add'} ${rel}`);
-        if (check) return;
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, data);
-    };
+    const write = writer(repo, check, notes);
 
     // Render every file before writing any, so a missing key leaves the repo untouched.
     const files = sources.map((source) =>
@@ -140,13 +162,7 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     write('.claude/kit/check.mjs', fs.readFileSync(path.join(KIT, 'bin', 'check.mjs')));
     write('.claude/kit/README.md', fs.readFileSync(path.join(KIT, 'bin', 'kit-readme.md')));
 
-    const settingsFile = path.join(repo, '.claude', 'settings.json');
-    const base = readJson<Settings>(path.join(SHARED, 'settings.base.json'), {});
-    write('.claude/settings.json', `${JSON.stringify(mergeSettings(readJson<Settings>(settingsFile, {}), base), null, 2)}\n`);
-
-    const mcp = readJson<McpConfig>(path.join(repo, '.mcp.json'), {});
-    const kitMcp = readJson<McpConfig>(path.join(SHARED, 'mcp.json'), {});
-    write('.mcp.json', `${JSON.stringify({ ...mcp, mcpServers: { ...mcp.mcpServers, ...kitMcp.mcpServers } }, null, 2)}\n`);
+    syncSettings(repo, write);
 
     // The lock changes with the kit revision alone, so it is not a difference worth reporting under --check.
     const lockText = `${JSON.stringify(lock, null, 2)}\n`;
@@ -197,7 +213,12 @@ function main(argv: string[]): number
             continue;
         }
         let notes: string[];
-        try { notes = syncRepo(repo, check, kit); }
+        // The kit itself takes only the plugins and MCP servers: its shared files already live here, under shared/.
+        try
+        {
+            if (repo === KIT) { notes = []; syncSettings(repo, writer(repo, check, notes)); }
+            else notes = syncRepo(repo, check, kit);
+        }
         catch (err)
         {
             console.error(`${path.basename(repo)}: ${(err as Error).message} - nothing written`);
