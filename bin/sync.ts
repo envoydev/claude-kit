@@ -10,7 +10,8 @@
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
 //     plugins switched on beside the repo's own, every other key the repo's;
-//   - shared/mcp.json as <repo>/.mcp.json only when the repo has none - it is machine-local in every repo.
+//   - shared/mcp.json merged into <repo>/.mcp.json: each kit server replaces the one of its name, the repo's own
+//     servers and keys are kept. The file is machine-local and git-ignored in every repo, so each machine syncs.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
 // one edited since is kept and named. A managed file the repo's .gitignore hides is named too.
 //
@@ -25,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 type Lock = { kit: string; files: Record<string, string> };
 type RepoVars = Readonly<Record<string, string | readonly string[]>>;
+type McpConfig = Record<string, unknown> & { mcpServers?: Record<string, unknown> };
 type Settings = Record<string, unknown> & {
     permissions?: { deny?: string[] } & Record<string, unknown>;
     enabledPlugins?: Record<string, boolean>;
@@ -142,7 +144,9 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     const base = readJson<Settings>(path.join(SHARED, 'settings.base.json'), {});
     write('.claude/settings.json', `${JSON.stringify(mergeSettings(readJson<Settings>(settingsFile, {}), base), null, 2)}\n`);
 
-    if (!fs.existsSync(path.join(repo, '.mcp.json'))) write('.mcp.json', fs.readFileSync(path.join(SHARED, 'mcp.json')));
+    const mcp = readJson<McpConfig>(path.join(repo, '.mcp.json'), {});
+    const kitMcp = readJson<McpConfig>(path.join(SHARED, 'mcp.json'), {});
+    write('.mcp.json', `${JSON.stringify({ ...mcp, mcpServers: { ...mcp.mcpServers, ...kitMcp.mcpServers } }, null, 2)}\n`);
 
     // The lock changes with the kit revision alone, so it is not a difference worth reporting under --check.
     const lockText = `${JSON.stringify(lock, null, 2)}\n`;
