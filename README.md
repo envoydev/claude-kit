@@ -12,7 +12,7 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 | Path | What it is |
 |---|---|
 | `shared/.claude/rules/` | `auto-run`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template) |
+| `shared/.claude/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template) |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
 | `shared/mcp.json` | the `.mcp.json` a repo gets when it has none (machine-local and git-ignored in every repo) |
 
