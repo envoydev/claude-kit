@@ -1,0 +1,12 @@
+{
+  "name": "claude-kit",
+  "private": true,
+  "description": "The Claude Code rules, skills and settings shared by envoydev's plugin repos, synced into each one.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": "^22.18.0 || >=23.6.0" },
+  "scripts": {
+    "sync": "node bin/sync.ts ../alfred-code ../alfred-mods ../preferred-tools",
+    "check": "node bin/sync.ts --check ../alfred-code ../alfred-mods ../preferred-tools"
+  }
+}

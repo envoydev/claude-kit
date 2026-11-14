@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(*.pem)",
+      "Read(*.pfx)",
+      "Read(*.p12)",
+      "Read(*.key)"
+    ]
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "superpowers@anthropic-plugin-directory": true
+  },
+  "autoCompactWindow": 400000
+}
