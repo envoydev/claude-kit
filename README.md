@@ -26,7 +26,7 @@ that repo's layout, commands and release path.
 
 ## Use
 
-The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../preferred-tools` - alfred-tools's checkout, under its old name).
+The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../alfred-tools`).
 
 ```bash
 npm run check   # what a sync would change in each repo, nothing written; exit 1 on a difference
