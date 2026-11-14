@@ -1,7 +1,7 @@
 # claude-kit
 
 The Claude Code rules, skills and settings that envoydev's plugin repos share - [alfred-code](https://github.com/envoydev/alfred-code),
-[alfred-mods](https://github.com/envoydev/alfred-mods) and [preferred-tools](https://github.com/envoydev/preferred-tools) -
+[alfred-mods](https://github.com/envoydev/alfred-mods) and [alfred-tools](https://github.com/envoydev/alfred-tools) -
 kept once here and copied into each repo's `.claude/` by a sync script.
 
 It is maintainer tooling: nothing here ships to the people who install the plugins. The plugin catalog itself lives in
@@ -21,7 +21,7 @@ Each repo keeps its own `CLAUDE.md`, its `repo-*` rules and skills, `solve-task`
 
 ## Use
 
-The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../preferred-tools`).
+The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../preferred-tools` - alfred-tools's checkout, under its old name).
 
 ```bash
 npm run check   # what a sync would change in each repo, nothing written; exit 1 on a difference
