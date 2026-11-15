@@ -27,6 +27,11 @@ The `repo-audit-*` skills are one generic copy each. What they audit in a repo c
 `roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
 graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
 
+This repo takes the same files into its own `.claude/`, so a session here loads the rules and skills it shares. Those
+copies are git-ignored - `shared/` is their one home - so a fresh clone runs `npm run sync` once to get them, and an
+edit goes into `shared/`, never into the copy. Only `.claude/settings.json` and `.claude/kit/repo.json` (this repo's
+own template values) are tracked.
+
 Each repo keeps its own `CLAUDE.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
 that repo's layout, commands and release path.
 
@@ -35,8 +40,8 @@ that repo's layout, commands and release path.
 The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../alfred-tools`).
 
 ```bash
-npm run check   # what a sync would change in each repo, nothing written; exit 1 on a difference
-npm run sync    # write the shared files, .claude/kit/lock.json and .claude/kit/check.mjs into each repo
+npm run check   # what a sync would change here and in each repo, nothing written; exit 1 on a difference
+npm run sync    # write the shared files, .claude/kit/lock.json and .claude/kit/check.mjs here and into each repo
 ```
 
 Then commit the change in each repo. In a repo, `npm run kit:check` fails when a managed file was edited there - the

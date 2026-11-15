@@ -14,7 +14,8 @@
 //     servers and keys are kept. The file is machine-local and git-ignored in every repo, so each machine syncs.
 //   - shared/retired.json names the plugins and MCP servers the kit shared once and dropped: both merges only add,
 //     so each sync takes those out of the project's settings and .mcp.json. An install record is left to the CLI.
-// The kit's own dir (.) takes only the settings and the MCP merge.
+// The kit's own dir (.) takes the same files, so a session in it loads the rules and skills it shares. They are
+// copies of shared/ and git-ignored there; only its settings and its .claude/kit/repo.json are tracked.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
 // one edited since is kept and named. A managed file the repo's .gitignore hides is named too.
 //
@@ -186,6 +187,8 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
         fs.mkdirSync(path.dirname(lockFile), { recursive: true });
         fs.writeFileSync(lockFile, lockText);
     }
+    // The kit ignores its own copies on purpose: shared/ is what it commits.
+    if (repo === KIT) return notes;
     for (const rel of ignoredByGit(repo, [...Object.keys(lock.files), '.claude/kit/lock.json']))
         notes.push(`ignored by git: ${rel} - a commit leaves it out and kit:check fails on a fresh clone; allow it in .gitignore`);
     return notes;
@@ -228,12 +231,7 @@ function main(argv: string[]): number
             continue;
         }
         let notes: string[];
-        // The kit itself takes only the plugins and MCP servers: its shared files already live here, under shared/.
-        try
-        {
-            if (repo === KIT) { notes = []; syncSettings(repo, writer(repo, check, notes)); }
-            else notes = syncRepo(repo, check, kit);
-        }
+        try { notes = syncRepo(repo, check, kit); }
         catch (err)
         {
             console.error(`${path.basename(repo)}: ${(err as Error).message} - nothing written`);

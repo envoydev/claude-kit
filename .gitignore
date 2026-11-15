@@ -2,3 +2,10 @@
 .mcp.json
 .claude/settings.local.json
 .DS_Store
+
+# Copies of shared/ the sync writes here so this repo's own sessions load them - shared/ is their home
+.claude/rules/
+.claude/skills/
+.claude/agents/
+.claude/kit/*
+!.claude/kit/repo.json
