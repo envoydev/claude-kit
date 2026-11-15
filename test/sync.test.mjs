@@ -48,6 +48,7 @@ test('ships the check, settings and status-hook scripts and the readme into .cla
         ['check.mjs', 'check.mjs'],
         ['settings.mjs', 'settings.mjs'],
         ['kit-settings.mjs', 'kit-settings.mjs'],
+        ['constants.mjs', 'constants.mjs'],
         ['status-hook.mjs', 'status-hook.mjs'],
         ['README.md', 'kit-readme.md'],
     ];

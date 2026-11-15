@@ -17,7 +17,7 @@ function makeSettingsRepo(t, files = AGENTS)
     const repo = makeTempDir(t, 'settings');
     writeFiles(repo, files);
     fs.mkdirSync(path.join(repo, '.claude/kit'), { recursive: true });
-    for (const script of ['settings.mjs', 'kit-settings.mjs'])
+    for (const script of ['settings.mjs', 'kit-settings.mjs', 'constants.mjs'])
         fs.copyFileSync(path.join(REAL_KIT, 'bin', script), path.join(repo, '.claude/kit', script));
     return repo;
 }
@@ -44,6 +44,7 @@ test('with no variable set it prints the defaults and the model each agent file 
         plan_model: "opus (the audit-planner agent's own)",
         review_model: "opus (the plan-grader agent's own)",
         implement_model: "sonnet (the audit-editor agent's own)",
+        search_model: 'haiku (default)',
         scoring: 'on (default)',
         auto_run: 'off (default)',
     });
@@ -56,6 +57,7 @@ test('each variable replaces its default and is named as the source', (t) =>
         KIT_PLAN_MODEL: 'fable',
         KIT_REVIEW_MODEL: 'opus',
         KIT_IMPLEMENT_MODEL: 'haiku',
+        KIT_SEARCH_MODEL: 'sonnet',
         KIT_SCORING: 'off',
         KIT_AUTO_RUN: 'on',
     });
@@ -65,6 +67,7 @@ test('each variable replaces its default and is named as the source', (t) =>
         plan_model: 'fable (KIT_PLAN_MODEL)',
         review_model: 'opus (KIT_REVIEW_MODEL)',
         implement_model: 'haiku (KIT_IMPLEMENT_MODEL)',
+        search_model: 'sonnet (KIT_SEARCH_MODEL)',
         scoring: 'off (KIT_SCORING)',
         auto_run: 'on (KIT_AUTO_RUN)',
     });
@@ -99,6 +102,13 @@ test("a model a dispatch cannot take falls back to the agent's own and the line 
         lines.implement_model,
         "sonnet (the audit-editor agent's own - KIT_IMPLEMENT_MODEL='claude-sonnet-5-5' is not one of sonnet, opus, haiku, fable)",
     );
+});
+
+test('a search model a dispatch cannot take falls back to haiku, the one role with no agent file', (t) =>
+{
+    const { lines } = printSettings(makeSettingsRepo(t), { KIT_SEARCH_MODEL: 'claude-haiku-5-5' });
+
+    assert.equal(lines.search_model, "haiku (default - KIT_SEARCH_MODEL='claude-haiku-5-5' is not one of sonnet, opus, haiku, fable)");
 });
 
 test('a blank value counts as not set, so blanking a variable returns an open session to the default', (t) =>

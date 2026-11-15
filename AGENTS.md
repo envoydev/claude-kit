@@ -37,9 +37,9 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 - `shared/settings.base.json`, `shared/mcp.json`, `shared/retired.json` - the files beside those folders are merged
   into a repo's `.claude/settings.json` and `.mcp.json`, never copied.
 - `bin/sync.ts` (the sync), `bin/check.mjs` (copied into each repo as its `kit:check`), `bin/kit-settings.mjs`,
-  `bin/settings.mjs` and `bin/status-hook.mjs` (copied too: the `KIT_*` settings resolved, printed, and shown with
-  every request by the one hook the kit shares), `bin/kit-readme.md` (copied as
-  `.claude/kit/README.md`).
+  `bin/constants.mjs`, `bin/settings.mjs` and `bin/status-hook.mjs` (copied too: the `KIT_*` settings resolved,
+  printed, and shown with every request by the one hook the kit shares, and the named values they share),
+  `bin/kit-readme.md` (copied as `.claude/kit/README.md`).
 - `.claude/` - this repo's own copy of the shared files, so a session here loads them. Only `settings.json` and
   `kit/repo.json` are tracked; `rules/`, `skills/`, `agents/` and the rest of `kit/` are git-ignored copies.
 

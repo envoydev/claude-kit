@@ -8,7 +8,7 @@
 //   - every file in a folder under shared/ (rules/, skills/, agents/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
-//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs and status-hook.mjs: the pass score, the three role models
+//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the four role models
 //     and the standing switches a session's settings carry (the KIT_* variables), printed for the skills that read
 //     them and added to every request by the UserPromptSubmit hook;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
@@ -118,6 +118,7 @@ const KIT_FILES: readonly (readonly [shipped: string, source: string])[] = [
     ['check.mjs', 'check.mjs'],
     ['settings.mjs', 'settings.mjs'],
     ['kit-settings.mjs', 'kit-settings.mjs'],
+    ['constants.mjs', 'constants.mjs'],
     ['status-hook.mjs', 'status-hook.mjs'],
     ['README.md', 'kit-readme.md'],
 ];

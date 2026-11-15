@@ -51,13 +51,13 @@ that repo's layout, commands and release path.
 
 ## Settings a project can change
 
-The pass score, three models and two standing switches come from the `env` block of a Claude Code settings file.
+The pass score, four models and two standing switches come from the `env` block of a Claude Code settings file.
 The status hook (`.claude/kit/status-hook.mjs`, a `UserPromptSubmit` hook) shows them with every request - one line
 for the user, the same values with their sources for Claude - so neither a new session nor a compacted one has to
 remember them. `node .claude/kit/settings.mjs` prints them on demand.
 
 ```text
-kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement sonnet
+kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement sonnet | search haiku
 ```
 
 | Variable | What it sets | Without it |
@@ -66,6 +66,7 @@ kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement s
 | `KIT_PLAN_MODEL` | the model that writes plans: the `audit-planner` agent, the plan step of `solve-task` | the `audit-planner` agent's own (opus) |
 | `KIT_REVIEW_MODEL` | the model that reviews: the `refining-plans` reviewer, the review step of `solve-task` | the `plan-grader` agent's own (opus) |
 | `KIT_IMPLEMENT_MODEL` | the model that implements: the `audit-editor` agent, the build step of `solve-task` | the `audit-editor` agent's own (sonnet) |
+| `KIT_SEARCH_MODEL` | the model that searches the code for the other three in `solve-task` - where a thing is, what calls it - and reports paths and lines | haiku |
 | `KIT_SCORING=off` | the grading of specs and plans is off in every session | on |
 | `KIT_AUTO_RUN=on` | auto-run is on from a session's first ask | off |
 
@@ -77,10 +78,10 @@ kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement s
   score of each file, and its grade A bar, belong to the audit skill and are never switched off.
 - A model is `sonnet`, `opus`, `haiku` or `fable`; a value the script cannot use falls back to the default, and
   its line says why.
-- The three models are what a step is dispatched on, not what the chat session runs on: a session cannot change its
+- The four models are what a step is dispatched on, not what the chat session runs on: a session cannot change its
   own model. A step whose model is the session's own runs there; any other goes to an agent with that model, and the
   closing report names the model each step actually ran on.
-- The first four go in a repo's committed `.claude/settings.json`, or in `~/.claude/settings.json` for every project
+- The first five go in a repo's committed `.claude/settings.json`, or in `~/.claude/settings.json` for every project
   on the machine. The sync leaves a repo's `env` block alone.
 - `KIT_SCORING` and `KIT_AUTO_RUN` switch a safeguard off, so they count only from a file that is not committed -
   `.claude/settings.local.json` or `~/.claude/settings.json`. The script ignores one in `.claude/settings.json`.

@@ -18,7 +18,7 @@ function makeHookRepo(t, files = {})
         ...files,
     });
     fs.mkdirSync(path.join(repo, '.claude/kit'), { recursive: true });
-    for (const script of ['status-hook.mjs', 'kit-settings.mjs'])
+    for (const script of ['status-hook.mjs', 'kit-settings.mjs', 'constants.mjs'])
         fs.copyFileSync(path.join(REAL_KIT, 'bin', script), path.join(repo, '.claude/kit', script));
     return repo;
 }
@@ -48,10 +48,10 @@ test('with nothing set it shows the user one line with the defaults and gives Cl
     const { status, output } = runHook(makeHookRepo(t), promptInput(scratchpad));
 
     assert.equal(status, 0);
-    assert.equal(output.systemMessage, 'kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement sonnet');
+    assert.equal(output.systemMessage, 'kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement sonnet | search haiku');
     assert.equal(output.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
     const context = output.hookSpecificOutput.additionalContext;
-    for (const part of ['auto_run=off (default)', 'scoring=on (default)', 'pass_score=90 (default)', 'plan_model=opus', 'review_model=opus', 'implement_model=sonnet'])
+    for (const part of ['auto_run=off (default)', 'scoring=on (default)', 'pass_score=90 (default)', 'plan_model=opus', 'review_model=opus', 'implement_model=sonnet', 'search_model=haiku (default)'])
         assert.ok(context.includes(part), `${part} missing from: ${context}`);
     assert.ok(context.includes(path.join(scratchpad, 'kit-session.md')), context);
 });
@@ -64,11 +64,12 @@ test('the settings variables change the line and are named as the source', (t) =
         KIT_PASS_SCORE: '95',
         KIT_PLAN_MODEL: 'fable',
         KIT_IMPLEMENT_MODEL: 'haiku',
+        KIT_SEARCH_MODEL: 'sonnet',
     });
 
     assert.equal(
         output.systemMessage,
-        'kit: auto-run on (KIT_AUTO_RUN) | scoring off (KIT_SCORING) | plan fable | review opus | implement haiku',
+        'kit: auto-run on (KIT_AUTO_RUN) | scoring off (KIT_SCORING) | plan fable | review opus | implement haiku | search sonnet',
     );
     assert.ok(output.hookSpecificOutput.additionalContext.includes('pass_score=95 (KIT_PASS_SCORE)'));
 });
@@ -80,7 +81,7 @@ test("a switch written in this session's file outranks the settings", (t) =>
 
     const { output } = runHook(makeHookRepo(t), promptInput(scratchpad));
 
-    assert.equal(output.systemMessage, 'kit: auto-run on (this session) | scoring off (this session) | plan opus | review opus | implement sonnet');
+    assert.equal(output.systemMessage, 'kit: auto-run on (this session) | scoring off (this session) | plan opus | review opus | implement sonnet | search haiku');
     assert.ok(output.hookSpecificOutput.additionalContext.includes('auto_run=on (this session)'));
 });
 

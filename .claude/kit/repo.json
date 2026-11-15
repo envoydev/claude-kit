@@ -21,7 +21,7 @@
     "- `bin/` is flat by contract: the sync copies a named list of its files into each repo's `.claude/kit/` (`KIT_FILES` in `bin/sync.ts`), so a feature here is a file, not a folder.",
     "- Entries, each run with `node`: `bin/sync.ts`, `bin/check.mjs`, `bin/settings.mjs`, `bin/status-hook.mjs`. Logic two of them share is a module of exported functions beside them (`bin/kit-settings.mjs`) that takes what it reads as arguments (`env`, `root`).",
     "- The outside world: `node:fs`, `node:child_process`, `process.env`, stdin and stdout, the clock.",
-    "- A new named value goes in `bin/constants.mjs`, which joins `KIT_FILES` once a copied script imports it. The constants now at the top of a script stay there until that script is changed.",
+    "- Named values live in `bin/constants.mjs`, copied with the scripts that import it (`KIT_FILES`); a new one goes there. The constants still at the top of `bin/sync.ts` and `bin/check.mjs` move there when a change adds or rewrites one.",
     "- Tests: `test/<script>.test.mjs`, run against throwaway kits and repos (`test/support.mjs`)."
   ],
   "audit": {
