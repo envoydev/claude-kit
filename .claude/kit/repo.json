@@ -1,14 +1,13 @@
 {
   "name": "claude-kit",
   "agents_md": "AGENTS.md",
-  "check_batch": "`npm run check`, read for the change just made and nothing else",
+  "check_batch": "`npm run check`, and `npm test` after a change under `bin/`, read for the change just made and nothing else",
   "check_once": "`npm run sync`, then `npm run kit:check` in each plugin repo",
   "not_for": "Not for a file a plugin repo owns (its `CLAUDE.md`, `repo-*` rules and skills, `repo.json`), which is changed in that repo.",
   "settled": "A design already settled by the user's rulings skips the spec and goes to the plan.",
   "checks": [
     "   - per batch: `npm run check`, read for the change just made and nothing else;",
-    "   - after a change to `bin/sync.ts`: a sync into a throwaway copy of a plugin repo, reading the files it wrote and",
-    "     its lock, never the exit code alone;",
+    "   - after a change under `bin/`: `npm test`, with a test added or changed for the behaviour that moved;",
     "   - once: `npm run sync`, then `npm run kit:check` in each plugin repo."
   ],
   "voice": "single dashes, single quotes in prose",

@@ -15,9 +15,12 @@ templates and the `audit` map.
 npm run check                # what a sync would change here and in the three repos; writes nothing, exit 1 on a difference
 npm run sync                 # write the shared files here and into ../alfred-code, ../alfred-mods, ../alfred-tools
 node .claude/kit/check.mjs   # this repo's own copies still match the lock, and no CLAUDE.md hides this file
+npm test                     # the three scripts under bin/, run against throwaway kits and repos in temp folders
 ```
 
-Node 22.18 or newer, no dependencies, no tests and no CI: these three are the whole gate. `bin/sync.ts` runs through
+Node 22.18 or newer, no dependencies and no CI: these four are the whole gate. The tests (`test/*.test.mjs`, Node's
+own runner) cover `bin/` only - they start no Claude session and cost nothing - and a change under `bin/` adds or
+changes a test with it. The skills and rules are prose and have none. `bin/sync.ts` runs through
 Node's type stripping, and no TypeScript is installed here, so it is type-checked with a sibling's compiler:
 
 ```bash

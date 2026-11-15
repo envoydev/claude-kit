@@ -87,6 +87,9 @@ fix is to change it here and sync again, so the repos never drift apart. It fail
 `.claude/CLAUDE.md` or `CLAUDE.local.md` sits beside the repo's `AGENTS.md`: Claude Code reads `AGENTS.md` only while
 none of the three exists, and says nothing when one switches it off.
 
+`npm test` runs the tests of the three scripts under `bin/` - the sync, the check and the settings script - against
+throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and cost nothing.
+
 Requires Node 22.18 or newer (the sync script is TypeScript run by Node's type stripping); no dependencies.
 
 ## Changing a shared file
