@@ -12,7 +12,7 @@
     "   - once: `npm run sync`, then `npm run kit:check` in each plugin repo."
   ],
   "voice": "single dashes, single quotes in prose",
-  "commit": "its message in the form the log already has (`type(scope): what is now true`)",
+  "commit": "its message in the form the log already has (`type(scope): what is now true`), with no trace of the agent (`.claude/rules/commits.md`)",
   "not_here": [
     "- A change to a plugin repo's own files, which follows that repo's own flow; this repo only syncs the shared ones into it.",
     "- Alfred Code's `task-solve` and its seats, stamps and stops, which serve the projects that install the stack."

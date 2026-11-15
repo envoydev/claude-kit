@@ -62,8 +62,8 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 - **The order of a shared change:** edit under `shared/`, `npm run check`, commit here, `npm run sync`,
   `npm run kit:check` in each plugin repo, then one commit in each (`chore(kit): sync to claude-kit <sha>`).
 - **Branches.** `main` is the only branch. Commit or push only on the user's word.
-- **Commits.** `type(scope): what is now true`, as the log has it. A commit in alfred-mods or alfred-tools carries no
-  trace of the agent - each repo's own `AGENTS.md` holds its rule.
+- **Commits.** `type(scope): what is now true`, as the log has it, with no trace of the agent - no co-author trailer,
+  session link or 'Generated with' line. The rule is `shared/rules/commits.md`, the same in all four repos.
 - **Voice.** Direct and lean, single dashes, single quotes in prose; recommend one option with a reason.
 
 ## Related repos

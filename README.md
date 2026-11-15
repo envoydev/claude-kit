@@ -11,7 +11,7 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 | Path | What it is |
 |---|---|
-| `shared/rules/` | `auto-run`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
+| `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
 | `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
 | `shared/mcp.json` | the MCP servers every repo gets (`context7`) - merged into each repo's `.mcp.json` by name, the repo's own servers kept; the file is machine-local and git-ignored, so each machine runs the sync |
