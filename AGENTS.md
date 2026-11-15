@@ -28,9 +28,9 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 ## Layout
 
-- `shared/rules/`, `shared/skills/` - every file in a folder under `shared/` is copied to the same path under a repo's
-  `.claude/`. A file ending in `.tmpl` lands without the suffix, each `{{key}}` filled from that repo's
-  `.claude/kit/repo.json`.
+- `shared/rules/`, `shared/skills/`, `shared/agents/` - every file in a folder under `shared/` is copied to the same
+  path under a repo's `.claude/`. A file ending in `.tmpl` lands without the suffix, each `{{key}}` filled from that
+  repo's `.claude/kit/repo.json`, or from `shared/defaults.json` where the repo sets none.
 - `shared/settings.base.json`, `shared/mcp.json`, `shared/retired.json` - the files beside those folders are merged
   into a repo's `.claude/settings.json` and `.mcp.json`, never copied.
 - `bin/sync.ts` (the sync), `bin/check.mjs` (copied into each repo as its `kit:check`), `bin/kit-readme.md` (copied as

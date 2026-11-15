@@ -5,7 +5,7 @@
 //   node bin/sync.ts --check <repo dir>...   write nothing; exit 1 when a repo differs from the kit
 //
 // What lands in a repo:
-//   - every file in a folder under shared/ (rules/, skills/) at the same path under <repo>/.claude/, overwritten;
+//   - every file in a folder under shared/ (rules/, skills/, agents/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
@@ -21,7 +21,8 @@
 //
 // A shared file ending in .tmpl is written without that suffix, each {{key}} filled from the repo's own
 // .claude/kit/repo.json (a string, or an array of lines). The repo owns that file; the lock holds the filled
-// file's hash, so a local edit fails kit:check like any other. A key the repo does not define fails the sync.
+// file's hash, so a local edit fails kit:check like any other. shared/defaults.json holds the kit's own value for a
+// key (the model the plan grader runs on); a key neither file defines fails the sync.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -143,7 +144,8 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     // Every folder under shared/ is copied into <repo>/.claude/; the files beside them are merged, never copied.
     const sources = listFiles(SHARED).filter((rel) => rel.includes('/'));
     const varsFile = path.join(repo, '.claude', 'kit', 'repo.json');
-    const vars = readJson<RepoVars>(varsFile, {});
+    // The kit's own value for a key, where it has one, stands until the repo sets that key itself.
+    const vars: RepoVars = { ...readJson<RepoVars>(path.join(SHARED, 'defaults.json'), {}), ...readJson<RepoVars>(varsFile, {}) };
     const varsName = path.relative(repo, varsFile).split(path.sep).join('/');
     const lockFile = path.join(repo, '.claude', 'kit', 'lock.json');
     const old = readJson<Lock>(lockFile, { kit: '', files: {} });
