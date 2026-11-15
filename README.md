@@ -25,7 +25,7 @@ while each repo names its own checks, commit rule and sibling scope. A key that 
 `shared/defaults.json` defines stops its sync before anything is written. The lock holds the filled file's hash, so a local edit fails `kit:check` as any other does.
 
 The `repo-audit-*` skills are one generic copy each. What they audit in a repo comes from that repo's `repo.json`
-`audit` map, one entry per kind (`skills`, `agents`, `rules`, `hooks`, `claude-md`, `plugins`, `system`, `usage`):
+`audit` map, one entry per kind (`skills`, `agents`, `rules`, `hooks`, `agent-md`, `plugins`, `system`, `usage`):
 `roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
 graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
 
