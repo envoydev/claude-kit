@@ -12,9 +12,9 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 | Path | What it is |
 |---|---|
 | `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits |
-| `shared/agents/` | `plan-grader` (a template): the reviewer that grades a spec or plan against the `refining-plans` rubric. The skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared |
-| `shared/defaults.json` | the kit's own value for a template key (`grader_model`), used until a repo's `repo.json` sets that key itself |
+| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits and the `repo-audit-flow` they run through |
+| `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
+| `shared/defaults.json` | the kit's own value for a template key - `auditor_model` (opus), `editor_model` (sonnet), `grader_model` (opus) - used until a repo's `repo.json` sets that key itself |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
 | `shared/mcp.json` | the MCP servers every repo gets (`context7`) - merged into each repo's `.mcp.json` by name, the repo's own servers kept; the file is machine-local and git-ignored, so each machine runs the sync |
 | `shared/retired.json` | the plugins and MCP servers the kit shared once and dropped - both merges only add, so each sync takes these out of every repo's settings and `.mcp.json`; to drop a shared plugin, delete it from `settings.base.json` and name it here |
@@ -23,6 +23,11 @@ A shared file ending in `.tmpl` is a template: it lands without the suffix, each
 `.claude/kit/repo.json` (a string, or an array of lines). That is how `solve-task` and `execution.md` stay one flow
 while each repo names its own checks, commit rule and sibling scope. A key that neither the repo nor
 `shared/defaults.json` defines stops its sync before anything is written. The lock holds the filled file's hash, so a local edit fails `kit:check` as any other does.
+
+An audit is typed (`/repo-audit-skills`, `-rules`, ...) and runs through `repo-audit-flow`: the planner agent reads,
+scores and writes an edit plan with the exact text of every change, `refining-plans` grades that plan when scoring is
+on, the session asks before anything is edited, the editor agent applies the plan, and the planner verifies. So the
+judgment runs on the stronger model and the edits on the cheaper one, whatever model the session is on.
 
 The `repo-audit-*` skills are one generic copy each. What they audit in a repo comes from that repo's `repo.json`
 `audit` map, one entry per kind (`skills`, `agents`, `rules`, `hooks`, `agent-md`, `plugins`, `system`, `usage`):

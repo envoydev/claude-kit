@@ -29,7 +29,7 @@
       "notes": [
         "shared/skills is the one home: bin/sync.ts copies each skill into .claude/skills of this repo and of alfred-code, alfred-mods and alfred-tools. No plugin install carries them, so there is no manifest, catalog or eval suite - the tested surface is the sync and each repo's kit:check.",
         "A file ending in .tmpl (solve-task/SKILL.md.tmpl) is a template: audit its text with the {{key}} slots as written, and the filled copy at .claude/skills/solve-task/SKILL.md for what a session reads. A slot's value is each repo's own, in its .claude/kit/repo.json.",
-        "The eight repo-audit-* skills carry disable-model-invocation: their descriptions are not in context, so the trigger grade judges the slash-menu line, not model triggering. Every other skill is model-invocable.",
+        "The eight repo-audit-* skills carry disable-model-invocation: their descriptions are not in context, so the trigger grade judges the slash-menu line, not model triggering. repo-audit-flow is the opposite - hidden from the slash menu, loaded by those eight. Every other skill is model-invocable.",
         "The authoring method is this repo's own skill-authoring skill: a description of at most 160 characters on one line, opening on its trigger. The skills name each other freely because the whole set is always synced together.",
         "javascript, typescript, ts-js-testing, npm, markdown-style and code-comments began as copies of Alfred Code stack skills and have diverged; alfred-code's stack/skills copies are that repo's product and are not kept in step from here.",
         "A fix lands under shared/skills, never in a .claude/ copy; after it, npm run sync and one commit in each of the three repos.",
@@ -44,9 +44,9 @@
         "npm run check"
       ],
       "notes": [
-        "One agent, plan-grader, a template: its model line is {{grader_model}}, filled from shared/defaults.json (opus) unless a repo's repo.json sets that key. The filled copy is .claude/agents/plan-grader.md.",
-        "It is meant to be dispatched only by the refining-plans skill, with the task, rubric, artifact and repository paths. The skill does not dispatch it yet: it still sends a general-purpose reviewer with references/reviewer-prompt.md until the two are compared on one sample (state on 2026-11-15).",
-        "Its tools are read-only (Read, Grep, Glob, WebFetch) by design: a grader never edits the artifact it grades.",
+        "Three agents, each a template whose model line is a {{key}} filled from shared/defaults.json unless a repo's repo.json sets it: audit-planner (auditor_model, opus), audit-editor (editor_model, sonnet), plan-grader (grader_model, opus). The filled copies are under .claude/agents/.",
+        "audit-planner and audit-editor are dispatched only by the repo-audit-flow skill: the planner reads, scores and writes the edit plan and never edits an audited file; the editor applies the plan and decides nothing. That split of tools is by design.",
+        "plan-grader is meant to be dispatched only by the refining-plans skill. The skill does not dispatch it yet: it still sends a general-purpose reviewer with references/reviewer-prompt.md until the two are compared on one sample (state on 2026-11-15).",
         "An agent definition loads at session start, so a new or changed one needs a restart before it can be dispatched."
       ]
     },

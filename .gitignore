@@ -3,6 +3,9 @@
 .claude/settings.local.json
 .DS_Store
 
+# Machine-local: what the superpowers skills and the audits write
+docs/superpowers/
+
 # Copies of shared/ the sync writes here so this repo's own sessions load them - shared/ is their home
 .claude/rules/
 .claude/skills/

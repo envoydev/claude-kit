@@ -1,3 +1,5 @@
 {
+  "auditor_model": "opus",
+  "editor_model": "sonnet",
   "grader_model": "opus"
 }
