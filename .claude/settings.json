@@ -15,5 +15,18 @@
       "Read(*.key)"
     ]
   },
-  "autoCompactWindow": 400000
+  "autoCompactWindow": 400000,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/kit/status-hook.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }

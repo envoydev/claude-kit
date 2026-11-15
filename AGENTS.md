@@ -36,8 +36,9 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
   repo's `.claude/kit/repo.json`, or from `shared/defaults.json` where the repo sets none.
 - `shared/settings.base.json`, `shared/mcp.json`, `shared/retired.json` - the files beside those folders are merged
   into a repo's `.claude/settings.json` and `.mcp.json`, never copied.
-- `bin/sync.ts` (the sync), `bin/check.mjs` (copied into each repo as its `kit:check`), `bin/settings.mjs`
-  (copied too; prints the `KIT_*` settings the skills read), `bin/kit-readme.md` (copied as
+- `bin/sync.ts` (the sync), `bin/check.mjs` (copied into each repo as its `kit:check`), `bin/kit-settings.mjs`,
+  `bin/settings.mjs` and `bin/status-hook.mjs` (copied too: the `KIT_*` settings resolved, printed, and shown with
+  every request by the one hook the kit shares), `bin/kit-readme.md` (copied as
   `.claude/kit/README.md`).
 - `.claude/` - this repo's own copy of the shared files, so a session here loads them. Only `settings.json` and
   `kit/repo.json` are tracked; `rules/`, `skills/`, `agents/` and the rest of `kit/` are git-ignored copies.
@@ -46,6 +47,10 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 - **`shared/` is the one home.** A rule or skill is edited under `shared/`, never in a `.claude/` copy here or in a
   plugin repo: `kit:check` fails on a local edit, and the next sync overwrites it.
+- **One shared hook, and it never blocks.** `shared/settings.base.json` wires `status-hook.mjs` on `UserPromptSubmit`
+  in every repo (the user's request of 2026-11-15). The sync tells a kit hook from a repo's own by the `.claude/kit/`
+  path in its command, so a repo's hooks are kept and a hook deleted from the base is removed everywhere. Another
+  hook waits for a rule that is seen to fail.
 - **A merge only adds.** Deleting a plugin or an MCP server from the shared list leaves it switched on in every repo;
   it is taken out by naming it in `shared/retired.json`.
 - **Enabling a plugin does not install it.** After a plugin joins `settings.base.json`, run

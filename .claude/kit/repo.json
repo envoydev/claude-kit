@@ -43,7 +43,7 @@
         "npm run check"
       ],
       "notes": [
-        "Three agents, each a template whose model line is a {{key}} filled from shared/defaults.json: audit-planner (auditor_model, opus), audit-editor (editor_model, sonnet), plan-grader (grader_model, opus). A project changes a seat's model through a KIT_*_MODEL variable in its settings, which bin/settings.mjs resolves and the dispatching skill passes. The filled copies are under .claude/agents/.",
+        "Three agents, each a template whose model line is a {{key}} filled from shared/defaults.json: audit-planner (plan_model, opus), audit-editor (implement_model, sonnet), plan-grader (review_model, opus). A project changes a role's model through KIT_PLAN_MODEL, KIT_REVIEW_MODEL or KIT_IMPLEMENT_MODEL in its settings, which bin/kit-settings.mjs resolves and the dispatching skill passes. The filled copies are under .claude/agents/.",
         "audit-planner and audit-editor are dispatched only by the repo-audit-flow skill: the planner reads, scores and writes the edit plan and never edits an audited file; the editor applies the plan and decides nothing. That split of tools is by design.",
         "plan-grader is meant to be dispatched only by the refining-plans skill. The skill does not dispatch it yet: it still sends a general-purpose reviewer with references/reviewer-prompt.md until the two are compared on one sample (state on 2026-11-15).",
         "An agent definition loads at session start, so a new or changed one needs a restart before it can be dispatched."
@@ -76,10 +76,14 @@
       ]
     },
     "hooks": {
-      "roots": [],
-      "checks": [],
+      "roots": [
+        "bin/status-hook.mjs"
+      ],
+      "checks": [
+        "npm test"
+      ],
       "notes": [
-        "This repo ships no hook and wires none in shared/settings.base.json - a decision of 2026-11-15: rules plus kit:check, and a hook only once a rule is seen to fail. The audit therefore covers only the hooks that enabled plugins bring into a session here: the plugins in .claude/settings.json enabledPlugins and those enabled at user scope."
+        "One hook, by the user's request of 2026-11-15, which replaced that morning's no-hook decision: bin/status-hook.mjs, a UserPromptSubmit command hook wired in shared/settings.base.json and merged into each repo's .claude/settings.json by bin/sync.ts, which recognises a kit hook by the .claude/kit/ path in its command. It shows one status line to the user and the same values to Claude, records a request that starts with 'stop auto run' or 'stop scoring' in the session's kit-session.md, and never blocks a request; test/status-hook.test.mjs covers it. Any other hook still waits for a rule that is seen to fail. The audit also covers the hooks that enabled plugins bring into a session here: the plugins in .claude/settings.json enabledPlugins and those enabled at user scope."
       ]
     }
   }

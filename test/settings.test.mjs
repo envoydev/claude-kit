@@ -17,7 +17,8 @@ function makeSettingsRepo(t, files = AGENTS)
     const repo = makeTempDir(t, 'settings');
     writeFiles(repo, files);
     fs.mkdirSync(path.join(repo, '.claude/kit'), { recursive: true });
-    fs.copyFileSync(path.join(REAL_KIT, 'bin/settings.mjs'), path.join(repo, '.claude/kit/settings.mjs'));
+    for (const script of ['settings.mjs', 'kit-settings.mjs'])
+        fs.copyFileSync(path.join(REAL_KIT, 'bin', script), path.join(repo, '.claude/kit', script));
     return repo;
 }
 
@@ -40,9 +41,9 @@ test('with no variable set it prints the defaults and the model each agent file 
     assert.equal(status, 0);
     assert.deepEqual(lines, {
         pass_score: '90 (default)',
-        grader_model: "opus (the plan-grader agent's own)",
-        auditor_model: "opus (the audit-planner agent's own)",
-        editor_model: "sonnet (the audit-editor agent's own)",
+        plan_model: "opus (the audit-planner agent's own)",
+        review_model: "opus (the plan-grader agent's own)",
+        implement_model: "sonnet (the audit-editor agent's own)",
         scoring: 'on (default)',
         auto_run: 'off (default)',
     });
@@ -52,18 +53,18 @@ test('each variable replaces its default and is named as the source', (t) =>
 {
     const { lines } = printSettings(makeSettingsRepo(t), {
         KIT_PASS_SCORE: '95',
-        KIT_GRADER_MODEL: 'fable',
-        KIT_AUDITOR_MODEL: 'fable',
-        KIT_EDITOR_MODEL: 'haiku',
+        KIT_PLAN_MODEL: 'fable',
+        KIT_REVIEW_MODEL: 'opus',
+        KIT_IMPLEMENT_MODEL: 'haiku',
         KIT_SCORING: 'off',
         KIT_AUTO_RUN: 'on',
     });
 
     assert.deepEqual(lines, {
         pass_score: '95 (KIT_PASS_SCORE)',
-        grader_model: 'fable (KIT_GRADER_MODEL)',
-        auditor_model: 'fable (KIT_AUDITOR_MODEL)',
-        editor_model: 'haiku (KIT_EDITOR_MODEL)',
+        plan_model: 'fable (KIT_PLAN_MODEL)',
+        review_model: 'opus (KIT_REVIEW_MODEL)',
+        implement_model: 'haiku (KIT_IMPLEMENT_MODEL)',
         scoring: 'off (KIT_SCORING)',
         auto_run: 'on (KIT_AUTO_RUN)',
     });
@@ -92,20 +93,20 @@ for (const passScore of ['0', '101', '9.5', '-5', 'ninety'])
 
 test("a model a dispatch cannot take falls back to the agent's own and the line says why", (t) =>
 {
-    const { lines } = printSettings(makeSettingsRepo(t), { KIT_EDITOR_MODEL: 'claude-sonnet-5-5' });
+    const { lines } = printSettings(makeSettingsRepo(t), { KIT_IMPLEMENT_MODEL: 'claude-sonnet-5-5' });
 
     assert.equal(
-        lines.editor_model,
-        "sonnet (the audit-editor agent's own - KIT_EDITOR_MODEL='claude-sonnet-5-5' is not one of sonnet, opus, haiku, fable)",
+        lines.implement_model,
+        "sonnet (the audit-editor agent's own - KIT_IMPLEMENT_MODEL='claude-sonnet-5-5' is not one of sonnet, opus, haiku, fable)",
     );
 });
 
 test('a blank value counts as not set, so blanking a variable returns an open session to the default', (t) =>
 {
-    const { lines } = printSettings(makeSettingsRepo(t), { KIT_PASS_SCORE: '', KIT_GRADER_MODEL: '  ', KIT_AUTO_RUN: '' });
+    const { lines } = printSettings(makeSettingsRepo(t), { KIT_PASS_SCORE: '', KIT_REVIEW_MODEL: '  ', KIT_AUTO_RUN: '' });
 
     assert.equal(lines.pass_score, '90 (default)');
-    assert.equal(lines.grader_model, "opus (the plan-grader agent's own)");
+    assert.equal(lines.review_model, "opus (the plan-grader agent's own)");
     assert.equal(lines.auto_run, 'off (default)');
 });
 
@@ -113,8 +114,8 @@ test('a seat whose agent file is missing prints none, so the dispatch passes no 
 {
     const { lines } = printSettings(makeSettingsRepo(t, { '.claude/agents/audit-planner.md': agentFile('opus') }));
 
-    assert.equal(lines.editor_model, 'none (.claude/agents/audit-editor.md names no model - pass no model)');
-    assert.equal(lines.auditor_model, "opus (the audit-planner agent's own)");
+    assert.equal(lines.implement_model, 'none (.claude/agents/audit-editor.md names no model - pass no model)');
+    assert.equal(lines.plan_model, "opus (the audit-planner agent's own)");
 });
 
 test('a switch set back to its own default is accepted, so it can be turned off without deleting the line', (t) =>

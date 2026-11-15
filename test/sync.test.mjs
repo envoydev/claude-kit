@@ -7,8 +7,8 @@ import { REAL_KIT, makeKit, makeRepo, makeTempDir, readJson, runNode, syncScript
 
 const SHARED = {
     'rules/alpha.md': '# Alpha\n',
-    'skills/demo/SKILL.md.tmpl': 'name: {{name}}\n{{checks}}\nmodel: {{grader_model}}\n',
-    'defaults.json': { grader_model: 'opus' },
+    'skills/demo/SKILL.md.tmpl': 'name: {{name}}\n{{checks}}\nmodel: {{review_model}}\n',
+    'defaults.json': { review_model: 'opus' },
     'settings.base.json': {
         permissions: { deny: ['Read(.env)'] },
         enabledPlugins: { 'kept@market': true },
@@ -37,14 +37,21 @@ test('copies a shared file to the same path under .claude and records it in the 
     assert.match(lock.kit, /^claude-kit@/);
 });
 
-test('ships the check script, the settings script and the readme into .claude/kit', (t) =>
+test('ships the check, settings and status-hook scripts and the readme into .claude/kit', (t) =>
 {
     const kit = makeKit(t, SHARED);
     const repo = makeRepo(t, REPO_VARS);
 
     sync(kit, repo);
 
-    for (const [shipped, source] of [['check.mjs', 'check.mjs'], ['settings.mjs', 'settings.mjs'], ['README.md', 'kit-readme.md']])
+    const shippedFiles = [
+        ['check.mjs', 'check.mjs'],
+        ['settings.mjs', 'settings.mjs'],
+        ['kit-settings.mjs', 'kit-settings.mjs'],
+        ['status-hook.mjs', 'status-hook.mjs'],
+        ['README.md', 'kit-readme.md'],
+    ];
+    for (const [shipped, source] of shippedFiles)
         assert.equal(read(repo, `.claude/kit/${shipped}`), fs.readFileSync(path.join(kit, 'bin', source), 'utf8'), shipped);
 });
 
@@ -62,7 +69,7 @@ test('fills a template from repo.json and the kit defaults, and drops the .tmpl 
 test("a repo's own value for a key outranks the kit default", (t) =>
 {
     const kit = makeKit(t, SHARED);
-    const repo = makeRepo(t, { '.claude/kit/repo.json': { name: 'demo-repo', checks: [], grader_model: 'fable' } });
+    const repo = makeRepo(t, { '.claude/kit/repo.json': { name: 'demo-repo', checks: [], review_model: 'fable' } });
 
     sync(kit, repo);
 
@@ -255,4 +262,55 @@ test("the real kit syncs into a fresh repo with the kit's own repo.json, fills e
     const check = runNode(path.join(repo, '.claude/kit/check.mjs'));
     assert.equal(check.status, 0, check.stderr);
     assert.match(check.stdout, /managed files match claude-kit@/);
+});
+
+const KIT_HOOK = { hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/.claude/kit/status-hook.mjs"', timeout: 10 }] };
+const OWN_HOOK = { hooks: [{ type: 'command', command: 'node scripts/own-hook.js' }] };
+const sharedWithHook = (hooks) => ({ ...SHARED, 'settings.base.json': { ...SHARED['settings.base.json'], hooks } });
+const settingsOf = (repo) => readJson(path.join(repo, '.claude/settings.json'));
+
+test("the kit's hook is added to a repo's settings beside the repo's own hooks", (t) =>
+{
+    const kit = makeKit(t, sharedWithHook({ UserPromptSubmit: [KIT_HOOK] }));
+    const repo = makeRepo(t, {
+        ...REPO_VARS,
+        '.claude/settings.json': { hooks: { UserPromptSubmit: [OWN_HOOK], Stop: [OWN_HOOK] } },
+    });
+
+    sync(kit, repo);
+
+    assert.deepEqual(settingsOf(repo).hooks, { UserPromptSubmit: [OWN_HOOK, KIT_HOOK], Stop: [OWN_HOOK] });
+});
+
+test("a kit hook already in the settings is replaced, never doubled, and a second sync finds the repo current", (t) =>
+{
+    const kit = makeKit(t, sharedWithHook({ UserPromptSubmit: [KIT_HOOK] }));
+    const staleKitHook = { hooks: [{ type: 'command', command: 'node .claude/kit/old-hook.mjs' }] };
+    const repo = makeRepo(t, { ...REPO_VARS, '.claude/settings.json': { hooks: { UserPromptSubmit: [staleKitHook] } } });
+
+    sync(kit, repo);
+    const again = sync(kit, repo);
+
+    assert.deepEqual(settingsOf(repo).hooks, { UserPromptSubmit: [KIT_HOOK] });
+    assert.match(again.stdout, /: current$/m);
+});
+
+test('a hook the kit no longer shares is taken out of the settings, and an emptied hooks block goes with it', (t) =>
+{
+    const kit = makeKit(t, SHARED);
+    const repo = makeRepo(t, { ...REPO_VARS, '.claude/settings.json': { hooks: { UserPromptSubmit: [KIT_HOOK] } } });
+
+    sync(kit, repo);
+
+    assert.equal('hooks' in settingsOf(repo), false);
+});
+
+test('a repo with no hooks and a kit with none gets no hooks key', (t) =>
+{
+    const kit = makeKit(t, SHARED);
+    const repo = makeRepo(t, REPO_VARS);
+
+    sync(kit, repo);
+
+    assert.equal('hooks' in settingsOf(repo), false);
 });

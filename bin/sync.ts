@@ -8,10 +8,12 @@
 //   - every file in a folder under shared/ (rules/, skills/, agents/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
-//   - <repo>/.claude/kit/settings.mjs, which prints the pass score, the seat models and the standing switches a
-//     session's settings carry (the KIT_* variables), for the skills that read them;
+//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs and status-hook.mjs: the pass score, the three role models
+//     and the standing switches a session's settings carry (the KIT_* variables), printed for the skills that read
+//     them and added to every request by the UserPromptSubmit hook;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
-//     plugins switched on beside the repo's own, every other key the repo's;
+//     plugins switched on beside the repo's own, the kit's hooks added after the repo's own for each event, every
+//     other key the base carries taken from it and the rest the repo's;
 //   - shared/mcp.json merged into <repo>/.mcp.json: each kit server replaces the one of its name, the repo's own
 //     servers and keys are kept. The file is machine-local and git-ignored in every repo, so each machine syncs.
 //   - shared/retired.json names the plugins and MCP servers the kit shared once and dropped: both merges only add,
@@ -35,9 +37,12 @@ type Lock = { kit: string; files: Record<string, string> };
 type RepoVars = Readonly<Record<string, string | readonly string[]>>;
 type McpConfig = Record<string, unknown> & { mcpServers?: Record<string, unknown> };
 type Retired = { plugins?: readonly string[]; mcpServers?: readonly string[] };
+type HookGroup = Record<string, unknown> & { hooks?: readonly { command?: unknown }[] };
+type HookMap = Record<string, readonly HookGroup[]>;
 type Settings = Record<string, unknown> & {
     permissions?: { deny?: string[] } & Record<string, unknown>;
     enabledPlugins?: Record<string, boolean>;
+    hooks?: HookMap;
 };
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -73,8 +78,33 @@ function mergeSettings(current: Settings, base: Settings): Settings
     out.permissions = { ...current.permissions, deny };
     out.enabledPlugins = { ...current.enabledPlugins, ...base.enabledPlugins };
     for (const [key, value] of Object.entries(base))
-        if (key !== 'permissions' && key !== 'enabledPlugins') out[key] = value;
+        if (key !== 'permissions' && key !== 'enabledPlugins' && key !== 'hooks') out[key] = value;
+    const hooks = mergeHooks(current.hooks ?? {}, base.hooks ?? {});
+    if (Object.keys(hooks).length) out.hooks = hooks;
+    else delete out.hooks;
     return out;
+}
+
+// A hook the kit shares runs a script under .claude/kit/, and that path is how one is told from a repo's own.
+const KIT_HOOK_PATH = '.claude/kit/';
+
+function isKitHookGroup(group: HookGroup): boolean
+{
+    return (group.hooks ?? []).some((hook) => typeof hook.command === 'string' && hook.command.includes(KIT_HOOK_PATH));
+}
+
+// Per event: the repo's own hook groups, then the kit's. A kit hook the base no longer carries is dropped, so a
+// shared hook is retired by deleting it from settings.base.json.
+function mergeHooks(current: HookMap, base: HookMap): HookMap
+{
+    const merged: HookMap = {};
+    for (const event of new Set([...Object.keys(current), ...Object.keys(base)]))
+    {
+        const own = Array.isArray(current[event]) ? current[event].filter((group) => !isKitHookGroup(group)) : [];
+        const groups = [...own, ...(base[event] ?? [])];
+        if (groups.length) merged[event] = groups;
+    }
+    return merged;
 }
 
 function readJson<T>(file: string, fallback: T): T
@@ -82,6 +112,15 @@ function readJson<T>(file: string, fallback: T): T
     try { return JSON.parse(fs.readFileSync(file, 'utf8')) as T; }
     catch (err) { if ((err as { code?: string }).code === 'ENOENT') return fallback; throw err; }
 }
+
+// What lands in <repo>/.claude/kit beside the lock: the name there, and the file under bin/ it is copied from.
+const KIT_FILES: readonly (readonly [shipped: string, source: string])[] = [
+    ['check.mjs', 'check.mjs'],
+    ['settings.mjs', 'settings.mjs'],
+    ['kit-settings.mjs', 'kit-settings.mjs'],
+    ['status-hook.mjs', 'status-hook.mjs'],
+    ['README.md', 'kit-readme.md'],
+];
 
 const TEMPLATE = '.tmpl';
 const SLOT = /\{\{([a-z_]+)\}\}/g;
@@ -181,9 +220,7 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
         pruneEmptyDirs(path.dirname(target), path.join(repo, '.claude'));
     }
 
-    write('.claude/kit/check.mjs', fs.readFileSync(path.join(KIT, 'bin', 'check.mjs')));
-    write('.claude/kit/settings.mjs', fs.readFileSync(path.join(KIT, 'bin', 'settings.mjs')));
-    write('.claude/kit/README.md', fs.readFileSync(path.join(KIT, 'bin', 'kit-readme.md')));
+    for (const [shipped, source] of KIT_FILES) write(`.claude/kit/${shipped}`, fs.readFileSync(path.join(KIT, 'bin', source)));
 
     syncSettings(repo, write);
 
