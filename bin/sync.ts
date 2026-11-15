@@ -174,7 +174,9 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
         if (!fs.existsSync(target)) continue;
         if (sha(fs.readFileSync(target)) !== hash) { notes.push(`kept ${rel}: the kit dropped it, but it was edited here`); continue; }
         notes.push(`remove ${rel}`);
-        if (!check) fs.rmSync(target);
+        if (check) continue;
+        fs.rmSync(target);
+        pruneEmptyDirs(path.dirname(target), path.join(repo, '.claude'));
     }
 
     write('.claude/kit/check.mjs', fs.readFileSync(path.join(KIT, 'bin', 'check.mjs')));
@@ -194,6 +196,16 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     for (const rel of ignoredByGit(repo, [...Object.keys(lock.files), '.claude/kit/lock.json']))
         notes.push(`ignored by git: ${rel} - a commit leaves it out and kit:check fails on a fresh clone; allow it in .gitignore`);
     return notes;
+}
+
+// A folder its last removed file leaves empty goes too - a renamed skill would otherwise leave its old folder behind.
+function pruneEmptyDirs(dir: string, stop: string): void
+{
+    while (dir.startsWith(stop + path.sep) && fs.readdirSync(dir).length === 0)
+    {
+        fs.rmdirSync(dir);
+        dir = path.dirname(dir);
+    }
 }
 
 // The managed paths the repo's .gitignore hides and the index does not track (git check-ignore skips tracked files).
