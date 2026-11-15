@@ -16,6 +16,11 @@
     "claude-md-management@claude-plugins-official": true
   },
   "autoCompactWindow": 400000,
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
