@@ -67,6 +67,9 @@ A new session, and one that lost its context to a compaction, reads them with on
   on the machine. The sync leaves a repo's `env` block alone.
 - `KIT_SCORING` and `KIT_AUTO_RUN` switch a safeguard off, so they count only from a file that is not committed -
   `.claude/settings.local.json` or `~/.claude/settings.json`. The script ignores one in `.claude/settings.json`.
+- Claude Code applies a new or changed value to sessions that are already open, but a deleted variable stays set in
+  them until they restart. To switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value (`off`, `on`)
+  instead of deleting the line. A session already running under auto-run stops only on 'stop auto run' or a restart.
 - What the user says in a session - 'auto mode', 'stop scoring', 'grade it to 95', 'audit with fable' - outranks the
   settings for that session and is written to the run's ledger or `run.md`, so a compaction keeps it.
 
