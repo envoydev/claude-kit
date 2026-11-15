@@ -32,7 +32,8 @@
         "The authoring method is this repo's own skill-authoring skill: a description of at most 160 characters on one line, opening on its trigger. The skills name each other freely because the whole set is always synced together.",
         "javascript, typescript, ts-js-testing, npm, markdown-style and code-comments began as copies of Alfred Code stack skills and have diverged; alfred-code's stack/skills copies are that repo's product and are not kept in step from here.",
         "A fix lands under shared/skills, never in a .claude/ copy; after it, npm run sync and one commit in each of the three repos.",
-        "No usage ledger exists for these skills."
+        "No usage ledger exists for these skills.",
+        "The multi-home registry is copies.json at the kit's root: the auto-run, refining-plans and typescript SKILL.md files own text their rules repeat on purpose, each pinned by marker phrases. A pass that rewords such text updates the copies and the registry in the same pass; no check reads it yet."
       ]
     },
     "agents": {
@@ -59,7 +60,8 @@
       "notes": [
         "Rules without a paths field load in every session of all four repos: auto-run, commits, execution, refining-plans, superpowers-location. execution.md.tmpl is a template whose check_batch and check_once come from each repo's repo.json. The path-scoped ones - javascript, typescript, skill-authoring - each exist to load their skill.",
         "No always-on budget is enforced here; alfred-code's lint budget covers its stack rules, not these.",
-        "The instruction file every rule sits beside is AGENTS.md at each repo's root, never a CLAUDE.md."
+        "The instruction file every rule sits beside is AGENTS.md at each repo's root, never a CLAUDE.md.",
+        "The multi-home registry is copies.json at the kit's root: each text kept on purpose in more than one file - a rule and its skill, a rule and each repo's AGENTS.md, the load contract the path-scoped rules share - with its owner, every copy and the marker phrases each site keeps. A pass that adds, moves or rewords such text updates it in the same pass; no check reads it yet."
       ]
     },
     "agent-md": {
@@ -72,7 +74,8 @@
       "notes": [
         "This repo ships no instruction template: AGENTS.md is its own instruction file and is the audit target. There is no installer, seed or fill skill.",
         "Claude Code reads it only while no CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md exists; check.mjs fails when one does.",
-        "README.md holds the mechanism in full - the shared paths, the templates, the audit map. AGENTS.md is the hub and points at it instead of repeating it."
+        "README.md holds the mechanism in full - the shared paths, the templates, the audit map. AGENTS.md is the hub and points at it instead of repeating it.",
+        "The multi-home registry is copies.json at the kit's root: AGENTS.md here and in each plugin repo keeps a registered copy of the commits rule, pinned by marker phrases. A pass that rewords it keeps those markers, or changes the owner rule and the registry with it in the same pass; no check reads it yet."
       ]
     },
     "hooks": {

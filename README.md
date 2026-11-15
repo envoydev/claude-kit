@@ -34,6 +34,10 @@ The `repo-audit-*` skills are one generic copy each. What they audit in a repo c
 `roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
 graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
 
+`copies.json` at the root is this repo's registry of text kept on purpose in more than one file - a rule and its skill,
+a rule and each repo's `AGENTS.md`: each entry names the owner, every copy and the marker phrases each keeps, so an
+audit reads a registered copy as deliberate and a reworded one shows. No script checks it yet.
+
 This repo takes the same files into its own `.claude/`, so a session here loads the rules and skills it shares. Those
 copies are git-ignored - `shared/` is their one home - so a fresh clone runs `npm run sync` once to get them, and an
 edit goes into `shared/`, never into the copy. Only `.claude/settings.json` and `.claude/kit/repo.json` (this repo's

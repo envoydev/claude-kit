@@ -1,0 +1,136 @@
+{
+  "about": "Text kept on purpose in more than one file. The owner is edited first and every copy follows it in the same change; each site keeps its markers word for word, so a copy that drifts shows. A site in a sibling repo is written <repo>:<path>.",
+  "copies": [
+    {
+      "id": "commits-no-trace",
+      "why": "AGENTS.md is also read by agents that never load .claude/rules, so each repo's hub keeps the line.",
+      "owner": {
+        "site": "shared/rules/commits.md",
+        "markers": [
+          "no trace of the agent",
+          "'Generated with' line"
+        ]
+      },
+      "copies": [
+        {
+          "site": "AGENTS.md",
+          "markers": [
+            "no trace of the agent",
+            "'Generated with' line"
+          ]
+        },
+        {
+          "site": "alfred-code:AGENTS.md",
+          "markers": [
+            "no trace of the agent",
+            "'Generated with' line"
+          ]
+        },
+        {
+          "site": "alfred-mods:AGENTS.md",
+          "markers": [
+            "no trace of the agent",
+            "'Generated with' line"
+          ]
+        },
+        {
+          "site": "alfred-tools:AGENTS.md",
+          "markers": [
+            "no trace of the agent",
+            "'Generated with' line"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "auto-run-trigger",
+      "why": "The skill's description alone did not fire, so the always-on rule repeats its trigger and the switch it reads.",
+      "owner": {
+        "site": "shared/skills/auto-run/SKILL.md",
+        "markers": [
+          "take the recommended options",
+          "no `kit status` line arrives"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/auto-run.md",
+          "markers": [
+            "take the recommended options",
+            "no `kit status` line arrives"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "refining-plans-trigger",
+      "why": "The always-on rule makes the grade happen before a handoff; the skill owns the loop and its off switches.",
+      "owner": {
+        "site": "shared/skills/refining-plans/SKILL.md",
+        "markers": [
+          "after the author's own self-review",
+          "ungraded - scoring stopped",
+          "ungraded - scoring off in the settings"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/refining-plans.md",
+          "markers": [
+            "after the author's own self-review",
+            "ungraded - scoring stopped",
+            "ungraded - scoring off in the settings"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "path-rule-load",
+      "why": "Each path-scoped rule attaches alone, so each carries the whole load contract.",
+      "owner": {
+        "site": "shared/rules/javascript.md",
+        "markers": [
+          "attaches ON the touch",
+          "the receipt is what makes the load happen",
+          "already-in-context skip"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/typescript.md",
+          "markers": [
+            "attaches ON the touch",
+            "the receipt is what makes the load happen",
+            "already-in-context skip"
+          ]
+        },
+        {
+          "site": "shared/rules/skill-authoring.md",
+          "markers": [
+            "attaches ON the touch",
+            "the receipt is what makes the load happen",
+            "already-in-context skip"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "typescript-loads-javascript",
+      "why": "The rule loads both layers in one action; the skill repeats it for a load its own description started.",
+      "owner": {
+        "site": "shared/skills/typescript/SKILL.md",
+        "markers": [
+          "call the Skill tool for `javascript` now"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/typescript.md",
+          "markers": [
+            "the `javascript` base layer it stacks on"
+          ]
+        }
+      ]
+    }
+  ]
+}
