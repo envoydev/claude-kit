@@ -71,7 +71,8 @@ A new session, and one that lost its context to a compaction, reads them with on
   them until they restart. To switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value (`off`, `on`)
   instead of deleting the line. A session already running under auto-run stops only on 'stop auto run' or a restart.
 - What the user says in a session - 'auto mode', 'stop scoring', 'grade it to 95', 'audit with fable' - outranks the
-  settings for that session and is written to the run's ledger or `run.md`, so a compaction keeps it.
+  settings for that session. A switch goes into `kit-session.md` in the session's own scratchpad folder, which no other
+  session shares, and a run's values into its `run.md`, so a compaction keeps them.
 
 ## Use
 
