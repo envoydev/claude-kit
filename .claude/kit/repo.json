@@ -1,6 +1,6 @@
 {
   "name": "claude-kit",
-  "claude_md": "README.md",
+  "agents_md": "AGENTS.md",
   "check_batch": "`npm run check`, read for the change just made and nothing else",
   "check_once": "`npm run sync`, then `npm run kit:check` in each plugin repo",
   "not_for": "Not for a file a plugin repo owns (its `CLAUDE.md`, `repo-*` rules and skills, `repo.json`), which is changed in that repo.",

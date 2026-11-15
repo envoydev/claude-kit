@@ -32,7 +32,7 @@ copies are git-ignored - `shared/` is their one home - so a fresh clone runs `np
 edit goes into `shared/`, never into the copy. Only `.claude/settings.json` and `.claude/kit/repo.json` (this repo's
 own template values) are tracked.
 
-Each repo keeps its own `CLAUDE.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
+Each repo keeps its own `AGENTS.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
 that repo's layout, commands and release path.
 
 ## Use
@@ -45,7 +45,9 @@ npm run sync    # write the shared files, .claude/kit/lock.json and .claude/kit/
 ```
 
 Then commit the change in each repo. In a repo, `npm run kit:check` fails when a managed file was edited there - the
-fix is to change it here and sync again, so the repos never drift apart.
+fix is to change it here and sync again, so the repos never drift apart. It fails too when a `CLAUDE.md`,
+`.claude/CLAUDE.md` or `CLAUDE.local.md` sits beside the repo's `AGENTS.md`: Claude Code reads `AGENTS.md` only while
+none of the three exists, and says nothing when one switches it off.
 
 Requires Node 22.18 or newer (the sync script is TypeScript run by Node's type stripping); no dependencies.
 
