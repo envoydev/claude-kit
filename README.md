@@ -11,8 +11,8 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 | Path | What it is |
 |---|---|
-| `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits and the `repo-audit-flow` they run through |
+| `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `superpowers-location` |
+| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits and the `repo-audit-flow` they run through |
 | `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
 | `shared/defaults.json` | the kit's own value for a template key - `plan_model` (opus), `review_model` (opus), `implement_model` (sonnet), the model each agent file is written with. A project changes a seat's model in its settings (below), not here |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow`, the `attribution` block that keeps Claude Code's own trailer, PR line and session link out of commits and PRs, and the status hook - merged into each repo's `.claude/settings.json`, the repo's own hooks kept |
@@ -21,7 +21,10 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 A shared file ending in `.tmpl` is a template: it lands without the suffix, each `{{key}}` filled from the repo's own
 `.claude/kit/repo.json` (a string, or an array of lines). That is how `solve-task` and `execution.md` stay one flow
-while each repo names its own checks, commit rule and sibling scope. A key that neither the repo nor
+while each repo names its own checks, commit rule and sibling scope, and how `project-structure` keeps one code shape
+- an entry that only wires, a folder per feature, pure logic, one effects file, constants and types in files of their
+own - while each repo's `structure_map` says where that shape lands in its folders and `structure_paths` which files
+attach the rule that loads it. A key that neither the repo nor
 `shared/defaults.json` defines stops its sync before anything is written. The lock holds the filled file's hash, so a local edit fails `kit:check` as any other does.
 
 An audit is typed (`/repo-audit-skills`, `-rules`, ...) and runs through `repo-audit-flow`: the planner agent reads,

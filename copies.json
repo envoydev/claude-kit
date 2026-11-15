@@ -111,6 +111,14 @@
             "the receipt is what makes the load happen",
             "already-in-context skip"
           ]
+        },
+        {
+          "site": "shared/rules/project-structure.md.tmpl",
+          "markers": [
+            "attaches ON the touch",
+            "the receipt is what makes the load happen",
+            "already-in-context skip"
+          ]
         }
       ]
     },
