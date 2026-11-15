@@ -8,6 +8,8 @@
 //   - every file in a folder under shared/ (rules/, skills/, agents/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
+//   - <repo>/.claude/kit/settings.mjs, which prints the pass score, the seat models and the standing switches a
+//     session's settings carry (the KIT_* variables), for the skills that read them;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
 //     plugins switched on beside the repo's own, every other key the repo's;
 //   - shared/mcp.json merged into <repo>/.mcp.json: each kit server replaces the one of its name, the repo's own
@@ -180,6 +182,7 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     }
 
     write('.claude/kit/check.mjs', fs.readFileSync(path.join(KIT, 'bin', 'check.mjs')));
+    write('.claude/kit/settings.mjs', fs.readFileSync(path.join(KIT, 'bin', 'settings.mjs')));
     write('.claude/kit/README.md', fs.readFileSync(path.join(KIT, 'bin', 'kit-readme.md')));
 
     syncSettings(repo, write);

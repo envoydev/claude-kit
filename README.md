@@ -14,7 +14,7 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 | `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `refining-plans`, `skill-authoring`, `superpowers-location` |
 | `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits and the `repo-audit-flow` they run through |
 | `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
-| `shared/defaults.json` | the kit's own value for a template key - `auditor_model` (opus), `editor_model` (sonnet), `grader_model` (opus) - used until a repo's `repo.json` sets that key itself |
+| `shared/defaults.json` | the kit's own value for a template key - `auditor_model` (opus), `editor_model` (sonnet), `grader_model` (opus), the model each agent file is written with. A project changes a seat's model in its settings (below), not here |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow` - merged into each repo's `.claude/settings.json` |
 | `shared/mcp.json` | the MCP servers every repo gets (`context7`) - merged into each repo's `.mcp.json` by name, the repo's own servers kept; the file is machine-local and git-ignored, so each machine runs the sync |
 | `shared/retired.json` | the plugins and MCP servers the kit shared once and dropped - both merges only add, so each sync takes these out of every repo's settings and `.mcp.json`; to drop a shared plugin, delete it from `settings.base.json` and name it here |
@@ -42,13 +42,41 @@ own template values) are tracked.
 Each repo keeps its own `AGENTS.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
 that repo's layout, commands and release path.
 
+## Settings a project can change
+
+The pass score, the seat models and two standing switches come from the `env` block of a Claude Code settings file.
+A new session, and one that lost its context to a compaction, reads them with one command:
+`node .claude/kit/settings.mjs` prints each value and where it came from.
+
+| Variable | What it sets | Without it |
+|---|---|---|
+| `KIT_PASS_SCORE` | the score `refining-plans` grades a spec or plan to, a whole number from 1 to 100 | 90 |
+| `KIT_GRADER_MODEL` | the model of the `refining-plans` reviewer | the `plan-grader` agent's own (opus) |
+| `KIT_AUDITOR_MODEL` | the model of the `audit-planner` agent | its own (opus) |
+| `KIT_EDITOR_MODEL` | the model of the `audit-editor` agent | its own (sonnet) |
+| `KIT_SCORING=off` | grading is off in every session | on |
+| `KIT_AUTO_RUN=on` | auto-run is on from a session's first ask | off |
+
+```json
+{ "env": { "KIT_PASS_SCORE": "95", "KIT_AUDITOR_MODEL": "fable" } }
+```
+
+- A model is `sonnet`, `opus`, `haiku` or `fable`; a value the script cannot use falls back to the default, and
+  its line says why.
+- The first four go in a repo's committed `.claude/settings.json`, or in `~/.claude/settings.json` for every project
+  on the machine. The sync leaves a repo's `env` block alone.
+- `KIT_SCORING` and `KIT_AUTO_RUN` switch a safeguard off, so they count only from a file that is not committed -
+  `.claude/settings.local.json` or `~/.claude/settings.json`. The script ignores one in `.claude/settings.json`.
+- What the user says in a session - 'auto mode', 'stop scoring', 'grade it to 95', 'audit with fable' - outranks the
+  settings for that session and is written to the run's ledger or `run.md`, so a compaction keeps it.
+
 ## Use
 
 The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../alfred-tools`).
 
 ```bash
 npm run check   # what a sync would change here and in each repo, nothing written; exit 1 on a difference
-npm run sync    # write the shared files, .claude/kit/lock.json and .claude/kit/check.mjs here and into each repo
+npm run sync    # write the shared files, .claude/kit/lock.json, check.mjs and settings.mjs here and into each repo
 ```
 
 Then commit the change in each repo. In a repo, `npm run kit:check` fails when a managed file was edited there - the

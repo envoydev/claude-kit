@@ -44,7 +44,7 @@
         "npm run check"
       ],
       "notes": [
-        "Three agents, each a template whose model line is a {{key}} filled from shared/defaults.json unless a repo's repo.json sets it: audit-planner (auditor_model, opus), audit-editor (editor_model, sonnet), plan-grader (grader_model, opus). The filled copies are under .claude/agents/.",
+        "Three agents, each a template whose model line is a {{key}} filled from shared/defaults.json: audit-planner (auditor_model, opus), audit-editor (editor_model, sonnet), plan-grader (grader_model, opus). A project changes a seat's model through a KIT_*_MODEL variable in its settings, which bin/settings.mjs resolves and the dispatching skill passes. The filled copies are under .claude/agents/.",
         "audit-planner and audit-editor are dispatched only by the repo-audit-flow skill: the planner reads, scores and writes the edit plan and never edits an audited file; the editor applies the plan and decides nothing. That split of tools is by design.",
         "plan-grader is meant to be dispatched only by the refining-plans skill. The skill does not dispatch it yet: it still sends a general-purpose reviewer with references/reviewer-prompt.md until the two are compared on one sample (state on 2026-11-15).",
         "An agent definition loads at session start, so a new or changed one needs a restart before it can be dispatched."
