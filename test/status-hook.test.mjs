@@ -95,31 +95,60 @@ test("the last line of a kind in the session file wins, so a standing default th
     assert.match(output.systemMessage, /^kit: auto-run off \(this session\) \|/);
 });
 
+test('a switch this session turned on outranks settings that say off, and one it turned off outranks on', (t) =>
+{
+    const scratchpad = makeTempDir(t, 'scratch');
+    writeFiles(scratchpad, { 'kit-session.md': 'Scoring: on - 2026-11-15\nAuto-run: off - 2026-11-15\n' });
+
+    const { output } = runHook(makeHookRepo(t), promptInput(scratchpad), { KIT_SCORING: 'off', KIT_AUTO_RUN: 'on' });
+
+    assert.match(output.systemMessage, /^kit: auto-run off \(this session\) \| scoring on \(this session\) \|/);
+    assert.ok(output.hookSpecificOutput.additionalContext.includes('scoring=on (this session)'));
+});
+
+// Each request is sent against settings that say the opposite, so the line shows that the session's word won.
 for (const [prompt, line, shown] of [
-    ['stop auto run', /^Auto-run: off - \d{4}-\d{2}-\d{2}$/m, /auto-run off \(this session\)/],
-    ['Stop scoring, just hand me the plan', /^Scoring: off - \d{4}-\d{2}-\d{2}$/m, /scoring off \(this session\)/],
+    ['stop auto run', 'Auto-run: off', 'auto-run off (this session)'],
+    ['Stop scoring, just hand me the plan', 'Scoring: off', 'scoring off (this session)'],
+    ['turn off auto-run please', 'Auto-run: off', 'auto-run off (this session)'],
+    ['Disable the auto mode', 'Auto-run: off', 'auto-run off (this session)'],
+    ['turn auto run off', 'Auto-run: off', 'auto-run off (this session)'],
+    ['disable scoring', 'Scoring: off', 'scoring off (this session)'],
+    ['Turn scoring off for this one', 'Scoring: off', 'scoring off (this session)'],
+    ['scoring off', 'Scoring: off', 'scoring off (this session)'],
+    ['turn on auto run', 'Auto-run: on', 'auto-run on (this session)'],
+    ['Enable auto mode and fix the lint', 'Auto-run: on', 'auto-run on (this session)'],
+    ['auto run on.', 'Auto-run: on', 'auto-run on (this session)'],
+    ['turn on scoring', 'Scoring: on', 'scoring on (this session)'],
+    ['Please enable scoring', 'Scoring: on', 'scoring on (this session)'],
+    ['switch scoring on', 'Scoring: on', 'scoring on (this session)'],
 ])
 {
-    test(`a request starting with '${prompt.slice(0, 13).toLowerCase()}' is recorded in the session file and shown at once`, (t) =>
+    test(`a request that opens with '${prompt}' is recorded in the session file and outranks the settings at once`, (t) =>
     {
         const scratchpad = makeTempDir(t, 'scratch');
-        writeFiles(scratchpad, { 'kit-session.md': "Auto-run: on - 'auto mode'\n" });
+        const opposite = line.endsWith('on') ? 'off' : 'on';
 
-        const { output } = runHook(makeHookRepo(t), promptInput(scratchpad, prompt));
+        const { output } = runHook(makeHookRepo(t), promptInput(scratchpad, prompt), { KIT_AUTO_RUN: opposite, KIT_SCORING: opposite });
 
-        assert.match(fs.readFileSync(path.join(scratchpad, 'kit-session.md'), 'utf8'), line);
-        assert.match(output.systemMessage, shown);
+        const recorded = fs.readFileSync(path.join(scratchpad, 'kit-session.md'), 'utf8').trimEnd();
+        assert.match(recorded, /^[A-Z][a-z-]+: (on|off) - \d{4}-\d{2}-\d{2}$/);
+        assert.ok(recorded.startsWith(`${line} - `), recorded);
+        assert.ok(output.systemMessage.includes(shown), output.systemMessage);
     });
 }
 
-test('a request that only mentions the words mid-sentence records nothing', (t) =>
+for (const prompt of ['why did you stop scoring the plan?', 'scoring on the last plan looked low', 'auto run offline tests', 'the scoring is off, why?'])
 {
-    const scratchpad = makeTempDir(t, 'scratch');
+    test(`'${prompt}' is no switch: nothing is recorded`, (t) =>
+    {
+        const scratchpad = makeTempDir(t, 'scratch');
 
-    runHook(makeHookRepo(t), promptInput(scratchpad, 'why did you stop scoring the plan?'));
+        runHook(makeHookRepo(t), promptInput(scratchpad, prompt));
 
-    assert.equal(fs.existsSync(path.join(scratchpad, 'kit-session.md')), false);
-});
+        assert.equal(fs.existsSync(path.join(scratchpad, 'kit-session.md')), false);
+    });
+}
 
 test('with no scratchpad named it still reports the settings and tells Claude the session file is unknown', (t) =>
 {

@@ -67,8 +67,8 @@ kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement s
 | `KIT_REVIEW_MODEL` | the model that reviews: the `refining-plans` reviewer, the review step of `solve-task` | the `plan-grader` agent's own (opus) |
 | `KIT_IMPLEMENT_MODEL` | the model that implements: the `audit-editor` agent, the build step of `solve-task` | the `audit-editor` agent's own (sonnet) |
 | `KIT_SEARCH_MODEL` | the model that searches the code for the other three in `solve-task` - where a thing is, what calls it - and reports paths and lines | haiku |
-| `KIT_SCORING=off` | the grading of specs and plans is off in every session | on |
-| `KIT_AUTO_RUN=on` | auto-run is on from a session's first ask | off |
+| `KIT_SCORING=off` | the grading of specs and plans is off in every session that is not told to turn it on | on |
+| `KIT_AUTO_RUN=on` | auto-run is on from a session's first ask, until the session is told to turn it off | off |
 
 ```json
 { "env": { "KIT_PASS_SCORE": "95", "KIT_PLAN_MODEL": "fable", "KIT_IMPLEMENT_MODEL": "sonnet" } }
@@ -87,12 +87,15 @@ kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement s
   `.claude/settings.local.json` or `~/.claude/settings.json`. The script ignores one in `.claude/settings.json`.
 - Claude Code applies a new or changed value to sessions that are already open, but a deleted variable stays set in
   them until they restart. To switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value (`off`, `on`)
-  instead of deleting the line. A session already running under auto-run stops only on 'stop auto run' or a restart.
-- A request that starts with 'stop auto run' or 'stop scoring' is recorded by the hook itself, and it never blocks a
+  instead of deleting the line. A session already running under auto-run stops only when it is told to ('stop auto
+  run', 'turn off auto run') or on a restart.
+- What the user says in a session - 'auto mode', 'turn off auto run', 'stop scoring', 'enable scoring', 'grade it to
+  95', 'audit with fable' - outranks the settings for that session, in both directions (the user's ruling,
+  2026-11-15). A switch goes into `kit-session.md` in the session's own scratchpad folder, which no other session
+  shares, and a run's values into its `run.md`, so a compaction keeps them.
+- A request that opens with words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto
+  run off' - is recorded by the hook itself; said any other way, Claude writes the same line. The hook never blocks a
   request: when it fails, it says so in the debug log and the request goes through.
-- What the user says in a session - 'auto mode', 'stop scoring', 'grade it to 95', 'audit with fable' - outranks the
-  settings for that session. A switch goes into `kit-session.md` in the session's own scratchpad folder, which no other
-  session shares, and a run's values into its `run.md`, so a compaction keeps them.
 
 ## Use
 
