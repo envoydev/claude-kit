@@ -15,7 +15,7 @@ templates and the `audit` map.
 npm run check                # what a sync would change here and in the three repos; writes nothing, exit 1 on a difference
 npm run sync                 # write the shared files here and into ../alfred-code, ../alfred-mods, ../alfred-tools
 node .claude/kit/check.mjs   # copies match the lock, no CLAUDE.md here, copies.json markers hold, descriptions fit 160
-npm test                     # the three scripts under bin/, run against throwaway kits and repos in temp folders
+npm test                     # the scripts under bin/, run against throwaway kits and repos in temp folders
 ```
 
 Node 22.18 or newer, no dependencies and no CI: these four are the whole gate. The tests (`test/*.test.mjs`, Node's
@@ -36,17 +36,15 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
   repo's `.claude/kit/repo.json`, or from `shared/defaults.json` where the repo sets none.
 - `shared/settings.base.json`, `shared/mcp.json`, `shared/retired.json` - the files beside those folders are merged
   into a repo's `.claude/settings.json` and `.mcp.json`, never copied.
-- `bin/sync.ts` (the sync), `bin/check.mjs` (copied into each repo as its `kit:check`), `bin/kit-settings.mjs`,
-  `bin/constants.mjs`, `bin/settings.mjs` and `bin/status-hook.mjs` (copied too: the `KIT_*` settings resolved,
-  printed, and shown with every request by the one hook the kit shares, and the named values they share),
-  `bin/kit-readme.md` (copied as `.claude/kit/README.md`).
+- `bin/` - `bin/sync.ts` (the sync) and the scripts it copies into each repo's `.claude/kit/`, `bin/check.mjs` among
+  them as that repo's `kit:check`.
 - `.claude/` - this repo's own copy of the shared files, so a session here loads them. Only `settings.json`,
-  `kit/repo.json` and `kit/settings.json` (this repo's saved kit settings, once one is set) are tracked; `rules/`, `skills/`, `agents/` and the rest of `kit/` are git-ignored copies.
+  `kit/repo.json` and `kit/settings.json` are tracked; the rest is git-ignored.
 
 ## Invariants
 
-- **`shared/` is the one home.** A rule or skill is edited under `shared/`, never in a `.claude/` copy here or in a
-  plugin repo: `kit:check` fails on a local edit, and the next sync overwrites it.
+- **`shared/` is the one home.** A rule, skill or agent is edited under `shared/`, never in a `.claude/` copy here or
+  in a plugin repo: `kit:check` fails on a local edit, and the next sync overwrites it.
 - **One shared hook, and it never blocks.** `shared/settings.base.json` wires `status-hook.mjs` on `UserPromptSubmit`
   in every repo (the user's request of 2026-11-15). The sync tells a kit hook from a repo's own by the `.claude/kit/`
   path in its command, so a repo's hooks are kept and a hook deleted from the base is removed everywhere. Another
@@ -54,14 +52,18 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 - **A merge only adds.** Deleting a plugin or an MCP server from the shared list leaves it switched on in every repo;
   it is taken out by naming it in `shared/retired.json`.
 - **Enabling a plugin does not install it.** After a plugin joins `settings.base.json`, run
-  `claude plugin install <id> --scope project` in each repo; after one is retired, `claude plugin uninstall`.
+  `claude plugin install <id> --scope project` in each repo; after one is retired,
+  `claude plugin uninstall <id> --scope project`.
 - **A sync writes the working tree, not the last commit.** With unfinished work under `shared/`, commit first or sync
   from a clean clone of the commit, or the unfinished files land in all three repos.
 - **A missing template key stops a repo's sync before anything is written.** A new `{{key}}` needs a value in all four
   `repo.json` files, this repo's included.
-- **A new shared skill or rule must be allowed in alfred-code's `.gitignore`**, which ignores `.claude/` except the
-  paths it lists; the sync names such a file as 'ignored by git'.
-- **Skills, rules and agents load at session start.** After a sync that adds one, restart the session to see it here.
+- **A new shared skill, rule or agent must be allowed in alfred-code's `.gitignore`**, which ignores `.claude/` except
+  the paths it lists; the sync names such a file as 'ignored by git'.
+- **Rules load at session start; a skill or an agent is picked up live.** After a sync that adds a rule, restart the
+  session to see it here. A synced skill or agent needs no restart unless `.claude/skills/` or `.claude/agents/` did
+  not exist when the session started; when one does not appear, restart (read 2026-11-17,
+  https://code.claude.com/docs/en/skills and https://code.claude.com/docs/en/sub-agents).
 - **`AGENTS.md` is the instruction file in all four repos, at the root.** Never add a `CLAUDE.md`, `.claude/CLAUDE.md`
   or `CLAUDE.local.md` beside it: Claude Code then stops reading `AGENTS.md` without a word (checked 2026-11-15,
   Claude Code 2.1.325, https://code.claude.com/docs/en/memory). `kit:check` fails when one appears.
@@ -70,10 +72,29 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 - **The order of a shared change:** edit under `shared/`, `npm run check`, commit here, `npm run sync`,
   `npm run kit:check` in each plugin repo, then one commit in each (`chore(kit): sync to claude-kit <sha>`).
-- **Branches.** `main` is the only branch. Commit or push only on the user's word.
+- **Branches.** `main` is the only branch. Commit or push only on the user's word. A `solve-task` run the user
+  started - `/solve-task`, or asking for it in their words - has that word for its local commits, never for a push;
+  a run the session loaded by itself does not.
 - **Commits.** `type(scope): what is now true`, as the log has it, with no trace of the agent - no co-author trailer,
   session link or 'Generated with' line. The rule is `shared/rules/commits.md`, the same in all four repos.
 - **Voice.** Direct and lean, single dashes, single quotes in prose; recommend one option with a reason.
+
+## Rules and skills
+
+Six rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
+from `.claude/rules/`:
+
+- `shared/rules/execution.md.tmpl` - one agent or several, the short plan, the check tiers and the close.
+- `shared/rules/refining-plans.md` - a spec or plan is graded before the user is asked to review it.
+- `shared/rules/plan-approval.md` - `auto_approve` decides who approves a draft: the run or the user.
+- `shared/rules/auto-run.md` - when the `auto-run` skill loads: the user is away, or `auto_run=on`.
+- `shared/rules/superpowers-location.md` - what the superpowers skills write goes under `docs/superpowers/`.
+- `shared/rules/commits.md` - the Commits line above.
+
+The other four rules there attach by path, and each exists to load its skills when a matching file is touched.
+
+Procedures live in skills, under `shared/skills/`: `solve-task` runs a change of more than a sentence end to end -
+spec, plan, build, checks, review. The `repo-audit-*` audits are the user's to start (`README.md`).
 
 ## Related repos
 
