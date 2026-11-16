@@ -1,5 +1,6 @@
 {
   "auto_run": "on",
   "plan_model": "fable",
-  "review_model": "fable"
+  "review_model": "fable",
+  "auto_approve": "on"
 }
