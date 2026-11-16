@@ -141,6 +141,58 @@
       ]
     },
     {
+      "id": "saved-setting-contract",
+      "why": "Each always-on rule that reads a kit setting says, for its own setting, how the user's word about it is saved, and the two skills repeat it for a switch said after they loaded. The four rules load together, so one rule could hold it once - a split that is the user's to decide (rules audit, 2026-11-17).",
+      "owner": {
+        "site": "shared/rules/auto-run.md",
+        "markers": [
+          "in every session until it is changed",
+          "the status hook saved it",
+          "say what it printed"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/refining-plans.md",
+          "markers": [
+            "in every session until it is changed",
+            "the status hook saved it",
+            "say what it printed"
+          ]
+        },
+        {
+          "site": "shared/rules/plan-approval.md",
+          "markers": [
+            "in every session until it is changed",
+            "the status hook saved it",
+            "say what it printed"
+          ]
+        },
+        {
+          "site": "shared/rules/execution.md.tmpl",
+          "markers": [
+            "in every session until it is changed",
+            "the status hook saved it",
+            "say what it printed"
+          ]
+        },
+        {
+          "site": "shared/skills/auto-run/SKILL.md",
+          "markers": [
+            "in every session until it is changed",
+            "the status hook saved it",
+            "say what it printed"
+          ]
+        },
+        {
+          "site": "shared/skills/refining-plans/SKILL.md",
+          "markers": [
+            "the status hook saved it"
+          ]
+        }
+      ]
+    },
+    {
       "id": "plan-reviewer-contract",
       "why": "The refining-plans skill still sends a general-purpose reviewer this prompt, and the plan-grader agent carries the same contract as its own prompt until the two are compared on one sample.",
       "owner": {
@@ -395,6 +447,50 @@
           "markers": [
             "Rank the dimension deductions by points lost. Fix the largest first.",
             "Do not declare an A you did not earn."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "project-structure-load",
+      "why": "The javascript and typescript rules load project-structure with every file they attach to, whatever its folder (the user, 2026-11-15), and the project-structure rule keeps its own paths, so all three name the load.",
+      "owner": {
+        "site": "shared/rules/project-structure.md.tmpl",
+        "markers": [
+          "where a file, a function, a constant or a type goes"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/javascript.md",
+          "markers": [
+            "where a file, a function, a constant or a type goes"
+          ]
+        },
+        {
+          "site": "shared/rules/typescript.md",
+          "markers": [
+            "where a file, a function, a constant or a type goes"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plan-approval-who-approves",
+      "why": "The skills that hand a draft over point at the plan-approval rule; the auto-run skill also repeats its two branches under 'What still stops', where a run looks for what it may not decide.",
+      "owner": {
+        "site": "shared/rules/plan-approval.md",
+        "markers": [
+          "`auto_approve=on`: the run approves the draft",
+          "`auto_approve=off`: the draft waits for the user"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/auto-run/SKILL.md",
+          "markers": [
+            "`auto_approve=on`: the run approves the draft",
+            "`auto_approve=off`: the draft waits for the user"
           ]
         }
       ]
