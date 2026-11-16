@@ -16,8 +16,10 @@ an unresolved DRIFTED finding blocks the artifact from A.
    tradeoffs, forbidden patterns) has no external truth to check - skip it.
 3. **Verify, bounded**: group the claims by library; per library, one `resolve-library-id` plus
    at most 2-3 `query-docs` calls covering the whole batch. Cap ~15 libraries per run - the long
-   tail rolls to the next audit and is listed as unchecked. Documentation server unreachable: mark the whole
-   check SKIPPED in the report and move on; never substitute recall for the lookup.
+   tail rolls to the next audit and is listed as unchecked. Documentation server unreachable, or not among this
+   seat's tools: fetch the official page itself - its `.md` form where the site serves one - and quote the line
+   found, saying in the report that the lookup went to the page. Mark the whole check SKIPPED in the report only
+   when neither can be reached, and move on; never substitute recall for the lookup.
 4. **Verdict per claim**: CURRENT (docs agree) | DRIFTED (docs contradict - a MATERIAL finding)
    | UNVERIFIABLE (docs silent - recorded, not a finding). Record the table (library, claim,
    verdict, evidence line) in the baseline report.

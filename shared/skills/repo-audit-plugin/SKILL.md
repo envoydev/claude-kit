@@ -112,7 +112,8 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    audit skill's goal and the baseline report. A revision the grader asks for is the planner's: send it the findings with SendMessage, never
    rewrite the plan here. Keep the score path.
 8. **The ask.** A report-only run prints the report and the plan's path and stops here. Otherwise show one row per
-   item - baseline grade, planned edits, expected grade - then:
+   item - baseline grade, planned edits, expected grade - and name every edit that stands on a ruling taken under
+   auto-run, with its `New` text and whether it can be struck alone: the user has not seen that answer. Then:
 
    ```ask
    Apply the audit plan - <N> edits in <M> files? Plan: <path>. Plan grade: <score path, or 'ungraded - <why>'>.
@@ -121,7 +122,10 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    - 'Report only' - nothing is edited; the report and the plan stay in the run folder
    ```
 
-9. **Edit.** Repeat step 7's freshness check when the ask waited on the user. That check makes the plan's `Baseline`
+9. **Edit.** Repeat step 7's freshness check when the ask waited on the user. After a 'Pick', first send the plan
+   back to its author - the planner, or this session for a `retro-plan.md` - which moves the edits not picked out
+   of `Edits`, proves the rest again and replaces the plan's expected files and checks, as the plan format says.
+   The freshness check makes the plan's `Baseline`
    revision the snapshot the audit skill asks for: `git checkout <revision> -- <path>` restores a file, and the report
    gives the revision as the snapshot location. Where the audit skill names a snapshot folder, or the plan edits a
    file git does not track, copy each file the plan edits there first (`snapshot/` in the run folder where no folder

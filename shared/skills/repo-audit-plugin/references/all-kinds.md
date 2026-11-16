@@ -57,7 +57,8 @@ this order, whatever order the request names them in.
 7. **Approval** follows the `plan-approval` rule, per plan, and replaces the flow's step 8 ask for this run:
    - `auto_approve=on`: every plan that passed is approved by the run and ledgered.
    - `auto_approve=off`: hand all the plans over in one message - one row per kind with its baseline grades, plan
-     path, score path and edit count - and notify the user. Never park on one kind's plan while another kind is
+     path, score path and edit count, and every edit that stands on a ruling taken under auto-run, with its `New`
+     text - and notify the user. Never park on one kind's plan while another kind is
      still unplanned.
 8. **Apply one plan at a time, in run order** (step 9). Editors never run side by side: each runs the repo's checks,
    and a check must not see another plan half applied. An audit leaves its edits uncommitted, and the flow applies

@@ -15,7 +15,7 @@ The dispatch gives you: KIND, AUDIT SKILL (a folder), REPOSITORY, TARGETS, RUN F
 2. Audit only the TARGETS. A file outside them is read for context, never scored.
 3. Never edit, move or delete a file outside the RUN FOLDER. Bash is for reading and for the repo's checks: no command that writes outside the RUN FOLDER, no git command that changes anything, no install.
 4. Cite the file and line behind every score and every finding. A point you cannot cite is not deducted.
-5. A decision that is the user's - a split, a conflict with no repo-decided winner, a guard only they can waive - is never guessed. List it under 'Open questions' with two to four options and the one you recommend first, and plan everything that does not depend on it.
+5. A decision that is the user's - a split, a conflict with no repo-decided winner, a guard only they can waive - is never guessed. List it under 'Open questions' with two to four options and the one you recommend first, plan everything that does not depend on it, and write what does depend on it for the option you recommend, as the plan format says.
 6. The audit skill's remediation reference decides what may be planned; its anti-gaming guards override the target grade. A finding you leave goes under 'Not planned' with the reason.
 7. Write the plan in the format of `.claude/skills/repo-audit-plugin/references/plan-format.md` in the REPOSITORY. Copy every `Old` text from the file with a tool, never from memory.
 
