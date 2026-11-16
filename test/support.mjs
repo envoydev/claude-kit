@@ -59,3 +59,88 @@ export function readJson(file)
 {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
+
+export const agentFile = (model) => `---\nname: seat\nmodel: ${model}\n---\n\nBody.\n`;
+export const AGENTS = {
+    '.claude/agents/plan-grader.md': agentFile('opus'),
+    '.claude/agents/audit-planner.md': agentFile('opus'),
+    '.claude/agents/audit-editor.md': agentFile('sonnet'),
+};
+
+function copyScripts(repo, scripts)
+{
+    fs.mkdirSync(path.join(repo, '.claude/kit'), { recursive: true });
+    for (const script of scripts)
+        fs.copyFileSync(path.join(REAL_KIT, 'bin', script), path.join(repo, '.claude/kit', script));
+}
+
+// A repo with the three agent files and settings.mjs's scripts copied into .claude/kit, as a sync leaves them.
+export function makeSettingsRepo(t, files = AGENTS)
+{
+    const repo = makeTempDir(t, 'settings');
+    writeFiles(repo, files);
+    copyScripts(repo, ['settings.mjs', 'kit-settings.mjs', 'constants.mjs']);
+    return repo;
+}
+
+export function runSettings(repo, args, variables = {})
+{
+    return runNode(path.join(repo, '.claude/kit/settings.mjs'), args, { env: { PATH: process.env.PATH, ...variables } });
+}
+
+// Runs with only the variables the test names, so a KIT_* value of the session running the suite cannot leak in.
+export function printSettings(repo, variables = {})
+{
+    const result = runSettings(repo, [], variables);
+    const lines = Object.fromEntries(result.stdout.trimEnd().split('\n').map((line) =>
+    {
+        const separator = line.indexOf(': ');
+        return [line.slice(0, separator), line.slice(separator + 2)];
+    }));
+    return { status: result.status, lines };
+}
+
+// A repo with the three agent files and the status hook's scripts copied into .claude/kit, as a sync leaves them.
+export function makeHookRepo(t, files = {})
+{
+    const repo = makeTempDir(t, 'hook');
+    writeFiles(repo, { ...AGENTS, ...files });
+    copyScripts(repo, ['status-hook.mjs', 'kit-settings.mjs', 'constants.mjs']);
+    return repo;
+}
+
+// Feeds the hook script its stdin and returns what it printed, parsed. Only the named variables are in its environment.
+export function runHookScript(script, hookInput, variables = {})
+{
+    const result = spawnSync(process.execPath, [script], {
+        input: typeof hookInput === 'string' ? hookInput : JSON.stringify(hookInput),
+        env: { PATH: process.env.PATH, ...variables },
+        encoding: 'utf8',
+    });
+    return { status: result.status, stdout: result.stdout, stderr: result.stderr, output: result.stdout.trim() ? JSON.parse(result.stdout) : null };
+}
+
+export const runHook = (repo, hookInput, variables = {}) => runHookScript(path.join(repo, '.claude/kit/status-hook.mjs'), hookInput, variables);
+
+// A folder cannot be made read-only on Windows, and root writes into one anyway.
+export const cannotLockFolders = () => process.platform === 'win32' || process.getuid?.() === 0;
+
+export const promptInput = (prompt = 'fix the lint') => ({
+    session_id: 'session-1',
+    hook_event_name: 'UserPromptSubmit',
+    prompt,
+});
+
+export const KIT_FILE = '.claude/kit/settings.json';
+export const readKitFile = (repo) => JSON.parse(fs.readFileSync(path.join(repo, KIT_FILE), 'utf8'));
+export const kitFileExists = (repo) => fs.existsSync(path.join(repo, KIT_FILE));
+
+// A sibling repo of `repo`, the folder `<repo>/../<name>`, with the files the test names. The name is unique to the repo.
+export function makeSibling(t, repo, files)
+{
+    const name = `sibling-${path.basename(repo)}`;
+    const folder = path.join(path.dirname(repo), name);
+    t.after(() => fs.rmSync(folder, { recursive: true, force: true }));
+    writeFiles(folder, files);
+    return name;
+}

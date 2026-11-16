@@ -3,7 +3,7 @@
   "agents_md": "AGENTS.md",
   "check_batch": "`npm run check`, and `npm test` after a change under `bin/`, read for the change just made and nothing else",
   "check_once": "`npm run sync`, then `npm run kit:check` in each plugin repo",
-  "not_for": "Not for a file a plugin repo owns (its `CLAUDE.md`, `repo-*` rules and skills, `repo.json`), which is changed in that repo.",
+  "not_for": "Not for a file a plugin repo owns (its `AGENTS.md`, `repo-*` rules and skills, `repo.json`), which is changed in that repo.",
   "settled": "A design already settled by the user's rulings skips the spec and goes to the plan.",
   "checks": [
     "   - per batch: `npm run check`, read for the change just made and nothing else;",
@@ -41,7 +41,7 @@
         "javascript, typescript, ts-js-testing, npm, markdown-style and code-comments began as copies of Alfred Code stack skills and have diverged; alfred-code's stack/skills copies are that repo's product and are not kept in step from here.",
         "A fix lands under shared/skills, never in a .claude/ copy; after it, npm run sync and one commit in each of the three repos.",
         "No usage ledger exists for these skills.",
-        "The multi-home registry is copies.json at the kit's root: the auto-run, refining-plans and typescript SKILL.md files own text their rules repeat on purpose, each pinned by marker phrases. A pass that rewords such text updates the copies and the registry in the same pass; no check reads it yet."
+        "The multi-home registry is copies.json at the kit's root: the auto-run, refining-plans and typescript SKILL.md files own text their rules repeat on purpose, the refining-plans reviewer prompt owns the contract the plan-grader agent repeats, and repo-audit-skills and repo-audit-rules own the six blocks the audit family shares - each pinned by marker phrases. A pass that rewords such text updates the copies and the registry in the same pass; `node .claude/kit/check.mjs` fails here when a site lacks one of its markers, and when a skill's description is not one line of at most 160 characters."
       ]
     },
     "agents": {
@@ -69,7 +69,7 @@
         "Rules without a paths field load in every session of all four repos: auto-run, commits, execution, refining-plans, superpowers-location. execution.md.tmpl is a template whose check_batch and check_once come from each repo's repo.json. The path-scoped ones - javascript, typescript, skill-authoring, project-structure - each exist to load their skill; project-structure.md.tmpl is a template whose paths are each repo's structure_paths.",
         "No always-on budget is enforced here; alfred-code's lint budget covers its stack rules, not these.",
         "The instruction file every rule sits beside is AGENTS.md at each repo's root, never a CLAUDE.md.",
-        "The multi-home registry is copies.json at the kit's root: each text kept on purpose in more than one file - a rule and its skill, a rule and each repo's AGENTS.md, the load contract the path-scoped rules share - with its owner, every copy and the marker phrases each site keeps. A pass that adds, moves or rewords such text updates it in the same pass; no check reads it yet."
+        "The multi-home registry is copies.json at the kit's root: each text kept on purpose in more than one file - a rule and its skill, a rule and each repo's AGENTS.md, the load contract the path-scoped rules share - with its owner, every copy and the marker phrases each site keeps. A pass that adds, moves or rewords such text updates it in the same pass; `node .claude/kit/check.mjs` fails here when a site lacks one of its markers."
       ]
     },
     "agent-md": {
@@ -83,7 +83,7 @@
         "This repo ships no instruction template: AGENTS.md is its own instruction file and is the audit target. There is no installer, seed or fill skill.",
         "Claude Code reads it only while no CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md exists; check.mjs fails when one does.",
         "README.md holds the mechanism in full - the shared paths, the templates, the audit map. AGENTS.md is the hub and points at it instead of repeating it.",
-        "The multi-home registry is copies.json at the kit's root: AGENTS.md here and in each plugin repo keeps a registered copy of the commits rule, pinned by marker phrases. A pass that rewords it keeps those markers, or changes the owner rule and the registry with it in the same pass; no check reads it yet."
+        "The multi-home registry is copies.json at the kit's root: AGENTS.md here and in each plugin repo keeps a registered copy of the commits rule, pinned by marker phrases. A pass that rewords it keeps those markers, or changes the owner rule and the registry with it in the same pass; `node .claude/kit/check.mjs` fails here when a site lacks one of its markers."
       ]
     },
     "hooks": {
@@ -94,7 +94,7 @@
         "npm test"
       ],
       "notes": [
-        "One hook, by the user's request of 2026-11-15, which replaced that morning's no-hook decision: bin/status-hook.mjs, a UserPromptSubmit command hook wired in shared/settings.base.json and merged into each repo's .claude/settings.json by bin/sync.ts, which recognises a kit hook by the .claude/kit/ path in its command. It shows one status line to the user and the same values to Claude, records a request that starts with 'stop auto run' or 'stop scoring' in the session's kit-session.md, and never blocks a request; test/status-hook.test.mjs covers it. Any other hook still waits for a rule that is seen to fail. The audit also covers the hooks that enabled plugins bring into a session here: the plugins in .claude/settings.json enabledPlugins and those enabled at user scope."
+        "One hook, by the user's request of 2026-11-15, which replaced that morning's no-hook decision: bin/status-hook.mjs, a UserPromptSubmit command hook wired in shared/settings.base.json and merged into each repo's .claude/settings.json by bin/sync.ts, which recognises a kit hook by the .claude/kit/ path in its command. It shows one status line to the user and the same values to Claude, saves in .claude/kit/settings.json a request whose first line is only words to switch auto-run or scoring or to name a role's model ('plan model fable'), where it holds until it is changed, and never blocks a request; test/status-hook.test.mjs and test/status-hook-models.test.mjs cover it. Any other hook still waits for a rule that is seen to fail. The audit also covers the hooks that enabled plugins bring into a session here: the plugins in .claude/settings.json enabledPlugins and those enabled at user scope."
       ]
     }
   }

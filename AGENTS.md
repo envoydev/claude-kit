@@ -14,7 +14,7 @@ templates and the `audit` map.
 ```bash
 npm run check                # what a sync would change here and in the three repos; writes nothing, exit 1 on a difference
 npm run sync                 # write the shared files here and into ../alfred-code, ../alfred-mods, ../alfred-tools
-node .claude/kit/check.mjs   # this repo's own copies still match the lock, and no CLAUDE.md hides this file
+node .claude/kit/check.mjs   # copies match the lock, no CLAUDE.md here, copies.json markers hold, descriptions fit 160
 npm test                     # the three scripts under bin/, run against throwaway kits and repos in temp folders
 ```
 
@@ -40,8 +40,8 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
   `bin/constants.mjs`, `bin/settings.mjs` and `bin/status-hook.mjs` (copied too: the `KIT_*` settings resolved,
   printed, and shown with every request by the one hook the kit shares, and the named values they share),
   `bin/kit-readme.md` (copied as `.claude/kit/README.md`).
-- `.claude/` - this repo's own copy of the shared files, so a session here loads them. Only `settings.json` and
-  `kit/repo.json` are tracked; `rules/`, `skills/`, `agents/` and the rest of `kit/` are git-ignored copies.
+- `.claude/` - this repo's own copy of the shared files, so a session here loads them. Only `settings.json`,
+  `kit/repo.json` and `kit/settings.json` (this repo's saved kit settings, once one is set) are tracked; `rules/`, `skills/`, `agents/` and the rest of `kit/` are git-ignored copies.
 
 ## Invariants
 

@@ -1,38 +1,7 @@
-// bin/settings.mjs, run where it lives in a synced repo: .claude/kit/settings.mjs.
+// bin/settings.mjs, run where it lives in a synced repo: .claude/kit/settings.mjs - printing the values from the variables.
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import { test } from 'node:test';
-import { REAL_KIT, makeTempDir, runNode, writeFiles } from './support.mjs';
-
-const agentFile = (model) => `---\nname: seat\nmodel: ${model}\n---\n\nBody.\n`;
-const AGENTS = {
-    '.claude/agents/plan-grader.md': agentFile('opus'),
-    '.claude/agents/audit-planner.md': agentFile('opus'),
-    '.claude/agents/audit-editor.md': agentFile('sonnet'),
-};
-
-function makeSettingsRepo(t, files = AGENTS)
-{
-    const repo = makeTempDir(t, 'settings');
-    writeFiles(repo, files);
-    fs.mkdirSync(path.join(repo, '.claude/kit'), { recursive: true });
-    for (const script of ['settings.mjs', 'kit-settings.mjs', 'constants.mjs'])
-        fs.copyFileSync(path.join(REAL_KIT, 'bin', script), path.join(repo, '.claude/kit', script));
-    return repo;
-}
-
-// Runs with only the variables the test names, so a KIT_* value of the session running the suite cannot leak in.
-function printSettings(repo, variables = {})
-{
-    const result = runNode(path.join(repo, '.claude/kit/settings.mjs'), [], { env: { PATH: process.env.PATH, ...variables } });
-    const lines = Object.fromEntries(result.stdout.trimEnd().split('\n').map((line) =>
-    {
-        const separator = line.indexOf(': ');
-        return [line.slice(0, separator), line.slice(separator + 2)];
-    }));
-    return { status: result.status, lines };
-}
+import { AGENTS, agentFile, makeSettingsRepo, printSettings } from './support.mjs';
 
 test('with no variable set it prints the defaults and the model each agent file names', (t) =>
 {

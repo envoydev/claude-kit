@@ -8,9 +8,9 @@
 //   - every file in a folder under shared/ (rules/, skills/, agents/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
-//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the four role models
-//     and the standing switches a session's settings carry (the KIT_* variables), printed for the skills that read
-//     them and added to every request by the UserPromptSubmit hook;
+//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the four role
+//     models and the two switches the repo's .claude/kit/settings.json and the KIT_* variables carry, printed and saved
+//     for the skills that read them and added to every request by the UserPromptSubmit hook;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
 //     plugins switched on beside the repo's own, the kit's hooks added after the repo's own for each event, every
 //     other key the base carries taken from it and the rest the repo's;
@@ -19,7 +19,8 @@
 //   - shared/retired.json names the plugins and MCP servers the kit shared once and dropped: both merges only add,
 //     so each sync takes those out of the project's settings and .mcp.json. An install record is left to the CLI.
 // The kit's own dir (.) takes the same files, so a session in it loads the rules and skills it shares. They are
-// copies of shared/ and git-ignored there; only its settings and its .claude/kit/repo.json are tracked.
+// copies of shared/ and git-ignored there; only its settings, its .claude/kit/repo.json and its .claude/kit/settings.json
+// are tracked.
 // A file an older sync wrote that the kit no longer has is removed while it still hashes to its lock entry;
 // one edited since is kept and named. A managed file the repo's .gitignore hides is named too.
 //

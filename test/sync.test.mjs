@@ -119,6 +119,24 @@ test('a second sync, and a --check after it, find the repo current', (t) =>
     assert.match(check.stdout, /: current \(check only\)$/m);
 });
 
+test("the kit's own settings file in a repo is left alone: byte for byte, and no change under --check or a sync", (t) =>
+{
+    const kit = makeKit(t, SHARED);
+    const content = '{\n    "plan_model": "fable",\n    "note": "kept as written"\n}\n';
+    const repo = makeRepo(t, { ...REPO_VARS, '.claude/kit/settings.json': content });
+
+    const before = sync(kit, '--check', repo);
+    const synced = sync(kit, repo);
+    const after = sync(kit, '--check', repo);
+
+    for (const result of [before, synced, after])
+        assert.doesNotMatch(result.stdout, /\.claude\/kit\/settings\.json/);
+    assert.equal(synced.status, 0, synced.stderr);
+    assert.equal(after.status, 0, after.stdout);
+    assert.equal(read(repo, '.claude/kit/settings.json'), content);
+    assert.equal(Object.keys(readJson(path.join(repo, '.claude/kit/lock.json')).files).includes('.claude/kit/settings.json'), false);
+});
+
 test("the settings merge keeps the repo's own keys, joins the deny list and drops a retired plugin", (t) =>
 {
     const kit = makeKit(t, SHARED);

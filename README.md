@@ -39,63 +39,72 @@ graders and catalogs, one sentence each). A kind with no entry is reported as no
 
 `copies.json` at the root is this repo's registry of text kept on purpose in more than one file - a rule and its skill,
 a rule and each repo's `AGENTS.md`: each entry names the owner, every copy and the marker phrases each keeps, so an
-audit reads a registered copy as deliberate and a reworded one shows. No script checks it yet.
+audit reads a registered copy as deliberate and a reworded one shows. `node .claude/kit/check.mjs` reads it here and
+fails when a site lacks one of its markers; a line wrap inside a marker counts as a space.
 
 This repo takes the same files into its own `.claude/`, so a session here loads the rules and skills it shares. Those
 copies are git-ignored - `shared/` is their one home - so a fresh clone runs `npm run sync` once to get them, and an
-edit goes into `shared/`, never into the copy. Only `.claude/settings.json` and `.claude/kit/repo.json` (this repo's
-own template values) are tracked.
+edit goes into `shared/`, never into the copy. Only `.claude/settings.json`, `.claude/kit/repo.json` (this repo's
+own template values) and `.claude/kit/settings.json` (its saved kit settings, once one is set) are tracked.
 
 Each repo keeps its own `AGENTS.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
 that repo's layout, commands and release path.
 
 ## Settings a project can change
 
-The pass score, four models and two standing switches come from the `env` block of a Claude Code settings file.
-The status hook (`.claude/kit/status-hook.mjs`, a `UserPromptSubmit` hook) shows them with every request - one line
-for the user, the same values with their sources for Claude - so neither a new session nor a compacted one has to
-remember them. `node .claude/kit/settings.mjs` prints them on demand.
+Seven values - the pass score, four models and two switches - live in the kit's own file, `.claude/kit/settings.json`,
+which the chat writes: say 'plan model fable' or 'stop scoring' and it is saved there until it is changed. The status
+hook (`.claude/kit/status-hook.mjs`, a `UserPromptSubmit` hook) shows them with every request - one line for the
+user, the same values with their sources for Claude - so neither a new session nor a compacted one has to remember
+them. `node .claude/kit/settings.mjs` prints them on demand.
 
 ```text
 kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement sonnet | search haiku
 ```
 
-| Variable | What it sets | Without it |
-|---|---|---|
-| `KIT_PASS_SCORE` | the score `refining-plans` grades a spec or plan to, a whole number from 1 to 100 | 90 |
-| `KIT_PLAN_MODEL` | the model that writes plans: the `audit-planner` agent, the plan step of `solve-task` | the `audit-planner` agent's own (opus) |
-| `KIT_REVIEW_MODEL` | the model that reviews: the `refining-plans` reviewer, the review step of `solve-task` | the `plan-grader` agent's own (opus) |
-| `KIT_IMPLEMENT_MODEL` | the model that implements: the `audit-editor` agent, the build step of `solve-task` | the `audit-editor` agent's own (sonnet) |
-| `KIT_SEARCH_MODEL` | the model that searches the code for the other three in `solve-task` - where a thing is, what calls it - and reports paths and lines | haiku |
-| `KIT_SCORING=off` | the grading of specs and plans is off in every session that is not told to turn it on | on |
-| `KIT_AUTO_RUN=on` | auto-run is on from a session's first ask, until the session is told to turn it off | off |
+| Name | Variable | What it sets | Without it |
+|---|---|---|---|
+| `pass_score` | `KIT_PASS_SCORE` | the score `refining-plans` grades a spec or plan to, a whole number from 1 to 100 | 90 |
+| `plan_model` | `KIT_PLAN_MODEL` | the model that writes plans: the `audit-planner` agent, the plan step of `solve-task` | the `audit-planner` agent's own (opus) |
+| `review_model` | `KIT_REVIEW_MODEL` | the model that reviews: the `refining-plans` reviewer, the review step of `solve-task` | the `plan-grader` agent's own (opus) |
+| `implement_model` | `KIT_IMPLEMENT_MODEL` | the model that implements: the `audit-editor` agent, the build step of `solve-task` | the `audit-editor` agent's own (sonnet) |
+| `search_model` | `KIT_SEARCH_MODEL` | the model that searches the code for the other three in `solve-task` - where a thing is, what calls it - and reports paths and lines | haiku |
+| `scoring` | `KIT_SCORING` | whether specs and plans are graded, `on` or `off` | on |
+| `auto_run` | `KIT_AUTO_RUN` | whether a session runs in auto-run from its first ask, `on` or `off` | off |
 
 ```json
-{ "env": { "KIT_PASS_SCORE": "95", "KIT_PLAN_MODEL": "fable", "KIT_IMPLEMENT_MODEL": "sonnet" } }
+{ "plan_model": "fable", "review_model": "fable", "pass_score": 95, "auto_run": "on" }
 ```
 
-- The pass score and `KIT_SCORING` govern the grade of a spec or a plan, an audit's edit plan included. An audit's own
+- `.claude/kit/settings.json` is committed with the repo, so a value never has to go into a Claude Code settings file
+  that may hold a key or a token. `node .claude/kit/settings.mjs set plan_model fable` writes one name and `unset
+  plan_model` removes it; the sync never touches the file.
+- What the user sets in chat is saved there and holds in every session until it is changed (the user's ruling,
+  2026-11-16, which replaced the per-session switches of 2026-11-15). A request whose first line is only
+  words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto run off' - or to name a
+  role's model - 'plan model fable', 'plan model and scoring models fable', 'edit with haiku' - is saved by the hook
+  itself, and Claude's values for that request say `saved: plan_model=fable in .claude/kit/settings.json`, or why it
+  was not saved. Said any other way - inside a longer sentence, as a question - the hook saves nothing and Claude
+  runs the `set` command. The hook never blocks a request: when it fails, it says
+  so in the debug log and the request goes through.
+- A value is the kit's file, else the `KIT_*` variable from the `env` block of a Claude Code settings file, else the
+  default. A value the script cannot use falls back to the next source, and its line says why.
+- The file is read with every request, so a change counts at once in every open session of the repo.
+- Because the file is committed, everyone who works in a clone runs with its values, `auto_run` and `scoring`
+  included (the user's choice, 2026-11-16). The variables keep the older rule: `KIT_SCORING` and `KIT_AUTO_RUN` count
+  only from a file that is not committed - `.claude/settings.local.json` or `~/.claude/settings.json` - and the
+  script ignores one in `.claude/settings.json`. The other five variables may go in any settings file; the sync
+  leaves a repo's `env` block alone.
+- The pass score and scoring govern the grade of a spec or a plan, an audit's edit plan included. An audit's own
   score of each file, and its grade A bar, belong to the audit skill and are never switched off.
-- A model is `sonnet`, `opus`, `haiku` or `fable`; a value the script cannot use falls back to the default, and
-  its line says why.
-- The four models are what a step is dispatched on, not what the chat session runs on: a session cannot change its
-  own model. A step whose model is the session's own runs there; any other goes to an agent with that model, and the
-  closing report names the model each step actually ran on.
-- The first five go in a repo's committed `.claude/settings.json`, or in `~/.claude/settings.json` for every project
-  on the machine. The sync leaves a repo's `env` block alone.
-- `KIT_SCORING` and `KIT_AUTO_RUN` switch a safeguard off, so they count only from a file that is not committed -
-  `.claude/settings.local.json` or `~/.claude/settings.json`. The script ignores one in `.claude/settings.json`.
-- Claude Code applies a new or changed value to sessions that are already open, but a deleted variable stays set in
-  them until they restart. To switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value (`off`, `on`)
-  instead of deleting the line. A session already running under auto-run stops only when it is told to ('stop auto
-  run', 'turn off auto run') or on a restart.
-- What the user says in a session - 'auto mode', 'turn off auto run', 'stop scoring', 'enable scoring', 'grade it to
-  95', 'audit with fable' - outranks the settings for that session, in both directions (the user's ruling,
-  2026-11-15). A switch goes into `kit-session.md` in the session's own scratchpad folder, which no other session
-  shares, and a run's values into its `run.md`, so a compaction keeps them.
-- A request that opens with words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto
-  run off' - is recorded by the hook itself; said any other way, Claude writes the same line. The hook never blocks a
-  request: when it fails, it says so in the debug log and the request goes through.
+- A model is `sonnet`, `opus`, `haiku` or `fable`. The four models are what a step is dispatched on, not what the
+  chat session runs on: a session cannot change its own model. A step whose model is the session's own runs there;
+  any other goes to an agent with that model, and the closing report names the model each step actually ran on.
+- Claude Code applies a new or changed variable to sessions that are already open, but a deleted one stays set in
+  them until they restart: to switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value instead of
+  deleting the line - or save the value in the kit's file, which outranks it.
+- A value meant for one run only - 'grade this one to 95' - goes into that run's `run.md`, not into the file, so a
+  compaction keeps it and the next run does not inherit it.
 
 ## Use
 

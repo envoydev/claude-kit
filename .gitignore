@@ -12,3 +12,4 @@ docs/superpowers/
 .claude/agents/
 .claude/kit/*
 !.claude/kit/repo.json
+!.claude/kit/settings.json
