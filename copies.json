@@ -166,11 +166,11 @@
     },
     {
       "id": "audit-flow-handoff",
-      "why": "Each repo-audit-* skill runs alone and never loads a sibling's file, so each carries the paragraph that hands its run to repo-audit-flow; the system audit keeps its first sentence.",
+      "why": "Each repo-audit-* skill runs alone and never loads a sibling's file, so each carries the paragraph that hands its run to the flow in repo-audit-plugin; the system audit keeps its first sentence.",
       "owner": {
         "site": "shared/skills/repo-audit-skills/SKILL.md",
         "markers": [
-          "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+          "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
           "stop the flow adds is its ask before any edit lands"
         ]
       },
@@ -178,48 +178,48 @@
         {
           "site": "shared/skills/repo-audit-agent-md/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stop the flow adds is its ask before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-agents/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stop the flow adds is its ask before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-hooks/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stop the flow adds is its ask before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-tools/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stop the flow adds is its ask before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-rules/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stop the flow adds is its ask before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-system/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it"
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow"
           ]
         },
         {
           "site": "shared/skills/repo-audit-commands/SKILL.md",
           "markers": [
-            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stop the flow adds is its ask before any edit lands"
           ]
         }

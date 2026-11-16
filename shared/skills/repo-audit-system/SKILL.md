@@ -49,7 +49,7 @@ It is this repo's own maintenance tool, not part of the shipped catalog.
 
 ## How the run goes
 
-**Load the `repo-audit-flow` skill before step 1 and run this audit through it.** Its planner seat does Phases 0 to
+**Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow.** Its planner seat does Phases 0 to
 1b and writes the fix list as a plan, Phase 2's one ask is the flow's ask, and its editor seat applies what the answer
 picked before the planner verifies. Autonomous through the report; one ask before any edit; nothing on a machine
 outside the fixtures.

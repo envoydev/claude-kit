@@ -45,7 +45,7 @@ Scope boundary: this audit reads and scores the AGENTS.md or CLAUDE.md template 
 
 ## How the run goes
 
-**Load the `repo-audit-flow` skill before step 1 and run this audit through it.** Its planner seat does Phases 0
+**Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow.** Its planner seat does Phases 0
 to 1b and writes Phase 2's edits as a plan, its editor seat applies them, and the planner does Phase 3. This session
 coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the one
 stop the flow adds is its ask before any edit lands. Stop otherwise only on the stop conditions

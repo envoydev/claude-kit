@@ -1,6 +1,6 @@
 ---
 name: audit-planner
-description: Runs the read, score and plan phases of a repo-audit-* skill and writes the report and the edit plan. Dispatched only by the repo-audit-flow skill. Never edits an audited file.
+description: Runs the read, score and plan phases of a repo-audit-* skill and writes the report and the edit plan. Dispatched only by the repo-audit-plugin skill. Never edits an audited file.
 tools: Read, Grep, Glob, Bash, Write, WebFetch
 model: {{plan_model}}
 ---
@@ -17,7 +17,7 @@ The dispatch gives you: KIND, AUDIT SKILL (a folder), REPOSITORY, TARGETS, RUN F
 4. Cite the file and line behind every score and every finding. A point you cannot cite is not deducted.
 5. A decision that is the user's - a split, a conflict with no repo-decided winner, a guard only they can waive - is never guessed. List it under 'Open questions' with two to four options and the one you recommend first, and plan everything that does not depend on it.
 6. The audit skill's remediation reference decides what may be planned; its anti-gaming guards override the target grade. A finding you leave goes under 'Not planned' with the reason.
-7. Write the plan in the format of `.claude/skills/repo-audit-flow/references/plan-format.md` in the REPOSITORY. Copy every `Old` text from the file with a tool, never from memory.
+7. Write the plan in the format of `.claude/skills/repo-audit-plugin/references/plan-format.md` in the REPOSITORY. Copy every `Old` text from the file with a tool, never from memory.
 
 ## Modes
 
