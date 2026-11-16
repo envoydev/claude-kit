@@ -40,14 +40,15 @@ test('a variable still counts for a name the kit file does not hold', (t) =>
     assert.equal(lines.implement_model, "sonnet (the audit-editor agent's own)");
 });
 
-test('the kit file may switch scoring and auto-run, and outranks their variables', (t) =>
+test('the kit file may switch scoring, auto-run and auto-approve, and outranks their variables', (t) =>
 {
-    const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { scoring: 'off', auto_run: 'on' } });
+    const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { scoring: 'off', auto_run: 'on', auto_approve: 'on' } });
 
-    const { lines } = printSettings(repo, { KIT_SCORING: 'on', KIT_AUTO_RUN: 'off' });
+    const { lines } = printSettings(repo, { KIT_SCORING: 'on', KIT_AUTO_RUN: 'off', KIT_AUTO_APPROVE: 'off' });
 
     assert.equal(lines.scoring, `off (${KIT_FILE})`);
     assert.equal(lines.auto_run, `on (${KIT_FILE})`);
+    assert.equal(lines.auto_approve, `on (${KIT_FILE})`);
 });
 
 test('the kit file outranks a variable the committed settings file names, which is otherwise ignored', (t) =>
@@ -79,6 +80,7 @@ for (const [name, fileValue, variables, expected] of [
     ['scoring', 'maybe', {}, `on (default - scoring="maybe" in ${KIT_FILE} ${SWITCH_REASON})`],
     ['scoring', true, { KIT_SCORING: 'off' }, `off (KIT_SCORING - scoring=true in ${KIT_FILE} ${SWITCH_REASON})`],
     ['auto_run', 'yes', {}, `off (default - auto_run="yes" in ${KIT_FILE} ${SWITCH_REASON})`],
+    ['auto_approve', 'always', {}, `off (default - auto_approve="always" in ${KIT_FILE} ${SWITCH_REASON})`],
 ])
 {
     test(`${name}='${fileValue}' in the kit file is unusable: the result falls through and the line says why`, (t) =>
@@ -123,7 +125,13 @@ test('set writes the value, prints where it went and outranks the variable at on
     assert.equal(printSettings(repo, { KIT_PLAN_MODEL: 'haiku' }).lines.plan_model, `fable (${KIT_FILE})`);
 });
 
-for (const [name, value, variables] of [['auto_run', 'on', {}], ['scoring', 'off', {}], ['auto_run', 'off', { KIT_AUTO_RUN: 'on' }]])
+for (const [name, value, variables] of [
+    ['auto_run', 'on', {}],
+    ['scoring', 'off', {}],
+    ['auto_run', 'off', { KIT_AUTO_RUN: 'on' }],
+    ['auto_approve', 'on', {}],
+    ['auto_approve', 'off', { KIT_AUTO_APPROVE: 'on' }],
+])
 {
     test(`set ${name} ${value} writes the switch and prints it, whatever the variable says`, (t) =>
     {
@@ -153,6 +161,7 @@ for (const [label, args, existing] of [
     ['a model the dispatch cannot take', ['set', 'plan_model', 'gpt'], '{"search_model":"opus"}'],
     ['a switch that is neither on nor off', ['set', 'scoring', 'maybe'], '{"search_model":"opus"}'],
     ['an auto-run that is not on or off', ['set', 'auto_run', 'true'], '{"search_model":"opus"}'],
+    ['an auto-approve that is not on or off', ['set', 'auto_approve', 'plans'], '{"search_model":"opus"}'],
     ['a score above 100', ['set', 'pass_score', '101'], '{"search_model":"opus"}'],
     ['a score that is not a number', ['set', 'pass_score', 'ninety'], '{"search_model":"opus"}'],
     ['a file that is a JSON array', ['set', 'plan_model', 'fable'], '[1, 2]'],

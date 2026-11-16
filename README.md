@@ -52,14 +52,14 @@ that repo's layout, commands and release path.
 
 ## Settings a project can change
 
-Seven values - the pass score, four models and two switches - live in the kit's own file, `.claude/kit/settings.json`,
+Eight values - the pass score, four models and three switches - live in the kit's own file, `.claude/kit/settings.json`,
 which the chat writes: say 'plan model fable' or 'stop scoring' and it is saved there until it is changed. The status
 hook (`.claude/kit/status-hook.mjs`, a `UserPromptSubmit` hook) shows them with every request - one line for the
 user, the same values with their sources for Claude - so neither a new session nor a compacted one has to remember
 them. `node .claude/kit/settings.mjs` prints them on demand.
 
 ```text
-kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement sonnet | search haiku
+kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review opus | implement sonnet | search haiku
 ```
 
 | Name | Variable | What it sets | Without it |
@@ -80,8 +80,10 @@ kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement s
   that may hold a key or a token. `node .claude/kit/settings.mjs set plan_model fable` writes one name and `unset
   plan_model` removes it; the sync never touches the file.
 - What the user sets in chat is saved there and holds in every session until it is changed (the user's ruling,
+| `auto_approve` | `KIT_AUTO_APPROVE` | who approves a spec, a design or a plan: `on`, the run does once it is at the pass score; `off`, it waits for the user, who is notified | off |
   2026-11-16, which replaced the per-session switches of 2026-11-15). A request whose first line is only
-  words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto run off' - or to name a
+  words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto run off', 'auto approve
+  on' - or to name a
   role's model - 'plan model fable', 'plan model and scoring models fable', 'edit with haiku' - is saved by the hook
   itself, and Claude's values for that request say `saved: plan_model=fable in .claude/kit/settings.json`, or why it
   was not saved. Said any other way - inside a longer sentence, as a question - the hook saves nothing and Claude
@@ -90,9 +92,9 @@ kit: auto-run off | scoring on (pass 90) | plan opus | review opus | implement s
 - A value is the kit's file, else the `KIT_*` variable from the `env` block of a Claude Code settings file, else the
   default. A value the script cannot use falls back to the next source, and its line says why.
 - The file is read with every request, so a change counts at once in every open session of the repo.
-- Because the file is committed, everyone who works in a clone runs with its values, `auto_run` and `scoring`
-  included (the user's choice, 2026-11-16). The variables keep the older rule: `KIT_SCORING` and `KIT_AUTO_RUN` count
-  only from a file that is not committed - `.claude/settings.local.json` or `~/.claude/settings.json` - and the
+- Because the file is committed, everyone who works in a clone runs with its values, `auto_run`, `auto_approve` and
+  `scoring` included (the user's choice, 2026-11-16). The variables keep the older rule: `KIT_SCORING`, `KIT_AUTO_RUN`
+  and `KIT_AUTO_APPROVE` count only from a file that is not committed - `.claude/settings.local.json` or `~/.claude/settings.json` - and the
   script ignores one in `.claude/settings.json`. The other five variables may go in any settings file; the sync
   leaves a repo's `env` block alone.
 - The pass score and scoring govern the grade of a spec or a plan, an audit's edit plan included. An audit's own

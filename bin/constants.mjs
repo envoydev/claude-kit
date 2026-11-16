@@ -13,6 +13,7 @@ export const VARIABLE = Object.freeze({
     searchModel: 'KIT_SEARCH_MODEL',
     scoring: 'KIT_SCORING',
     autoRun: 'KIT_AUTO_RUN',
+    autoApprove: 'KIT_AUTO_APPROVE',
 });
 
 // The names the resolved settings go by, and the names the kit's own settings file may hold.
@@ -24,6 +25,7 @@ export const SETTING = Object.freeze({
     searchModel: 'search_model',
     scoring: 'scoring',
     autoRun: 'auto_run',
+    autoApprove: 'auto_approve',
 });
 
 export const DEFAULT_PASS_SCORE = 90;
@@ -33,11 +35,13 @@ export const COMMITTED_SETTINGS = '.claude/settings.json';
 
 export const SWITCH = Object.freeze({ on: 'on', off: 'off' });
 
-// The two modes a request can switch, whatever the variables say. `setting` is the mode's name among the settings,
-// `names` are what a request may call it.
+// The three modes a request can switch, whatever the variables say. `setting` is the mode's name among the settings,
+// `names` are what a request may call it. Auto-approve has no 'plan approval' among its names: 'disable plan approval'
+// reads both ways, so the session saves that one, not the hook.
 export const SWITCH_MODES = Object.freeze([
     Object.freeze({ setting: SETTING.autoRun, names: Object.freeze(['auto run', 'auto-run', 'autorun', 'auto mode']) }),
     Object.freeze({ setting: SETTING.scoring, names: Object.freeze(['scoring']) }),
+    Object.freeze({ setting: SETTING.autoApprove, names: Object.freeze(['auto approve', 'auto-approve', 'autoapprove', 'auto approval', 'auto-approval']) }),
 ]);
 // What a request may start with and still count, as a pattern source, and the article its names may carry:
 // 'Please, turn off the scoring'.
@@ -90,7 +94,7 @@ export const VALUE_END = `(?:${BOUNDARY}| (?:${VALUE_TAILS.join('|')})(?:${BOUND
 export const KIT_FOLDER = '.claude/kit';
 export const KIT_SETTINGS_FILE = `${KIT_FOLDER}/settings.json`;
 export const MODEL_SETTINGS = Object.freeze([SETTING.planModel, SETTING.reviewModel, SETTING.implementModel, SETTING.searchModel]);
-export const SWITCH_SETTINGS = Object.freeze([SETTING.scoring, SETTING.autoRun]);
+export const SWITCH_SETTINGS = Object.freeze([SETTING.scoring, SETTING.autoRun, SETTING.autoApprove]);
 export const KIT_FILE_SETTINGS = Object.freeze([...MODEL_SETTINGS, SETTING.passScore, ...SWITCH_SETTINGS]);
 export const MIN_PASS_SCORE = 1;
 export const MAX_PASS_SCORE = 100;

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // Copied into each repo as .claude/kit/status-hook.mjs by claude-kit's sync - edit it in claude-kit, never here.
 //
-// A UserPromptSubmit hook: with every request it shows the user one line - is auto-run on, is scoring on, which
-// model plans, reviews, implements and searches - and gives Claude the same values with their sources, so neither a new
+// A UserPromptSubmit hook: with every request it shows the user one line - is auto-run on, is scoring on, does the run
+// approve its own plans, which model plans, reviews, implements and searches - and gives Claude the same values with their sources, so neither a new
 // session nor a compacted one has to remember them. The values are the kit's file .claude/kit/settings.json, then the
 // KIT_* variables, then the defaults (kit-settings.mjs).
 //
 // A request that opens with words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto
-// run off' - or to name a role's model - 'plan model fable', 'set the review model to sonnet', 'audit with fable' - is
+// run off', 'auto approve on' - or to name a role's model - 'plan model fable', 'set the review model to sonnet', 'audit with fable' - is
 // saved to that file by this hook, and the same request already shows it. What the user says in chat is saved until the
 // user changes it (the user's ruling, 2026-11-16). Only the first line of a request is read, and the words must make up
 // the whole of it - or all of it but a tail like 'for good' or 'please' and what follows punctuation - so a sentence that
@@ -141,10 +141,11 @@ function buildOutput(hookInput, env, root, folder)
     const userLine = [
         `kit: auto-run ${settings[SETTING.autoRun].value}`,
         `scoring ${scoring}${scoring === SWITCH.on ? ` (pass ${settings[SETTING.passScore].value})` : ''}`,
+        `auto-approve ${settings[SETTING.autoApprove].value}`,
         ...MODEL_ROLES.map(({ label, setting }) => `${label} ${settings[setting].value}`),
     ].join(' | ');
 
-    const names = [SETTING.autoRun, SETTING.scoring, SETTING.passScore, ...MODEL_ROLES.map(({ setting }) => setting)];
+    const names = [SETTING.autoRun, SETTING.scoring, SETTING.passScore, SETTING.autoApprove, ...MODEL_ROLES.map(({ setting }) => setting)];
     const context = [
         'kit status (.claude/kit/status-hook.mjs):',
         ...names.map((name) => `${name}=${settings[name].value} (${settings[name].origin});`),

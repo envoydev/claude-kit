@@ -16,6 +16,7 @@ test('with no variable set it prints the defaults and the model each agent file 
         search_model: 'haiku (default)',
         scoring: 'on (default)',
         auto_run: 'off (default)',
+        auto_approve: 'off (default)',
     });
 });
 
@@ -29,6 +30,7 @@ test('each variable replaces its default and is named as the source', (t) =>
         KIT_SEARCH_MODEL: 'sonnet',
         KIT_SCORING: 'off',
         KIT_AUTO_RUN: 'on',
+        KIT_AUTO_APPROVE: 'on',
     });
 
     assert.deepEqual(lines, {
@@ -39,6 +41,7 @@ test('each variable replaces its default and is named as the source', (t) =>
         search_model: 'sonnet (KIT_SEARCH_MODEL)',
         scoring: 'off (KIT_SCORING)',
         auto_run: 'on (KIT_AUTO_RUN)',
+        auto_approve: 'on (KIT_AUTO_APPROVE)',
     });
 });
 
@@ -107,8 +110,9 @@ test('a switch set back to its own default is accepted, so it can be turned off 
 
 test("a switch value that is neither on nor off keeps the safeguard and the line says why", (t) =>
 {
-    const { lines } = printSettings(makeSettingsRepo(t), { KIT_AUTO_RUN: 'true', KIT_SCORING: 'no' });
+    const { lines } = printSettings(makeSettingsRepo(t), { KIT_AUTO_RUN: 'true', KIT_SCORING: 'no', KIT_AUTO_APPROVE: 'yes' });
 
+    assert.equal(lines.auto_approve, "off (default - KIT_AUTO_APPROVE='yes' is neither 'on' nor 'off')");
     assert.equal(lines.auto_run, "off (default - KIT_AUTO_RUN='true' is neither 'on' nor 'off')");
     assert.equal(lines.scoring, "on (default - KIT_SCORING='no' is neither 'on' nor 'off')");
 });
@@ -117,11 +121,12 @@ test('a switch found in the committed settings file is ignored, while a pass sco
 {
     const repo = makeSettingsRepo(t, {
         ...AGENTS,
-        '.claude/settings.json': { env: { KIT_AUTO_RUN: 'on', KIT_SCORING: 'off', KIT_PASS_SCORE: '97' } },
+        '.claude/settings.json': { env: { KIT_AUTO_RUN: 'on', KIT_SCORING: 'off', KIT_AUTO_APPROVE: 'on', KIT_PASS_SCORE: '97' } },
     });
 
-    const { lines } = printSettings(repo, { KIT_AUTO_RUN: 'on', KIT_SCORING: 'off', KIT_PASS_SCORE: '97' });
+    const { lines } = printSettings(repo, { KIT_AUTO_RUN: 'on', KIT_SCORING: 'off', KIT_AUTO_APPROVE: 'on', KIT_PASS_SCORE: '97' });
 
+    assert.equal(lines.auto_approve, 'off (default - KIT_AUTO_APPROVE in .claude/settings.json is ignored: set it in .claude/settings.local.json)');
     assert.equal(lines.auto_run, 'off (default - KIT_AUTO_RUN in .claude/settings.json is ignored: set it in .claude/settings.local.json)');
     assert.equal(lines.scoring, 'on (default - KIT_SCORING in .claude/settings.json is ignored: set it in .claude/settings.local.json)');
     assert.equal(lines.pass_score, '97 (KIT_PASS_SCORE)');

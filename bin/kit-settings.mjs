@@ -6,11 +6,11 @@
 //
 // A value comes from the first of these that holds a usable one: the kit's file .claude/kit/settings.json, the
 // KIT_* variable, the default. The file is one JSON object committed with the repo, with these names: plan_model,
-// review_model, implement_model, search_model (a model), pass_score (a whole number from 1 to 100) and scoring and
-// auto_run ('on' or 'off'). It is written by `node .claude/kit/settings.mjs set <name> <value>` and by the status hook
+// review_model, implement_model, search_model (a model), pass_score (a whole number from 1 to 100) and scoring,
+// auto_run and auto_approve ('on' or 'off'). It is written by `node .claude/kit/settings.mjs set <name> <value>` and by the status hook
 // when the user tells a session a model or a switch in chat: what the user says is saved until the user changes it
-// (the user's ruling, 2026-11-16). The file may switch scoring and auto-run because the user chose it; a variable may
-// not do so from the committed .claude/settings.json.
+// (the user's ruling, 2026-11-16). The file may switch scoring, auto-run and auto-approve because the user chose it; a
+// variable may not do so from the committed .claude/settings.json.
 //
 // A variable is set in the `env` block of a Claude Code settings file (~/.claude/settings.json, .claude/settings.json
 // or .claude/settings.local.json). Claude Code decides which file wins and puts the value in the environment:
@@ -22,10 +22,11 @@
 //   KIT_SEARCH_MODEL      the model that finds things in the code for the other three (haiku without it)
 //   KIT_SCORING           on or off: whether specs and plans are graded in every session (on without it)
 //   KIT_AUTO_RUN          on or off: whether every session runs in auto-run from its first ask (off without it)
+//   KIT_AUTO_APPROVE      on or off: whether the run approves a spec, design or plan itself (off without it: the user does)
 //
 // A model is one of sonnet, opus, haiku, fable - what a dispatch accepts. Without a value it is the model the role's
-// agent file names; the search role has no agent file, so its default is fixed. KIT_SCORING and KIT_AUTO_RUN switch a
-// safeguard off, so a variable counts only from a file that is not committed: one found in .claude/settings.json is
+// agent file names; the search role has no agent file, so its default is fixed. KIT_SCORING, KIT_AUTO_RUN and
+// KIT_AUTO_APPROVE switch a safeguard off, so a variable counts only from a file that is not committed: one found in .claude/settings.json is
 // ignored and named. Claude Code applies a new or changed variable to a session that is already open, but a deleted
 // one stays set there until it restarts: to switch one back at once, set its other value (KIT_AUTO_RUN=off).
 // An unusable value in the kit's file falls to the variable, then the default; an unusable variable falls to the
@@ -168,6 +169,7 @@ export function resolveKitSettings(env, root)
         [SETTING.searchModel]: fromKitFile(fileSettings, SETTING.searchModel, searchModel(env)),
         [SETTING.scoring]: fromKitFile(fileSettings, SETTING.scoring, safeguard(env, VARIABLE.scoring, SWITCH.on, SWITCH.off, committedNames)),
         [SETTING.autoRun]: fromKitFile(fileSettings, SETTING.autoRun, safeguard(env, VARIABLE.autoRun, SWITCH.off, SWITCH.on, committedNames)),
+        [SETTING.autoApprove]: fromKitFile(fileSettings, SETTING.autoApprove, safeguard(env, VARIABLE.autoApprove, SWITCH.off, SWITCH.on, committedNames)),
     };
 }
 

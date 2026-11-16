@@ -7,10 +7,10 @@ run its sync, which rewrites them in every repo.
 - `npm run kit:check` (or `node .claude/kit/check.mjs`) fails when a managed file was edited or removed here, when a
   `CLAUDE.md` hides `AGENTS.md`, and when a managed skill's description is not one line of at most 160 characters.
 - `node .claude/kit/settings.mjs` prints the values the kit's skills run on - the pass score, the plan, review,
-  implement and search models, whether scoring and auto-run are on - read from `settings.json` beside it, then the
+  implement and search models, whether scoring, auto-run and auto-approve are on - read from `settings.json` beside it, then the
   `KIT_*` variables of a settings file's `env` block; the header of `kit-settings.mjs` lists them and
   `constants.mjs` holds their names and defaults. `settings.json` here is this repo's own and is never synced: it
-  keeps what was set in chat - a model, the pass score, scoring, auto-run - until it is changed, written by the hook
+  keeps what was set in chat - a model, the pass score, scoring, auto-run, auto-approve - until it is changed, written by the hook
   when a request's first line is only words to switch a mode or name a role's model, and by
   `node .claude/kit/settings.mjs set <name> <value>` for everything else. `status-hook.mjs` is the `UserPromptSubmit` hook this repo's `.claude/settings.json` runs: it shows the
   same values with every request.
