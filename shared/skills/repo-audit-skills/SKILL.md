@@ -19,12 +19,12 @@ assume a particular set. It is this repo's own maintenance tool, not part of the
 
 - The user types `/repo-audit-skills` to audit the repo's shipped skills (the `audit.skills` roots in
   `.claude/kit/repo.json`), or a root they name.
-- Not for the subagents (`/repo-audit-agents`) or the rule files (`/repo-audit-rules`), and not for
-  writing one skill - that method is the `skill-authoring` skill.
+- Not for the subagents (`/repo-audit-agents`), the rule files (`/repo-audit-rules`) or flat command files
+  (`/repo-audit-commands`), and not for writing one skill - that method is the `skill-authoring` skill.
 
 ## Parameters
 
-- `SKILLS_ROOT`: the folders containing skills (default: the `audit.skills` roots from step 1). Each skill is a directory with a `SKILL.md` at its root, optionally with `references/`, `scripts/`, `assets/`; a flat command file (`commands/<name>.md`) is a single-file skill - the harness serves both forms as the same slash entry. This repo's own `.claude/skills/` (this audit family and the other authoring skills synced in beside it) is outside the shipped catalog: audit it only when the user names it, and remember the repo's checks may not hold it.
+- `SKILLS_ROOT`: the folders containing skills (default: the `audit.skills` roots from step 1). Each skill is a directory with a `SKILL.md` at its root, optionally with `references/`, `scripts/`, `assets/`. A flat command file (`commands/<name>.md`) is served as the same kind of slash entry but is the commands audit's (`/repo-audit-commands`), never scored here. This repo's own `.claude/skills/` (this audit family and the other authoring skills synced in beside it) is outside the shipped catalog: audit it only when the user names it, and remember the repo's checks may not hold it.
 - `TARGET`: minimum acceptable grade (default: `A` / `9`).
 - `MAX_ITERATIONS`: max remediation passes per skill (default: `4`).
 - `WRITE`: `true` takes the run to the flow's ask and applies what it picks, `false` stops after the report and the plan (default: `true`).
@@ -65,7 +65,7 @@ with concrete options and a marked recommendation, never a prose question buried
 
 After the loop, for each edited skill:
 
-1. Re-read the full edited `SKILL.md` and any moved reference files end to end. Confirm the frontmatter is still valid and `name` and directory (or file name, for a command file) are unchanged.
+1. Re-read the full edited `SKILL.md` and any moved reference files end to end. Confirm the frontmatter is still valid and `name` and directory are unchanged.
 2. Confirm the behavior-preservation prompts still produce matching outputs.
 3. Confirm no guarded rule was dropped. Diff against the snapshot to check.
 4. For any multi-home content, confirm every copy is self-contained, its entry in the repo's multi-home registry (the file its `notes` name) pins each site by marker, and no skill loads a file outside its own folder.

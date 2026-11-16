@@ -11,8 +11,8 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 | Path | What it is |
 |---|---|
-| `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), the eight `repo-audit-*` audits and the `repo-audit-flow` they run through |
+| `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `plan-approval`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `superpowers-location` |
+| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), the nine `repo-audit-<kind>` audits, the `repo-audit-flow` they run through and `repo-audit-plugin`, which runs them together |
 | `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
 | `shared/defaults.json` | the kit's own value for a template key - `plan_model` (opus), `review_model` (opus), `implement_model` (sonnet), the model each agent file is written with. A project changes a seat's model in its settings (below), not here |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow`, the `attribution` block that keeps Claude Code's own trailer, PR line and session link out of commits and PRs, and the status hook - merged into each repo's `.claude/settings.json`, the repo's own hooks kept |
@@ -27,13 +27,22 @@ own - while each repo's `structure_map` says where that shape lands in its folde
 attach the rule that loads it. A key that neither the repo nor
 `shared/defaults.json` defines stops its sync before anything is written. The lock holds the filled file's hash, so a local edit fails `kit:check` as any other does.
 
-An audit is typed (`/repo-audit-skills`, `-rules`, ...) and runs through `repo-audit-flow`: the planner agent reads,
+An audit is typed (`/repo-audit-skills`, `-rules`, ...) and runs through `repo-audit-flow`. `/repo-audit-plugin` runs every
+kind the repo has targets for, `/repo-audit-plugin exclude tools, usage` every kind but those, and
+`/repo-audit-plugin skills, hooks` only those - the kinds planned, graded and verified side by side, their edits applied one plan at a time - and, unlike the nine, it can also be started by asking in chat
+('run all the audits'). In each audit the planner agent reads,
 scores and writes an edit plan with the exact text of every change, `refining-plans` grades that plan unless plan grading
-is off, the session asks before anything is edited, the editor agent applies the plan, and the planner verifies. So the
+is off, the plan is approved before anything is edited - by the user, or by the run where `auto_approve` is on - the
+editor agent applies the plan, and the planner verifies. Every run opens on its size and its models and closes on
+a scorecard - the grades before the edits against the grades after them - and then on a self-review: what the
+audit's own instructions got wrong in this run, ranked by what it cost, each with the edit that would have prevented
+it. In this repo, the audit skills' home, those edits become a plan of their own; in a plugin repo they are a report
+to carry here. So the
 judgment runs on the stronger model and the edits on the cheaper one, whatever model the session is on.
 
 The `repo-audit-*` skills are one generic copy each. What they audit in a repo comes from that repo's `repo.json`
-`audit` map, one entry per kind (`skills`, `agents`, `rules`, `hooks`, `agent-md`, `plugins`, `system`, `usage`):
+`audit` map, one entry per kind (`skills`, `commands`, `agents`, `rules`, `agent-md`, `hooks`, `tools`, `system`,
+`usage`):
 `roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
 graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
 
@@ -71,6 +80,7 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review
 | `search_model` | `KIT_SEARCH_MODEL` | the model that searches the code for the other three in `solve-task` - where a thing is, what calls it - and reports paths and lines | haiku |
 | `scoring` | `KIT_SCORING` | whether specs and plans are graded, `on` or `off` | on |
 | `auto_run` | `KIT_AUTO_RUN` | whether a session runs in auto-run from its first ask, `on` or `off` | off |
+| `auto_approve` | `KIT_AUTO_APPROVE` | who approves a spec, a design or a plan: `on`, the run does once it is at the pass score; `off`, it waits for the user, who is notified | off |
 
 ```json
 { "plan_model": "fable", "review_model": "fable", "pass_score": 95, "auto_run": "on" }
@@ -80,7 +90,6 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review
   that may hold a key or a token. `node .claude/kit/settings.mjs set plan_model fable` writes one name and `unset
   plan_model` removes it; the sync never touches the file.
 - What the user sets in chat is saved there and holds in every session until it is changed (the user's ruling,
-| `auto_approve` | `KIT_AUTO_APPROVE` | who approves a spec, a design or a plan: `on`, the run does once it is at the pass score; `off`, it waits for the user, who is notified | off |
   2026-11-16, which replaced the per-session switches of 2026-11-15). A request whose first line is only
   words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto run off', 'auto approve
   on' - or to name a

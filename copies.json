@@ -197,7 +197,7 @@
           ]
         },
         {
-          "site": "shared/skills/repo-audit-plugins/SKILL.md",
+          "site": "shared/skills/repo-audit-tools/SKILL.md",
           "markers": [
             "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
             "stop the flow adds is its ask before any edit lands"
@@ -214,6 +214,13 @@
           "site": "shared/skills/repo-audit-system/SKILL.md",
           "markers": [
             "Load the `repo-audit-flow` skill before step 1 and run this audit through it"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "stop the flow adds is its ask before any edit lands"
           ]
         }
       ]
@@ -245,6 +252,13 @@
         },
         {
           "site": "shared/skills/repo-audit-rules/SKILL.md",
+          "markers": [
+            "put the question through the AskUserQuestion tool",
+            "with concrete options and a marked recommendation, never a prose question buried in a report"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/SKILL.md",
           "markers": [
             "put the question through the AskUserQuestion tool",
             "with concrete options and a marked recommendation, never a prose question buried in a report"
@@ -282,6 +296,14 @@
         },
         {
           "site": "shared/skills/repo-audit-rules/references/currency.md",
+          "markers": [
+            "Training-data recall drifts",
+            "never substitute recall for the lookup",
+            "judgment stays in the artifact, drifting facts are fetched live"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/references/currency.md",
           "markers": [
             "Training-data recall drifts",
             "never substitute recall for the lookup",
@@ -366,6 +388,13 @@
           "markers": [
             "Rank the dimension deductions by points lost. Fix the largest first.",
             "Do not carry forward the previous score."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/references/remediation.md",
+          "markers": [
+            "Rank the dimension deductions by points lost. Fix the largest first.",
+            "Do not declare an A you did not earn."
           ]
         }
       ]

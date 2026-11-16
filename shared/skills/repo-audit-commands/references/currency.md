@@ -1,0 +1,46 @@
+# Command audit - Phase 1b currency check
+
+Read at Phase 1b, before any row drives a score or an edit.
+
+Command bodies carry claims about the outside world - a CLI's flags, a package, a version floor, a settings key - and
+this audit's own principles and rubric rest on documented harness behaviour. Training-data recall drifts, so these
+claims are verified against current documentation - the official Claude Code pages for the harness, the
+documentation MCP for a library - never re-asserted from memory. This check changes no dimension weights (scores
+stay comparable across audit runs); an unresolved DRIFTED finding blocks the command from A.
+
+1. **Inventory** while scoring Phase 1: collect every externally-verifiable claim in the bodies and the scripts'
+   usage lines they quote - a named CLI and its flags, a package, a version floor, a settings key, a 'X does not
+   support Y' statement.
+2. **The harness facts this audit leans on** are external claims too, re-read from the live pages each run (the
+   skills page at <https://code.claude.com/docs/en/skills>, the plugin manifest reference at
+   <https://code.claude.com/docs/en/plugins-reference>), since they move between releases. As read on 2026-11-16:
+   - a command file is served by the same mechanism as a skill and takes the same frontmatter except `name` and
+     `paths`; the file name is the command, a subfolder is a namespace, and a skill wins over a command file of the
+     same name;
+   - `disable-model-invocation: true` stops the model starting the entry and takes its description out of context;
+     `allowed-tools` pre-approves for the invoking turn and `disallowed-tools` removes tools for it;
+   - `$ARGUMENTS` is the whole argument string, `$ARGUMENTS[N]` and `$N` count from zero, `arguments` names
+     positions, and an argument no placeholder reads is appended as `ARGUMENTS: <value>`;
+   - a `` !`command` `` line and a fenced `!` block run before the content reaches the model, a failing one aborts
+     the invocation, they are checked against permission rules, and a `disableSkillShellExecution` setting turns
+     them off;
+   - a listing entry is cut at 1,536 characters, and after a compaction the first 5,000 tokens of each invoked
+     entry return under a shared 25,000-token budget;
+   - in a plugin, the manifest's `commands` key replaces the default `commands/` scan, a map entry sets exactly one
+     of `source` or `content`, commands are typed as `/<plugin>:<command>`, and the plugin root, plugin data and
+     project variables are substituted in the body but are not in the environment of a shell tool call.
+   Whether an argument is substituted into a pre-run shell line before it runs is not stated on those pages: treat
+   it as unsafe until the live page or a run in the repo's sandbox says otherwise.
+3. **Prioritize** what a release can invalidate: version-named claims, flag syntax, support statements. House
+   judgment (naming, tone, which step asks) has no external truth to check - skip it.
+4. **Verify, bounded**: group the claims by tool or library; per library, one `resolve-library-id` plus at most 2-3
+   `query-docs` calls covering the whole batch. Cap ~15 libraries per run - the long tail rolls to the next audit and
+   is listed as unchecked. A page or the documentation server unreachable: mark the check SKIPPED in the report and
+   move on; never substitute recall for the lookup.
+5. **Verdict per claim**: CURRENT (docs agree) | DRIFTED (docs contradict - a MATERIAL finding) | UNVERIFIABLE
+   (docs silent - recorded, not a finding). Record the table (source, claim, verdict, evidence line) in the baseline
+   report.
+6. **Remediation routing** for DRIFTED: fix it in Phase 2 - and when the drifted content is version-coupled detail
+   (a flag list, a per-release config block), prefer REPLACING it with the durable instruction plus a fetch-at-use
+   step (the tool's own `--help`, the documentation server at usage time) over updating the number: judgment stays
+   in the artifact, drifting facts are fetched live.

@@ -6,7 +6,7 @@ user-invocable: false
 
 # Audit flow - a strong model plans, a cheaper one edits
 
-One flow for the eight `repo-audit-*` skills. The reading, the scoring and every decision about what to change
+One flow for the nine audit skills (`repo-audit-<kind>`). The reading, the scoring and every decision about what to change
 happen on the planner's model; the edits happen on the editor's, from a plan that leaves it nothing to decide.
 
 ## When to use
@@ -16,7 +16,8 @@ happen on the planner's model; the edits happen on the editor's, from a plan tha
   Where that skill names its own run folder, size and batches, options for step 8's ask, or work this session does
   around a seat - before the planner starts, between the edit and the verify step, after a 'Report only' - its word
   replaces this file's default for that step.
-- Not for a change outside an audit, and not typed directly: an audit starts with its own `/repo-audit-<kind>`.
+- Not for a change outside an audit, and not typed directly: an audit starts with its own `/repo-audit-<kind>`, or
+  from the `repo-audit-plugin` skill, which runs several of them through this flow.
 
 ## The seats
 
@@ -46,13 +47,15 @@ happen on the planner's model; the edits happen on the editor's, from a plan tha
 ## The run folder
 
 `docs/superpowers/audits/<date>-<kind>/` in the audited repo, git-ignored. It holds `run.md`, `baseline.md`,
-`records.md`, `plan.md`, `ledger.md` and `final.md`; a batched run adds `-<n>` to `baseline`, `records` and `plan` per batch. Nothing in it is
-committed.
+`records.md`, `plan.md`, `ledger.md`, `final.md` and `retro.md`; a batched run adds `-<n>` to `baseline`,
+`records`, `plan`, `final` and `retro` per batch. Nothing in it is committed.
 
 ## The steps
 
-With `auto-run` on, the asks of steps 4, 6 and 8 are not put: each takes its `(Recommended)` option and is ledgered as
-a ruling, as that skill says, and what that skill still stops on still stops.
+With `auto-run` on, the asks of steps 4 and 6 are not put: each takes its `(Recommended)` option and is ledgered as
+a ruling, as that skill says, and what that skill still stops on still stops. Step 8's ask is the approval of the
+plan, and the `auto_approve` setting decides it as the `plan-approval` rule says, whatever auto-run says: on, 'Apply
+all' is taken and ledgered; off, the ask is put and the user is notified that the run waits.
 
 1. **Targets.** Do the audit skill's Targets step: the `audit.<kind>` entry, its `roots`, `checks` and `notes`. No
    entry stops the run as that skill says. Then `git status --porcelain -- <targets>` must print nothing: a target
@@ -68,8 +71,10 @@ a ruling, as that skill says, and what that skill still stops on still stops.
    summary.
 3. **Batches.** Targets over 250,000 characters in total are split into batches under that size, a skill folder or
    an agent file never split, in name order. Under it, one batch.
-4. **Size before spend.** No planner starts before the user has seen the size. One batch: state the total
-   characters, the planner's model and whether the plan is graded in one line, and go on. More than one batch: stop and ask,
+4. **Size before spend.** No planner starts before the user has seen two lines, in this form:
+   `Size: <kind> - <files> files, <total> characters, <N> batch(es), <seats> planner seat(s)` and
+   `Models: plan <model>, review <model>, implement <model>`. One batch: add whether the plan is graded, and go
+   on. More than one batch: stop and ask,
    since each batch is its own planner on the stronger model and a graded plan costs a round or more on top:
 
    ```ask
@@ -81,7 +86,8 @@ a ruling, as that skill says, and what that skill still stops on still stops.
    ```
 
    Above three batches the mark moves: 'One batch first (Recommended)' is listed first and 'All <N> batches' second.
-5. **Plan.** Dispatch one planner per batch, all in one message, each with: the kind, the audit skill's folder, the
+5. **Plan.** Dispatch one planner per batch, all in one message so they run side by side - at most four planner
+   seats at a time, a fifth batch waiting for a free seat - each with: the kind, the audit skill's folder, the
    repo root, its target paths, the run folder, the audit skill's parameters, the `checks` and `notes`, and mode
    `audit`. With more than one batch, then dispatch one more planner in mode `set` with only the batches' record
    and plan files: it adds the set-wide findings and merges everything into one `plan.md`.
@@ -111,11 +117,43 @@ a ruling, as that skill says, and what that skill still stops on still stops.
    is named). Dispatch the editor with: the plan's path, the repo root, the items picked, the `checks` commands and
    the ledger's path. The editor runs the plan's own checks as well as these.
 10. **Verify.** Send the planner the ledger's path and the snapshot location with SendMessage, mode `verify`: it runs the audit skill's
-   verification phase on what was edited, re-grades those items and writes `final.md`. An edit the ledger marks
-   `SKIPPED` is rewritten by the planner against the file as it now is, and steps 9 and 10 run again - at most the
-   audit skill's `MAX_ITERATIONS` rounds in all.
-11. **Report.** Print the audit skill's output contract from `final.md`, then one line per seat with the model it ran
-    on, the plan's score path and the run folder. Commit nothing: a commit waits for the user's word.
+   verification phase on what was edited, re-grades those items and writes `final.md`. A batched run verifies side
+   by side: each batch's own planner gets that message in one turn and writes `final-<n>.md` for its items, then
+   the `set` planner is sent those files, re-checks the set-wide findings and merges them into `final.md`. An edit
+   the ledger marks `SKIPPED` is rewritten by the planner against the file as it now is, and steps 9 and 10 run
+   again - at most the audit skill's `MAX_ITERATIONS` rounds in all.
+11. **Report.** Print the audit skill's output contract from `final.md`, then the scorecard - the quality before
+    the edits against the quality after them, from the audit's own grades:
+
+    ```text
+    Scorecard: <kind> - <n> items
+    At grade A:  <before> -> <after>
+    Mean grade:  <before, numeric> -> <after, numeric>
+    Lowest item: <name> <grade> -> <name> <grade>
+    Plan grade:  <score path, or 'ungraded - <why>'>
+    ```
+
+    Then one line per seat with the model it ran on, and the run folder. Commit nothing: a commit waits for the
+    user's word.
+12. **Self-review.** The audit then audits itself - how its own instructions served this run, never the audited
+    files again. A report-only run does it after step 8.
+    - **Analyze.** Send every planner one message, all in one turn, mode `retro`: each writes `retro.md`
+      (`retro-<n>.md` for a batch) with at most five findings on the audit skill, its references and this flow.
+      Add your own from `run.md`, `ledger.md` and the plan's grade rounds: a seat that failed, an edit marked
+      `SKIPPED`, a plan sent back, a finding the grader raised about the plan's shape, an ask that should not have
+      been needed. Every finding cites the run record it happened in and the instruction line it traces to.
+    - **Rank.** Merge them into one list in `retro.md`, the costliest first: a wrong result that verification
+      caught outranks work done twice, which outranks friction, and a finding several seats hit outranks one seat's.
+      Keep the top seven and print them, one line each. A run with nothing to report says so: no finding is
+      invented to fill the list.
+    - **Improve.** Each kept finding carries the exact edit that would have prevented it. Where this repo is the
+      audit skills' home - `shared/skills/repo-audit-flow/` exists in it - write those edits as `retro-plan.md` in
+      the plan's format and take it through steps 7 to 9 as a plan of its own, then run the repo's `checks`.
+      Anywhere else the audit skills are locked copies: apply nothing, and say that `retro.md` goes to the kit
+      they are synced from.
+    - **The bar never moves.** No self-review edit loosens a rubric line, a floor, a grade band or a guard, drops
+      a step, or makes this run's grades read better; such a finding is listed as the user's to decide, with its
+      evidence, and is never planned. This run's grades are not re-scored after it.
 
 ## The plan
 
@@ -128,6 +166,9 @@ the plan is sent back to the planner for the text.
 - A planner started on a batched run before the size ask was answered or, under auto-run, ruled.
 - This session read the audited files or scored an item itself.
 - An edit landed before the ask or its ruling, or the editor changed something the plan does not list.
+- 'Apply all' taken with `auto_approve` off, on the strength of auto-run alone.
 - A plan graded or applied after one of its targets changed.
 - `Plan grade: on` and the ask shows no score path.
-- The report does not say which model each seat ran on, or the run folder has no `run.md`.
+- The report does not say which model each seat ran on, has no scorecard, or the run folder has no `run.md`.
+- A run that ends with no `retro.md`, or a self-review edit that lowers the audit's own bar.
+- Batches planned or verified one after another where seats were free.
