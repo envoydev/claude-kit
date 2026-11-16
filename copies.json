@@ -139,6 +139,236 @@
           ]
         }
       ]
+    },
+    {
+      "id": "plan-reviewer-contract",
+      "why": "The refining-plans skill still sends a general-purpose reviewer this prompt, and the plan-grader agent carries the same contract as its own prompt until the two are compared on one sample.",
+      "owner": {
+        "site": "shared/skills/refining-plans/references/reviewer-prompt.md",
+        "markers": [
+          "Default every check to no",
+          "Never invent a finding to fill a slot",
+          "Be calibrated, not polite",
+          "(one row per check, C1.1 through C7.4, 28 rows)"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/agents/plan-grader.md.tmpl",
+          "markers": [
+            "Default every check to no",
+            "Never invent a finding to fill a slot",
+            "Be calibrated, not polite",
+            "(one row per check, C1.1 through C7.4, 28 rows)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-flow-handoff",
+      "why": "Each repo-audit-* skill runs alone and never loads a sibling's file, so each carries the paragraph that hands its run to repo-audit-flow; the system audit keeps its first sentence.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/SKILL.md",
+        "markers": [
+          "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+          "stop the flow adds is its ask before any edit lands"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "stop the flow adds is its ask before any edit lands"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "stop the flow adds is its ask before any edit lands"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-hooks/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "stop the flow adds is its ask before any edit lands"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-plugins/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "stop the flow adds is its ask before any edit lands"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-rules/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it",
+            "stop the flow adds is its ask before any edit lands"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-system/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-flow` skill before step 1 and run this audit through it"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-ask-shape",
+      "why": "The four audits that can stop on a question each say in their own body how it is put, because a body pointer to a sibling would not load.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/SKILL.md",
+        "markers": [
+          "put the question through the AskUserQuestion tool",
+          "with concrete options and a marked recommendation, never a prose question buried in a report"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/SKILL.md",
+          "markers": [
+            "put the question through the AskUserQuestion tool",
+            "with concrete options and a marked recommendation, never a prose question buried in a report"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/SKILL.md",
+          "markers": [
+            "put the question through the AskUserQuestion tool",
+            "with concrete options and a marked recommendation, never a prose question buried in a report"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-rules/SKILL.md",
+          "markers": [
+            "put the question through the AskUserQuestion tool",
+            "with concrete options and a marked recommendation, never a prose question buried in a report"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-currency-procedure",
+      "why": "The lookup procedure for outside claims is the same in four audits and each reads only its own references.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/references/currency.md",
+        "markers": [
+          "Training-data recall drifts",
+          "never substitute recall for the lookup",
+          "judgment stays in the artifact, drifting facts are fetched live"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/references/currency.md",
+          "markers": [
+            "Training-data recall drifts",
+            "never substitute recall for the lookup",
+            "judgment stays in the artifact, drifting facts are fetched live"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/references/currency.md",
+          "markers": [
+            "Training-data recall drifts",
+            "never substitute recall for the lookup",
+            "judgment stays in the artifact, drifting facts are fetched live"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-rules/references/currency.md",
+          "markers": [
+            "Training-data recall drifts",
+            "never substitute recall for the lookup",
+            "judgment stays in the artifact, drifting facts are fetched live"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-name-or-describe",
+      "why": "The skills audit and the agents audit judge cites by the same two principles, each from its own principles file.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/references/principles.md",
+        "markers": [
+          "Name only what is guaranteed; describe the rest.",
+          "A guard phrase beside a name ('load `x` when it is in your skill list') is NOT the remedy",
+          "Minimal cross-mentions - single responsibility."
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agents/references/principles.md",
+          "markers": [
+            "Name only what is guaranteed; describe the rest.",
+            "A guard phrase beside a name ('load `x` when it is in your skill list') is NOT the remedy",
+            "Minimal cross-mentions - single responsibility."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-instruction-layer-facts",
+      "why": "The rules audit and the instruction-file audit score the same always-on layer by the same mechanism facts, each from its own principles file.",
+      "owner": {
+        "site": "shared/skills/repo-audit-rules/references/principles.md",
+        "markers": [
+          "Installs are selective - name only what is guaranteed, describe the rest.",
+          "Block-level HTML comments are stripped before injection",
+          "measure 'short' in tokens as well as lines"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/references/principles.md",
+          "markers": [
+            "Installs are selective - name only what is guaranteed, describe the rest.",
+            "Block-level HTML comments are stripped before injection",
+            "measure 'short' in tokens as well as lines"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-remediation-loop",
+      "why": "The bounded loop and its guards are the same in four audits, with the noun changed, and each reads only its own remediation file.",
+      "owner": {
+        "site": "shared/skills/repo-audit-rules/references/remediation.md",
+        "markers": [
+          "Rank the dimension deductions by points lost. Fix the largest first.",
+          "Preserve intended tiering.",
+          "Do not declare an A you did not earn."
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/references/remediation.md",
+          "markers": [
+            "Rank the dimension deductions by points lost. Fix the largest first.",
+            "Preserve intended tiering.",
+            "Do not declare an A you did not earn."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/references/remediation.md",
+          "markers": [
+            "Rank the dimension deductions by points lost. Fix the largest first.",
+            "Do not declare an A you did not earn."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-skills/references/remediation.md",
+          "markers": [
+            "Rank the dimension deductions by points lost. Fix the largest first.",
+            "Do not carry forward the previous score."
+          ]
+        }
+      ]
     }
   ]
 }
