@@ -121,6 +121,7 @@ const KIT_FILES: readonly (readonly [shipped: string, source: string])[] = [
     ['kit-settings.mjs', 'kit-settings.mjs'],
     ['constants.mjs', 'constants.mjs'],
     ['status-hook.mjs', 'status-hook.mjs'],
+    ['prove-plan.mjs', 'prove-plan.mjs'],
     ['README.md', 'kit-readme.md'],
 ];
 

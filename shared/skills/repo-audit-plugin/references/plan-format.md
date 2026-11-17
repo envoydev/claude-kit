@@ -126,3 +126,10 @@ New:
 - Nothing is left to the editor's judgment: no 'similar changes elsewhere', no 'as appropriate', no text described
   where it could be written.
 - An outer fence is one backtick longer than any fence inside the text it holds.
+- Where the repository holds `.claude/kit/prove-plan.mjs`, that proof is the script's:
+  `node .claude/kit/prove-plan.mjs <plan>`, run at the repository root, reads every edited file at the `Baseline`
+  revision, applies the edits by the rules above, writes the expected folder beside the plan and prints the
+  `Applies:` line with each file's size before and after. It writes nothing and exits 1 unless every edit applied,
+  naming each edit that did not. `--without E<n>` also writes `expected-without-E<n>/`, leaving out that edit and
+  every edit that needs it. It writes only beside the plan and needs no copy; a check that writes still runs on
+  one. Where the script is absent, the planner proves by hand, to the same rules.

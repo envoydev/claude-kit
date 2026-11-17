@@ -37,7 +37,7 @@ test('copies a shared file to the same path under .claude and records it in the 
     assert.match(lock.kit, /^claude-kit@/);
 });
 
-test('ships the check, settings and status-hook scripts and the readme into .claude/kit', (t) =>
+test('ships the check, settings, status-hook and prove-plan scripts and the readme into .claude/kit', (t) =>
 {
     const kit = makeKit(t, SHARED);
     const repo = makeRepo(t, REPO_VARS);
@@ -50,6 +50,7 @@ test('ships the check, settings and status-hook scripts and the readme into .cla
         ['kit-settings.mjs', 'kit-settings.mjs'],
         ['constants.mjs', 'constants.mjs'],
         ['status-hook.mjs', 'status-hook.mjs'],
+        ['prove-plan.mjs', 'prove-plan.mjs'],
         ['README.md', 'kit-readme.md'],
     ];
     for (const [shipped, source] of shippedFiles)

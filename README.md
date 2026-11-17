@@ -131,8 +131,13 @@ fix is to change it here and sync again, so the repos never drift apart. It fail
 `.claude/CLAUDE.md` or `CLAUDE.local.md` sits beside the repo's `AGENTS.md`: Claude Code reads `AGENTS.md` only while
 none of the three exists, and says nothing when one switches it off.
 
-`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings and the status hook - against
-throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and cost nothing.
+The kit's scripts also include `.claude/kit/prove-plan.mjs`: `node .claude/kit/prove-plan.mjs <plan>` replays an audit
+plan's edits from its `Baseline` revision, writes the expected files beside the plan and exits 1 unless every edit
+applied.
+
+`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status hook and the plan
+prover - against throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and
+cost nothing.
 
 Requires Node 22.18 or newer (the sync script is TypeScript run by Node's type stripping); no dependencies.
 
