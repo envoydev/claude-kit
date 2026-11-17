@@ -29,15 +29,16 @@ attach the rule that loads it. A key that neither the repo nor
 
 An audit is typed (`/repo-audit-skills`, `-rules`, ...) and runs through the flow in `repo-audit-plugin`. `/repo-audit-plugin` runs every
 kind the repo has targets for, `/repo-audit-plugin exclude tools, usage` every kind but those, and
-`/repo-audit-plugin skills, hooks` only those - the kinds planned, graded and verified side by side, their edits applied one plan at a time - and, unlike the nine, it can also be started by asking in chat
+`/repo-audit-plugin skills, hooks` only those - one kind at a time, `hooks` last in its wave, or side by side where the request says `parallel` - and, unlike the nine, it can also be started by asking in chat
 ('run all the audits'). In each audit the planner agent reads,
 scores and writes an edit plan with the exact text of every change, `refining-plans` grades that plan unless plan grading
 is off, the plan is approved before anything is edited - by the user, or by the run where `auto_approve` is on - the
 editor agent applies the plan, and the planner verifies. Every run opens on its size and its models and closes on
 a scorecard - the grades before the edits against the grades after them - and then on a self-review: what the
 audit's own instructions got wrong in this run, ranked by what it cost, each with the edit that would have prevented
-it. In this repo, the audit skills' home, those edits become a plan of their own; in a plugin repo they are a report
-to carry here. So the
+it. The self-review runs only in this repo, the audit skills' home, where those edits become a plan of their own;
+a plugin repo's run skips it. An audit plan is graded twice at most: under the pass score after its second
+grade, it waits for the user. So the
 judgment runs on the stronger model and the edits on the cheaper one, whatever model the session is on.
 
 The `repo-audit-*` skills are one generic copy each. What they audit in a repo comes from that repo's `repo.json`
@@ -45,6 +46,14 @@ The `repo-audit-*` skills are one generic copy each. What they audit in a repo c
 `usage`):
 `roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
 graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
+
+An audit of `skills`, `commands`, `agents` or `rules` reads only the items that are new, changed since they were
+last graded on this machine, or were graded below the target; the rest are carried with their grade, and `full`
+after the command audits every item again. An entry may add `scope_with`: paths every item's grade rests on besides
+its own files - a change to one of them audits every item, and an entry under a root that the list names is no item.
+`hooks` is scoped only where its entry has the list. A change to an audit skill's `references/rubric.md` or
+`references/currency.md` audits every item of its kind again; a change to its other text carries the grades and
+says so. The first audit of a kind on a machine is always a full one.
 
 `copies.json` at the root is this repo's registry of text kept on purpose in more than one file - a rule and its skill,
 a rule and each repo's `AGENTS.md`: each entry names the owner, every copy and the marker phrases each keeps, so an
@@ -133,10 +142,12 @@ none of the three exists, and says nothing when one switches it off.
 
 The kit's scripts also include `.claude/kit/prove-plan.mjs`: `node .claude/kit/prove-plan.mjs <plan>` replays an audit
 plan's edits from its `Baseline` revision, writes the expected files beside the plan and exits 1 unless every edit
-applied.
+applied; with `--check` it writes nothing and compares the replay with the files already there.
+`.claude/kit/audit-scope.mjs` keeps, under `docs/superpowers/audits/state/`, each audited item's grade beside the
+hashes of its files: `scope` tells an audit which items to read, and `record` saves the grades once they are final.
 
-`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status hook and the plan
-prover - against throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and
+`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status hook, the plan
+prover and the audit scope - against throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and
 cost nothing.
 
 Requires Node 22.18 or newer (the sync script is TypeScript run by Node's type stripping); no dependencies.

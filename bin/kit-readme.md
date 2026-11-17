@@ -18,7 +18,13 @@ run its sync, which rewrites them in every repo.
   revision, finds every `Old` exactly once and applies its `New`, writes the results into a folder beside the plan
   (`expected/` for `plan.md`) and prints `Applies: <n> of <n> edits`. It exits 1 and names each edit that did not
   apply, 2 when the plan cannot be read; `--without E<n>` also writes the files of the plan with that edit and the
-  edits that need it left out, into `expected-without-E<n>/`.
+  edits that need it left out, into `expected-without-E<n>/`. With `--check` before the plan's path it writes
+  nothing: it compares the replay with the folders already there and with the plan's `Applies:` line, and exits 1
+  on any difference.
+- `node .claude/kit/audit-scope.mjs scope <kind> <root>...` tells an audit which items to read: `audit` for an item
+  that is new, changed or graded below the target, `carried` for the rest, from the state its `record` command
+  wrote under `docs/superpowers/audits/state/` when the last audit's grades were final. The `repo-audit-plugin`
+  flow runs both; neither is run by hand.
 - `repo.json` here is this repo's own: the values the kit's templates (`solve-task`, `execution.md`) are filled
   with - its name, its checks, its commit rule. Edit it here, then run claude-kit's sync to rewrite those files.
   Its `audit` map tells the `repo-audit-*` skills what this repo ships and how to check it; they read it at run time.

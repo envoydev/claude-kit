@@ -61,13 +61,15 @@ New:
 
 ## Risks and rollback
 
-- <the commands that put back what the edits and the checks changed, and one row per edit that stands on a ruling>
+- <the commands that put back what the edits and the checks changed, and one row per edit that hangs on an open question>
 ````
 
 ## Rules for the sections around the edits
 
 - `Baseline` is `git rev-parse --short HEAD` when the targets were read. The flow starts only on targets with no
   uncommitted change, and compares them against it before the grade and before the edit.
+- A plan with no edit - every audited item already at the target - keeps `## Edits` with 'None' under it and has
+  no `Applies:` line, no expected folder and no checks; the flow reads it as a report-only run.
 - `Effects` is what a session notices: a rule or skill that now loads or attaches where it did not, the always-on
   size before and after, a trigger that moved. `None beyond the edited files` is a valid answer when it is true.
   A size or a count it gives is measured, never estimated: before from the files at `Baseline`, after from the
@@ -78,7 +80,9 @@ New:
   the expected grade with every question at its recommended option, and each question says what the grade is under
   each other option. An answered question stays in the section, marked with the option taken, who took it and
   when - the user's own answer, or a ruling under auto-run that the user may still overturn at the ask - and with
-  what each option not taken would have changed.
+  what each option not taken would have changed. The planner marks it where it was sent the answer before the
+  edit; an answer that is the recommended option is not sent then - `run.md` holds it, and `final.md` lists it
+  under 'Still open'.
 - A check's expected output names only what the edits change - never a count of unrelated lines, a total a tool
   prints over a file or a registry another plan can edit, or the revision `HEAD` is at: in a run of several kinds
   another kind's commit moves each of them before the editor runs. Where the edits add entries, the check names
@@ -98,9 +102,9 @@ New:
 - `Risks and rollback` gives the commands that put back everything the plan and its checks change, in order - the
   edited files from the `Baseline` revision (`git checkout <revision> -- <paths>`), then whatever a check wrote
   that git does not track - and says what they leave behind and whether any step is irreversible; the editor
-  never runs them. Under them, one row per edit that stands on a ruling taken under auto-run: the question, the
-  option taken and how the edit is struck alone - the file as every other edit leaves it is kept under
-  `expected-without-E<n>/<path>` beside the plan and proved with the rest.
+  never runs them. Under them, one row per edit that hangs on an open question, written when the plan is: the
+  question, the option the edit is written for and how the edit is struck alone - the file as every other edit
+  leaves it is kept under `expected-without-E<n>/<path>` beside the plan and proved with the rest.
 
 ## Rules for every edit
 
@@ -134,4 +138,7 @@ New:
   `Applies:` line with each file's size before and after. It writes nothing and exits 1 unless every edit applied,
   naming each edit that did not. `--without E<n>` also writes `expected-without-E<n>/`, leaving out that edit and
   every edit that needs it. It writes only beside the plan and needs no copy; a check that writes still runs on
-  one. Where the script is absent, the planner proves by hand, to the same rules.
+  one. With `--check` before the plan's path it writes nothing: it replays the plan the same way, compares the
+  result with the expected folder and with the count on the `Applies:` line, and exits 1 on any difference,
+  naming each. The flow runs that before the grade and before the edit, so no reader has to replay an edit.
+  Where the script is absent, the planner proves by hand, to the same rules.

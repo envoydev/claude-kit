@@ -29,6 +29,10 @@
       "roots": [
         "shared/skills"
       ],
+      "scope_with": [
+        "shared/defaults.json",
+        ".claude/kit/repo.json"
+      ],
       "checks": [
         "npm run check",
         "node .claude/kit/check.mjs"
@@ -48,6 +52,10 @@
       "roots": [
         "shared/agents"
       ],
+      "scope_with": [
+        "shared/defaults.json",
+        ".claude/kit/repo.json"
+      ],
       "checks": [
         "npm run check"
       ],
@@ -61,6 +69,10 @@
     "rules": {
       "roots": [
         "shared/rules"
+      ],
+      "scope_with": [
+        "shared/defaults.json",
+        ".claude/kit/repo.json"
       ],
       "checks": [
         "npm run check"
@@ -89,6 +101,13 @@
     "hooks": {
       "roots": [
         "bin/status-hook.mjs"
+      ],
+      "scope_with": [
+        "bin/constants.mjs",
+        "bin/kit-settings.mjs",
+        "test/status-hook.test.mjs",
+        "test/status-hook-models.test.mjs",
+        "shared/settings.base.json"
       ],
       "checks": [
         "npm test"

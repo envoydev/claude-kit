@@ -38,7 +38,7 @@ Write them to a folder `refining/<slug>/` in the session scratchpad:
 
 ## The loop
 
-Round 0 grades the draft; rounds 1-3 each revise, then grade again.
+Round 0 grades the draft; rounds 1-3 each revise, then grade again. Where the caller names fewer rounds - the audit flow grades a plan twice at most - the loop ends at the caller's last round: the confirmed findings are fixed, the ask below is not put and none of its options is taken, under auto-run too, and the draft waits for the user as the `plan-approval` rule says of a loop that ended under the pass score.
 
 1. Dispatch ONE new reviewer: the Agent tool, `subagent_type: general-purpose`, `model:` the review model, description `Review <kind> round <n>`, prompt = `references/reviewer-prompt.md` with TASK = `task.md`, RUBRIC = `${CLAUDE_SKILL_DIR}/references/rubric.md`, ARTIFACT = the draft (and, for a plan, its spec). Never a fork, never resumed, never told earlier scores, findings, the change log, or that this is a revision.
 2. Validate the scorecard: recompute each criterion as weight x met / 4 and the total rounded; flip a `yes` with no quote to `no`, and an `n/a` on a check that allows none to `no`; apply the BLOCKER cap of 60. Change nothing else. A malformed reply gets one re-run with a new reviewer - a failed grade, not a second opinion. A well-formed grade is never repeated on an unchanged draft: a fail is revised at once (2026-10-25: 10 of 10 stack re-grades of an unchanged draft were followed by the revision anyway, 16% of the scored minutes). Save it as `round-<n>.md` in the folder, and a copy of the draft it graded as `draft-<n>` (the draft's own extension) beside it.
