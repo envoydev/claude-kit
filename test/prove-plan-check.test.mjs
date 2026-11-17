@@ -182,7 +182,7 @@ test('a plan that writes no file passes with no expected folder', (t) =>
     assert.equal(p.exists(PLAN_EXPECTED_FOLDER), false);
 });
 
-const VARIANT_PROJECT = { files: { 'a.txt': ALPHA_TEXT }, edits: [makeReplaceEdit(1, 'a.txt', 'alpha', 'ALPHA_TEXT'), makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')] };
+const VARIANT_PROJECT = { files: { 'a.txt': ALPHA_TEXT }, edits: [makeReplaceEdit(1, 'a.txt', 'alpha', 'ALPHA'), makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')] };
 
 function variantProject(t)
 {

@@ -54,7 +54,7 @@ const FAILURES = [
     [
         'Old is before the end of the previous edit to the file',
         { 'a.txt': ALPHA_TEXT },
-        [makeReplaceEdit(1, 'a.txt', 'beta', 'BETA'), makeReplaceEdit(2, 'a.txt', 'alpha', 'ALPHA_TEXT')],
+        [makeReplaceEdit(1, 'a.txt', 'beta', 'BETA'), makeReplaceEdit(2, 'a.txt', 'alpha', 'ALPHA')],
         'E2 - a.txt: Old is before the end of E1 - out of file order or overlapping',
     ],
     ['New is the same as Old', { 'a.txt': ALPHA_TEXT }, [makeReplaceEdit(1, 'a.txt', 'beta', 'beta')], 'E1 - a.txt: New is the same as Old'],
@@ -99,7 +99,7 @@ for (const [name, files, edits, line] of FAILURES)
 test('one failed edit does not hide another: two lines on stderr and Applies 1 of 3', (t) =>
 {
     const p = makePlanProject(t, { 'a.txt': ALPHA_TEXT, 'b.txt': 'x\nx\n' });
-    const plan = p.plan([makeReplaceEdit(1, 'a.txt', 'alpha', 'ALPHA_TEXT'), makeReplaceEdit(2, 'a.txt', 'delta', 'DELTA'), makeReplaceEdit(3, 'b.txt', 'x', 'y')]);
+    const plan = p.plan([makeReplaceEdit(1, 'a.txt', 'alpha', 'ALPHA'), makeReplaceEdit(2, 'a.txt', 'delta', 'DELTA'), makeReplaceEdit(3, 'b.txt', 'x', 'y')]);
 
     const result = p.run(plan);
 
@@ -205,7 +205,7 @@ test('an edit to a path a delete-file named fails with deleted by E<m>', (t) =>
 test('a kind the prover does not handle fails and a missing Kind line fails', (t) =>
 {
     const p = makePlanProject(t, { 'a.txt': ALPHA_TEXT });
-    const plan = p.plan([{ n: 1, path: 'a.txt', kind: 'rename', old: 'alpha', new: 'ALPHA_TEXT' }, makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')]);
+    const plan = p.plan([{ n: 1, path: 'a.txt', kind: 'rename', old: 'alpha', new: 'ALPHA' }, makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')]);
     fs.writeFileSync(path.join(p.repo, plan), fs.readFileSync(path.join(p.repo, plan), 'utf8').replace('- Kind: replace\n', ''));
 
     const result = p.run(plan);
@@ -217,7 +217,7 @@ test('a kind the prover does not handle fails and a missing Kind line fails', (t
 test("a missing fence after 'Old:' or 'New:' fails that edit", (t) =>
 {
     const p = makePlanProject(t, { 'a.txt': ALPHA_TEXT });
-    const plan = p.plan([makeReplaceEdit(1, 'a.txt', 'alpha', 'ALPHA_TEXT'), makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')]);
+    const plan = p.plan([makeReplaceEdit(1, 'a.txt', 'alpha', 'ALPHA'), makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')]);
     const text = fs.readFileSync(path.join(p.repo, plan), 'utf8');
     const broken = text.replace(/Old:\n\n```text\nalpha\n```\n/, 'Old:\n').replace(/(New:\n\n```text\nBETA\n)```\n/, '$1');
     fs.writeFileSync(path.join(p.repo, plan), broken);
@@ -356,7 +356,7 @@ test('plan-level errors exit 2 with one prove-plan line and write nothing', asyn
         'an unknown revision': [good.replace(`Baseline: ${p.baseline}`, 'Baseline: nosuchrev00'), /nosuchrev00/],
         'no Edits section': [good.replace('## Edits', '## Changes'), /Edits/],
         'no edit in the Edits section': [good.replace(/### E1[\s\S]*?(?=## Open questions)/, ''), /no edit/],
-        'numbers that do not rise': [plan([makeReplaceEdit(2, 'a.txt', 'alpha', 'ALPHA_TEXT'), makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')]), /rise/],
+        'numbers that do not rise': [plan([makeReplaceEdit(2, 'a.txt', 'alpha', 'ALPHA'), makeReplaceEdit(2, 'a.txt', 'beta', 'BETA')]), /rise/],
         'a path that leaves the repository': [plan([makeReplaceEdit(1, '../outside.txt', 'x', 'y')]), /outside the repository/],
         'a padded path that leaves the repository': [plan([{ n: 1, path: ' ../plan.md', kind: 'new-file', new: 'x' }]), /outside the repository/],
         'an edit heading after the Edits section ended': [good.replace('## Open questions', '## Open questions\n\n### E2 - b.txt'), /E2 is outside the Edits section/],

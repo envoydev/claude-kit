@@ -182,6 +182,7 @@ function auditSkillHashes(root, kind)
     const hashes = hashFiles(root, [...new Set([...scoring, ...folder])]);
     return { scoring: listingHash(scoring, hashes), folder: listingHash(folder, hashes) };
 }
+
 function readState(root, kind)
 {
     const relative = stateFilePath(kind);

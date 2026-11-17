@@ -46,7 +46,7 @@ export function makeRepo(t, files = {})
 
 export function runNode(script, args = [], options = {})
 {
-    const result = spawnSync(process.execPath, [script, ...args], {
+    const result = spawnSync(process.execPath, [...(options.nodeArgs ?? []), script, ...args], {
         cwd: options.cwd,
         env: options.env ?? process.env,
         encoding: 'utf8',
@@ -242,14 +242,14 @@ const FILES = {
     'rules/a.md': 'A\n',
     'rules/b.md': 'B\n',
     'AGENTS.md': 'agents\n',
-    'skills/one/SCOPE_SKILL.md': 'one\n',
+    'skills/one/SKILL.md': 'one\n',
     'skills/one/references/x.md': 'x\n',
-    'skills/two/SCOPE_SKILL.md': 'two\n',
+    'skills/two/SKILL.md': 'two\n',
     'hooks/guard.mjs': 'guard\n',
     'hooks/helper.mjs': 'helper\n',
     'hooks/data/list.json': '[]\n',
     'cfg/defaults.json': '{}\n',
-    [`${SCOPE_SKILL}/SCOPE_SKILL.md`]: 'audit\n',
+    [`${SCOPE_SKILL}/SKILL.md`]: 'audit\n',
     [`${SCOPE_SKILL}/references/rubric.md`]: 'rubric\n',
     [`${SCOPE_SKILL}/references/currency.md`]: 'currency\n',
 };

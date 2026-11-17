@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
+import { pathToFileURL } from 'node:url';
 import {
     EARLIER,
     GRADES_A_AND_B,
@@ -22,6 +23,7 @@ import {
     printedLines,
     runNode,
     withoutGradesFile,
+    writeFiles,
 } from './support.mjs';
 
 test('record writes only the state file, and leaves no temp file in its folder', (t) =>
@@ -109,7 +111,7 @@ test('the audit skill line still counts the kept items after a later record', (t
     const p = makeScopeProject(t);
     p.record(GRADES_A_AND_B, 'rules');
     p.setState((state) => { state.items['rules/a.md'].date = EARLIER; state.items['rules/b.md'].date = LATER; });
-    p.write(`${SCOPE_SKILL}/SCOPE_SKILL.md`, 'audit 2\n');
+    p.write(`${SCOPE_SKILL}/SKILL.md`, 'audit 2\n');
     p.write('rules/c.md', 'C\n');
     p.add('rules/c.md');
 
@@ -250,6 +252,28 @@ test('a state folder that cannot be written is one audit-scope line and leaves n
 
     expectRefused(result);
     assert.deepEqual(fs.readdirSync(stateFolder), []);
+});
+
+test('an internal fault is not reported as a usage error', (t) =>
+{
+    const p = makeScopeProject(t);
+    const preload = path.join(makeTempDir(t, 'preload'), 'fault.mjs');
+    writeFiles(path.dirname(preload), {
+        'fault.mjs': [
+            "import fs from 'node:fs';",
+            "import { syncBuiltinESMExports } from 'node:module';",
+            "fs.readdirSync = () => { throw Object.assign(new TypeError('coded fault'), { code: 'ERR_INVALID_ARG_TYPE' }); };",
+            'syncBuiltinESMExports();',
+            '',
+        ].join('\n'),
+    });
+
+    const result = runNode(SCOPE_SCRIPT, ['scope', 'rules', 'rules'], { cwd: p.repo, nodeArgs: ['--import', pathToFileURL(preload).href] });
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.doesNotMatch(result.stderr, /^audit-scope:/m);
+    assert.match(result.stderr, /coded fault/);
 });
 
 for (const outside of ['..\\outside', 'a\\..\\b', 'C:\\x', '\\\\server\\x'])

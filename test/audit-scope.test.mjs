@@ -196,7 +196,7 @@ test('a change elsewhere in the audit skill carries the grades and says so', (t)
     const p = makeScopeProject(t);
     p.record(GRADES_A_AND_B, 'rules');
     p.setState((state) => { state.items['rules/a.md'].date = EARLIER; state.items['rules/b.md'].date = LATER; });
-    p.write(`${SCOPE_SKILL}/SCOPE_SKILL.md`, 'audit 2\n');
+    p.write(`${SCOPE_SKILL}/SKILL.md`, 'audit 2\n');
 
     assert.deepEqual(printedLines(p.scope('rules')), [
         carriedLine('rules/a.md', 'A / 9', EARLIER),
@@ -296,7 +296,7 @@ test('the age line sits between the Scope line and the audit skill line', (t) =>
     p.record(GRADES_A_AND_B, 'rules');
     const old = daysAgo(40);
     p.setState((state) => { state.items['rules/a.md'].date = old; });
-    p.write(`${SCOPE_SKILL}/SCOPE_SKILL.md`, 'audit 2\n');
+    p.write(`${SCOPE_SKILL}/SKILL.md`, 'audit 2\n');
 
     const printed = printedLines(p.scope('rules'));
 
