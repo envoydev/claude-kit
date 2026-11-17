@@ -105,7 +105,8 @@ time.
    outside `parallel`, that is before the next plan is applied. Where another kind's plan was applied after this kind's planner started -
    `auto_approve` off, or `parallel` - first run its scope once more and name in the verify message each
    carried item that now reads `changed`: `final.md` and the scorecard list it as 'changed after planning - not
-   audited', never as carried. A kind that is `done - all <n> items carried` is scoped once more the same way
+   audited', never as carried. One that now reads `older than` stays carried for this run - the day changed, not
+   the item. A kind that is `done - all <n> items carried` is scoped once more the same way
    before the close, and its scorecard lists such an item the same way. Where that plan edits a path under this
    kind's roots or its `scope_with`, the
    kind is not recorded, as the flow's step 10 says.

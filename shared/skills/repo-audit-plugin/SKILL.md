@@ -82,7 +82,8 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    Then the scope, where the repository holds `.claude/kit/audit-scope.mjs` and the kind is scoped: `skills`,
    `commands`, `agents` and `rules` always, `hooks` only where its `audit` entry carries a `scope_with` list -
    the paths every item's grade rests on besides its own files. Run
-   `node .claude/kit/audit-scope.mjs scope <kind> [--with <path>]... <root>...` with the entry's `roots` and one
+   `node .claude/kit/audit-scope.mjs scope <kind> [--full] [--max-age <days>] [--with <path>]... <root>...` with
+   the entry's `roots` and one
    `--with` for each `scope_with` path, and `--max-age <days>` where the entry carries `max_age_days`: a carried
    grade older than that - 30 days without the key - is audited again, since a carried item is never checked
    against outside documentation. Every path the script takes - a root, a `--with` path, `--run` - is
@@ -92,14 +93,15 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    - an `audit <item>` line is an item to audit - new, changed, graded below the target, or graded longer ago
      than the age limit. Those items are the
      planner's targets, and where the audit skill says 'every item' it means every one of them;
-   - a `carried <item>` line is an item graded at the target whose files have not changed since: it is not read
+   - a `carried <item>` line is an item graded at the target, within the age limit, whose files have not changed
+     since: it is not read
      or scored, and goes to the planner as printed, under `CARRIED:`;
    - the `Graded under:` line goes back to `record` in step 10.
 
    No `audit` line: start no seat. Print the scope lines and a scorecard of the carried grades, set the status
    `done - all <n> items carried`, record nothing and skip step 12. Where the script is absent, the kind is not
-   scoped or `scope` exits 2, every item is audited, and an `audit-scope:` line it printed goes on the size line
-   and into the report.
+   scoped or `scope` exits with anything but 0, every item is audited, and the `audit-scope:` line it printed -
+   on an exit other than 2, the last line of its stderr - goes on the size line and into the report.
 2. **Settings.** Take the `kit status` line of the request, or run `node .claude/kit/settings.mjs`, and write `run.md`: the kind, the way in (one kind, or several with the queue file's path), `WRITE`, the planner's and the
    editor's model, the pass score and `Plan grade: on` or `off`, each with its source - the user's words in this
    session, the settings, or the default. The plan grade is off when that line's `scoring` is off or
@@ -212,8 +214,9 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    at a time, before any later kind's plan is applied, so that no grade is stored beside the hash of a later edit. A report-only
    run records the same way at step 8, its baseline grades standing. A run that stops before its verify records
    nothing, so the items it edited read `changed` next time. Keep what `record` printed in `run.md` and print
-   its `Recorded:` line and each `skipped` line in the report; where it exits 2, print its `audit-scope:` line
-   there instead and go on. Where another kind's plan was applied after this kind's planner started and edits a
+   its `Recorded:` line and each `skipped` line in the report; where it exits with anything but 0, print its
+   `audit-scope:` line - on an exit other than 2, the last line of its stderr - there instead and go on. Where
+   another kind's plan was applied after this kind's planner started and edits a
    path under
    this kind's roots or its `scope_with`, do not record the kind: the edited items then read `changed` next time.
 11. **Report.** Print the audit skill's output contract from `final.md`, then the scorecard - the quality before
