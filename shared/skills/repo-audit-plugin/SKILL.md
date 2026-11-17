@@ -40,7 +40,8 @@ Two ways in. Say in one line which one this run took:
 - **The grader** is the `refining-plans` skill, grading the plan when the plan grade is on.
 - **The editor** is the `audit-editor` agent. It applies the plan and decides nothing.
 - **Each seat's model** is passed as its dispatch's `model`: the one the user named for this run only, else the
-  `plan_model` or `implement_model` of step 2's settings (Opus plans and Sonnet edits where nothing sets another). A
+  `audit_model` or `implement_model` of step 2's settings - the audit model is the `plan_model` until it is set
+  (Opus plans and Sonnet edits where nothing sets another). A
   model named without that limit ('audit with fable', 'edit with haiku') is a saved setting and reaches the seat that
   way. A value of `none`
   passes no `model`. The grader runs on the `review_model`.
@@ -111,7 +112,8 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    one batch.
 4. **Size before spend.** No planner starts before the user has seen two lines, in this form:
    `Size: <kind> - <files> files, <total> characters, <N> batch(es), <seats> planner seat(s)` and
-   `Models: plan <model>, review <model>, implement <model>`. Where step 1 ran the scope, add its `Scope:` line
+   `Models: plan <model>, review <model>, implement <model>` - `plan` is the planner seat's model, the
+   `audit_model`. Where step 1 ran the scope, add its `Scope:` line
    and, where it printed one, its line that the audit skill changed - the cue for `full`. One batch: add whether
    the plan is graded, and go on. More than one batch: stop and ask,
    since each batch is its own planner on the stronger model and a graded plan costs a round or more on top:

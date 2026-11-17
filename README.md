@@ -70,7 +70,7 @@ that repo's layout, commands and release path.
 
 ## Settings a project can change
 
-Eight values - the pass score, four models and three switches - live in the kit's own file, `.claude/kit/settings.json`,
+Nine values - the pass score, five models and three switches - live in the kit's own file, `.claude/kit/settings.json`,
 which the chat writes: say 'plan model fable' or 'stop scoring' and it is saved there until it is changed. The status
 hook (`.claude/kit/status-hook.mjs`, a `UserPromptSubmit` hook) shows them with every request - one line for the
 user, the same values with their sources for Claude - so neither a new session nor a compacted one has to remember
@@ -83,7 +83,8 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review
 | Name | Variable | What it sets | Without it |
 |---|---|---|---|
 | `pass_score` | `KIT_PASS_SCORE` | the score `refining-plans` grades a spec or plan to, a whole number from 1 to 100 | 90 |
-| `plan_model` | `KIT_PLAN_MODEL` | the model that writes plans: the `audit-planner` agent, the plan step of `solve-task` | the `audit-planner` agent's own (opus) |
+| `plan_model` | `KIT_PLAN_MODEL` | the model that writes plans: the plan step of `solve-task`, and the `audit-planner` agent where no `audit_model` is set | the `audit-planner` agent's own (opus) |
+| `audit_model` | `KIT_AUDIT_MODEL` | the model of the `audit-planner` agent alone, so an audit can plan on another model than everyday plans | the `plan_model` |
 | `review_model` | `KIT_REVIEW_MODEL` | the model that reviews: the `refining-plans` reviewer, the review step of `solve-task` | the `plan-grader` agent's own (opus) |
 | `implement_model` | `KIT_IMPLEMENT_MODEL` | the model that implements: the `audit-editor` agent, the build step of `solve-task` | the `audit-editor` agent's own (sonnet) |
 | `search_model` | `KIT_SEARCH_MODEL` | the model that searches the code for the other three in `solve-task` - where a thing is, what calls it - and reports paths and lines | haiku |
@@ -117,7 +118,7 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review
   leaves a repo's `env` block alone.
 - The pass score and scoring govern the grade of a spec or a plan, an audit's edit plan included. An audit's own
   score of each file, and its grade A bar, belong to the audit skill and are never switched off.
-- A model is `sonnet`, `opus`, `haiku` or `fable`. The four models are what a step is dispatched on, not what the
+- A model is `sonnet`, `opus`, `haiku` or `fable`. The five models are what a step is dispatched on, not what the
   chat session runs on: a session cannot change its own model. A step whose model is the session's own runs there;
   any other goes to an agent with that model, and the closing report names the model each step actually ran on.
 - Claude Code applies a new or changed variable to sessions that are already open, but a deleted one stays set in
