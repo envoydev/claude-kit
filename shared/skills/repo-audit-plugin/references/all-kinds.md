@@ -29,9 +29,10 @@ this order, whatever order the request names them in.
    there is listed as `no targets` and not run.
 2. **The queue file.** Write `docs/superpowers/audits/<date>-all/queue.md`: one line per kind with its wave, its
    status - `pending`, `planning`, `graded <score>`, `waiting for approval`, `applying`, `verifying`,
-   `done <baseline> -> <final>`, `no targets`, `NOT RUN - <why>` - its run folder and its commit. Update a line
-   whenever its status changes. After a compaction, Read it before the next step: it is how the run outlives the
-   summary.
+   `done <baseline> -> <final>`, `no targets`, `NOT RUN - <why>` - its run folder, its seats' ids and its
+   commit - and under those lines one `Next:` line for the run, with the step it is at and the one after it. Update
+   a kind's line whenever its status changes, and `Next:` at every step. After a compaction, Read it before the
+   next step: it is how the run outlives the summary.
 3. **Each audit's skill.** For every kind that will run, Read `.claude/skills/repo-audit-<kind>/SKILL.md` with the
    Read tool - the audits are typed-only, so the Skill tool cannot load them, and the user's ask for this run is
    their word for each audit in it. Its line that loads this skill is already done. This session coordinates only:
@@ -56,7 +57,9 @@ this order, whatever order the request names them in.
    reviewer of every plan is dispatched in one message, and each plan's own `refining-plans` loop goes on from its
    scorecard. A plan's revision is its own planner's.
 7. **Approval** follows the `plan-approval` rule, per plan, and replaces the flow's step 8 ask for this run:
-   - `auto_approve=on`: every plan that passed is approved by the run and ledgered.
+   - `auto_approve=on`: every plan that passed is approved by the run and ledgered, and before its editor starts
+     every edit of it that stands on a ruling taken under auto-run is printed with its `New` text - the user has
+     not seen that answer, and no ask will show it.
    - `auto_approve=off`: hand all the plans over in one message - one row per kind with its baseline grades, plan
      path, score path and edit count, and every edit that stands on a ruling taken under auto-run, with its `New`
      text - and notify the user. Never park on one kind's plan while another kind is
@@ -65,9 +68,10 @@ this order, whatever order the request names them in.
    and a check must not see another plan half applied. An audit leaves its edits uncommitted, and the flow applies
    no plan to targets that hold uncommitted changes, so:
    - where the request said to commit - the word `commit` after the command, 'commit each audit' in chat - commit
-     each kind's edited files by pathspec, under the repo's own commit rule, one commit per kind, before the next
-     plan is applied. Never push. A plan whose targets that commit changed goes back to its planner first, as the
-     flow's freshness check says;
+     each kind's edited files by pathspec - the plan's last check lists them - under the repo's own commit rule,
+     one commit per kind, before the next plan is applied; then the repo's own copies are refreshed, or reported
+     as stale, as the flow's step 10 says, before the next kind's checks read them. Never push. A plan whose
+     targets that commit changed goes back to its planner first, as the flow's freshness check says;
    - where it did not, commit nothing: a kind whose targets an earlier kind edited is
      `NOT RUN - targets edited by <kind>, uncommitted`, and the close names the commit that unblocks it.
 9. **Verify side by side** (step 10): send every applied kind's planners their verify message in one turn.

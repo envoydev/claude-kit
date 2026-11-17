@@ -15,7 +15,7 @@ Work set-level defects first, before the per-command loops:
   the cluster on Dimension 4 and any dimension the edit touched. A new script is a code change with its own tests -
   plan it only where the repo's `notes` say commands may gain one in an audit; otherwise report it as a candidate.
 
-Then, for each command still scoring below A / 9, run this bounded loop:
+Then, for each command still scoring below A / 9, run this bounded loop. A command already at A / 9 gets no loop edit: each deduction it keeps is scored, cited in the report and listed as not planned, with the reason 'at the target - the loop runs only below it'. The loop:
 
 1. Snapshot the command file before the first edit.
 2. Rank the dimension deductions by points lost. Fix the largest first.

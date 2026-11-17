@@ -1,7 +1,8 @@
 # The audit plan format
 
 The planner writes `plan.md` in this shape; the editor applies it top to bottom. The plan is complete when a reader
-who has never seen the audit could apply it with a text editor and nothing else.
+who has never seen the audit could apply it with a text editor and nothing else. Contents: the layout - the rules for
+the sections around the edits - the rules for every edit.
 
 ## Layout
 
@@ -56,7 +57,11 @@ New:
 
 ## Checks
 
-- <each command the editor runs after the last edit, with the output that means it passed>
+1. <each command the editor runs after the last edit, in the order they run, with the output that means it passed>
+
+## Risks and rollback
+
+- <the commands that put back what the edits and the checks changed, and one row per edit that stands on a ruling>
 ````
 
 ## Rules for the sections around the edits
@@ -65,6 +70,8 @@ New:
   uncommitted change, and compares them against it before the grade and before the edit.
 - `Effects` is what a session notices: a rule or skill that now loads or attaches where it did not, the always-on
   size before and after, a trigger that moved. `None beyond the edited files` is a valid answer when it is true.
+  A size or a count it gives is measured, never estimated: before from the files at `Baseline`, after from the
+  proved results beside the plan, and again whenever an `Old` or a `New` changes.
 - `Depends on` names what must hold for the plan to apply: a sibling checkout or a tool version a check needs, a
   claim about outside documentation that was not read. An assumption nobody can verify is an open question instead.
 - `Open questions`: an edit that hangs on a question is still written, for the recommended option. `Summary` gives
@@ -72,8 +79,28 @@ New:
   each other option. An answered question stays in the section, marked with the option taken, who took it and
   when - the user's own answer, or a ruling under auto-run that the user may still overturn at the ask - and with
   what each option not taken would have changed.
-- A check's expected output names only what the edits change - never a count of unrelated lines, which is stale
-  before the editor runs.
+- A check's expected output names only what the edits change - never a count of unrelated lines, a total a tool
+  prints over a file or a registry another plan can edit, or the revision `HEAD` is at: in a run of several kinds
+  another kind's commit moves each of them before the editor runs. Where the edits add entries, the check names
+  the ids or the lines they add and the words that mean failure, never how many the file then holds.
+- Checks are numbered in the order they run, and every check is run and reported as it comes out. A check that
+  writes and is safe only when something holds - a sync that copies a whole tree, a generator - tests that
+  condition in its own command, so that it fails without writing where the condition does not hold. A note beside
+  the command ('read Depends on first') is a decision left to the editor.
+- A check that reads a copy the edits reach only through a command - a sync, a build - comes after that command
+  as a check of its own, and only where the `checks` or `notes` the dispatch carries name a command that writes
+  this repository's copies alone. Where they name none, or only one that writes other repositories too, the plan
+  lists no such command, and `Depends on` says the copies are stale and which checks read them.
+- The last check is `git status --porcelain -- <the paths the plan edits>`, each path written out, and its
+  expected output is one line per path and nothing else: the list is the pathspec a commit of the plan takes. It
+  is scoped to those paths because the tree may hold changes that are not this plan's - another kind's edits in
+  a run that commits nothing, a file outside the targets.
+- `Risks and rollback` gives the commands that put back everything the plan and its checks change, in order - the
+  edited files from the `Baseline` revision (`git checkout <revision> -- <paths>`), then whatever a check wrote
+  that git does not track - and says what they leave behind and whether any step is irreversible; the editor
+  never runs them. Under them, one row per edit that stands on a ruling taken under auto-run: the question, the
+  option taken and how the edit is struck alone - the file as every other edit leaves it is kept under
+  `expected-without-E<n>/<path>` beside the plan and proved with the rest.
 
 ## Rules for every edit
 
@@ -84,7 +111,11 @@ New:
   its `New`. The plan says so in one line above `Summary` (`Applies: <n> of <n> edits`), the result of each edited
   file is kept under a folder beside the plan - `expected/<path>` for `plan.md`, `retro-expected/<path>` for
   `retro-plan.md` - and the plan's first check compares the edited file with it (`cmp`). Every other check is run
-  against those results before the plan is handed over. A plan the user picks edits from goes back to its author:
+  against those results before the plan is handed over. A check that writes - a sync, a
+  generator, a fixer - is run only on a copy of the whole repository inside the run folder, from a script file kept
+  beside the plan that changes into the copy by its full path and stops unless its working directory is that copy -
+  never as a command typed after a `cd` in one shell line, where a failed link leaves the shell at the repository
+  root and the write lands there. A plan the user picks edits from goes back to its author:
   each edit not picked moves from `Edits` to `Not planned` with 'struck at the ask', the rest are proved again,
   and the expected files and the checks are replaced before the editor starts.
 - `insert-after` gives `Old` as the anchor that stays and `New` as what follows it. `delete` gives `Old` only.

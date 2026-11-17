@@ -4,7 +4,7 @@ Read before the first edit. The anti-gaming guards at the end override the grade
 
 Set-level defects first. A coverage gap: add the hook or the permission rule only with the measured incident that motivates it, or record the decline with its reason - never a gate on a hunch. A double home: retire the prose mandate to a pointer at the mechanism. A route gap: extend the same hook to the missing route with the same test shapes. A wiring drift: fix the source the notes name for the wiring, the retired set and the timeouts, regenerate whatever is generated from it, and let the `checks` and the tests prove it. A collision: merge the jobs into one hook or record the order and the combined cost. A contradiction: the house rule wins - repair the receipt path (the skill step writes what the hook reads, or the hook reads what the step writes) or retire the instruction; amend the rule only with a measurement and a recorded reason. A child hook that duplicates, contradicts or collides with the root: the tools audit owns the plugin's fate; this run writes the row, the recommended home (the house hook, the child hook, or neither) and, where the child stays, the timeout and matcher it would need - and never edits a plugin's files in its cache.
 
-Then, for each hook still below A / 9, a bounded loop:
+Then, for each hook still below A / 9, a bounded loop. A hook already at A / 9 gets no loop edit: each deduction it keeps is scored, cited in the report and listed as not planned, with the reason 'at the target - the loop runs only below it'. The loop:
 
 1. Snapshot the hook file, its wiring lines and its tests.
 2. Rank the deductions by points lost. Fix the largest first.

@@ -24,7 +24,7 @@ For each cluster in the duplication map: pick the single home, replace the copie
 
 ## Step 4 - Per-file loop
 
-Then, for each file still scoring below A / 9, run this bounded loop:
+Then, for each file still scoring below A / 9, run this bounded loop. A file already at A / 9 gets no loop edit: each deduction it keeps is scored, cited in the report and listed as not planned, with the reason 'at the target - the loop runs only below it'. The loop:
 
 1. Snapshot the file before the first edit.
 2. Rank the dimension deductions by points lost. Fix the largest first.
