@@ -114,6 +114,11 @@ export const TEMP_SUFFIX = '.tmp';
 export const HOOK_ERROR_PREFIX = 'claude-kit status hook:';
 export const SAVED_PREFIX = 'saved:';
 export const NOT_SAVED_PREFIX = 'not saved -';
+// The most characters of one value or one source the status hook prints, and what it puts where it cut one: a kit file,
+// a variable or an agent file can hold a value of any length, and Claude Code replaces a string of more than 10,000
+// characters that a hook returns with a pointer to a file.
+export const MAX_SHOWN_LENGTH = 400;
+export const CUT_MARK = '...';
 
 // check.mjs: the registry of text kept on purpose in more than one file (only the kit itself has it), the separator
 // between a sibling repo and a path in it ('alfred-code:AGENTS.md'), and the words a failure to read the registry opens with.

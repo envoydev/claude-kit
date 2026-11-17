@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { KIT_FILE, REAL_KIT, cannotLockFolders, kitFileExists, makeHookRepo, makeTempDir, promptInput, readKitFile, runHook, runHookScript } from './support.mjs';
+import { KIT_FILE, REAL_KIT, agentFile, cannotLockFolders, kitFileExists, makeHookRepo, makeTempDir, promptInput, readKitFile, runHook, runHookScript } from './support.mjs';
 
 const contextOf = (output) => output.hookSpecificOutput.additionalContext;
 
@@ -64,6 +64,21 @@ test('a switch in the kit file that cannot be used falls through, and Claude is 
 
     assert.match(output.systemMessage, /\| scoring on \(pass 90\) \|/);
     assert.ok(contextOf(output).includes(`scoring=on (default - scoring="maybe" in ${KIT_FILE} is neither 'on' nor 'off');`), contextOf(output));
+});
+
+test("a value too long to show is cut, so the user's line and Claude's values stay under the 10,000 characters Claude Code allows a hook", (t) =>
+{
+    const outputLimit = 10000;
+    const junk = 'x'.repeat(20000);
+    const repo = makeHookRepo(t, { [KIT_FILE]: { scoring: junk }, '.claude/agents/audit-planner.md': agentFile(junk) });
+
+    const { status, output } = runHook(repo, promptInput('auto run on'), { KIT_REVIEW_MODEL: junk });
+
+    assert.equal(status, 0);
+    assert.ok(output.systemMessage.length < outputLimit, `the user's line is ${output.systemMessage.length} characters`);
+    assert.ok(contextOf(output).length < outputLimit, `Claude's values are ${contextOf(output).length} characters`);
+    assert.ok(output.systemMessage.includes(`| plan ${'x'.repeat(400)}... |`), output.systemMessage.slice(0, 200));
+    assert.ok(contextOf(output).endsWith(` saved: auto_run=on in ${KIT_FILE};`), contextOf(output).slice(-200));
 });
 
 test('a switch in the committed settings file is ignored here too, unless the kit file holds one', (t) =>
@@ -194,6 +209,7 @@ test('a hook that sits outside a repo\'s .claude/kit saves nothing, says so and 
 for (const [label, breakIt] of [
     ['missing', (folder) => fs.rmSync(path.join(folder, 'kit-settings.mjs'))],
     ['broken', (folder) => fs.writeFileSync(path.join(folder, 'constants.mjs'), 'export const = ;')],
+    ['loaded without what the hook calls', (folder) => fs.writeFileSync(path.join(folder, 'kit-settings.mjs'), 'export {};\n')],
 ])
 {
     test(`a sibling module that is ${label} never blocks: the hook exits 0 and says so on stderr`, (t) =>
