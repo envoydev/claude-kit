@@ -113,7 +113,7 @@ Produce a single report with:
 2. Per hook, a short block: baseline score by dimension with the top 2-3 cited deductions; what changed, as a terse list of edits; final score by dimension; any blocker.
 3. Coverage map: every must-never and must-always action with its cover (hook and routes / permission rule / declined with reason).
 4. Fit map: one row per hook and relation - `mechanizes` / `honours` / `names` / `double home` / `contradicts` / `orphan` / `shadows` - with the rule, skill step, agent line or design-record line it meets and the resolution (pointer left, receipt path repaired, instruction retired, rule amended with its measurement) or why it stands.
-4b. Shared plugin hooks: one row per child hook entry with its event, matcher, timeout, job, and its relation to the root - `collides` / `duplicates` / `contradicts` / `independent` - plus the recommended home handed to `repo-audit-tools`.
+4b. Shared plugin hooks: one row per child hook entry with its event, matcher, timeout, job, and its relation to the root - `collides` / `duplicates` / `contradicts` / `independent` / `unread` (a script not read to its last line, with what was read - the read is still owed) - plus the recommended home handed to `repo-audit-tools`.
 4c. Collision table: every shared event and matcher, house or child, with the jobs, the order and the combined cost.
 5. Wiring parity: every wiring source the notes name (the source table, the generated entry, the copy-route writer, a mods module's registrations against its feature folders), the deployed files, the retired set - agreeing or not, with the line.
 6. The Phase 1b currency table with this run's verdicts.

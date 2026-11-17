@@ -59,6 +59,8 @@ Floor for A: >= 17/20.
 | 50-64 | D | 3-4 |
 | < 50 | F | 1-2 |
 
+Where a band gives two numerics, the upper half of its totals takes the higher: 85-89 is 8 and 80-84 is 7, 72-79 is 6 and 65-71 is 5, 57-64 is 4 and 50-56 is 3, 25-49 is 2 and under 25 is 1. A report prints the numeric beside the letter, and a mean is taken over the numerics.
+
 An agent reaches A / 9 only when the total is >= 90 and every dimension clears its floor. This is deliberate: it blocks acing some dimensions and averaging away a weak one. An agent with a sharp prompt but blanket tool access is not an A agent, because the over-grant is a real risk. An agent that reads perfectly but inlines a procedure a skill owns, or forks a convention a rule defines, is not an A agent either, because the duplication is a maintenance defect the reader of one file cannot see.
 
 An agent implicated in an unresolved invocation cycle or cross-layer contradiction is blocked from A until it is resolved, whatever its own total.

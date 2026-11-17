@@ -111,7 +111,9 @@ New:
   its `New`. The plan says so in one line above `Summary` (`Applies: <n> of <n> edits`), the result of each edited
   file is kept under a folder beside the plan - `expected/<path>` for `plan.md`, `retro-expected/<path>` for
   `retro-plan.md` - and the plan's first check compares the edited file with it (`cmp`). Every other check is run
-  against those results before the plan is handed over. A check that writes - a sync, a
+  against those results before the plan is handed over, with no exception: what a check needs and the copy lacks -
+  a sibling checkout, say - the planner builds inside the run folder, and a check it cannot prove is not listed.
+  A check that writes - a sync, a
   generator, a fixer - is run only on a copy of the whole repository inside the run folder, from a script file kept
   beside the plan that changes into the copy by its full path and stops unless its working directory is that copy -
   never as a command typed after a `cd` in one shell line, where a failed link leaves the shell at the repository

@@ -27,6 +27,10 @@ this order, whatever order the request names them in.
    kind is named back with the list above, and the run goes on with the rest. Say in one line which kinds run and
    which were left out, before anything else. Then read `.claude/kit/repo.json` -> `audit`: a kind with no entry
    there is listed as `no targets` and not run.
+   Kinds the user adds after the edits of the kinds first named are applied join the same run as a second part:
+   add them to the queue file under the first part's lines and take them through steps 3 to 12 in the run order.
+   The word `commit` carries from the request that started the run, and step 13's one self-review runs after the
+   last kind of the last part.
 2. **The queue file.** Write `docs/superpowers/audits/<date>-all/queue.md`: one line per kind with its wave, its
    status - `pending`, `planning`, `graded <score>`, `waiting for approval`, `applying`, `verifying`,
    `done <baseline> -> <final>`, `no targets`, `NOT RUN - <why>` - its run folder, its seats' ids and its
@@ -52,7 +56,9 @@ this order, whatever order the request names them in.
    size ask (the flow's step 4) for this run.
 5. **Plan side by side.** Dispatch the planners of every wave 1 kind in one message (the flow's step 5), at most
    four planner seats running at a time across all kinds and batches; a seat that frees takes the next waiting
-   batch. Each kind's open questions (step 6) are gathered and put together, at most four per ask.
+   batch. The cap is for planning, where a seat reads its targets: the verify and retro messages of steps 9 and
+   13 go to every seat in one turn. Each kind's open questions (step 6) are gathered and put together, at most
+   four per ask.
 6. **Grade side by side.** Run each plan's freshness check and grade (step 7): with `Plan grade: on`, the first
    reviewer of every plan is dispatched in one message, and each plan's own `refining-plans` loop goes on from its
    scorecard. A plan's revision is its own planner's.
@@ -103,7 +109,7 @@ this order, whatever order the request names them in.
 
 - An audit run from memory of its skill, its `SKILL.md` never Read in this run.
 - Wave 1 kinds planned, graded or verified one after another while seats were free - or more than four planner
-  seats running at once.
+  seats planning at once.
 - Two editors running at the same time, or a plan applied on top of another kind's uncommitted edits to the same
   targets.
 - A commit made without the user's word for it, or a push.
