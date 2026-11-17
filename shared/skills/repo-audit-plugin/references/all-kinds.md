@@ -54,8 +54,8 @@ time.
    it reads no audited file and scores nothing.
 4. **Size and models, once for the run.** Do the flow's steps 1 to 3 for each kind, its scope included, then state
    `Size:` with one entry per kind (items audited and carried, files, characters, batches) and the total planner
-   seats, `Models:` as the flow gives them, and under them each kind's line that its audit skill changed or its
-   `audit-scope:` line, where its scope printed one.
+   seats, `Models:` as the flow gives them, and under them each kind's `age:` line, its line that its audit skill
+   changed and its `audit-scope:` line, where its scope printed one.
    With more than one kind to run, ask once before the first planner starts:
 
    ```ask

@@ -48,7 +48,8 @@ The `repo-audit-*` skills are one generic copy each. What they audit in a repo c
 graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
 
 An audit of `skills`, `commands`, `agents` or `rules` reads only the items that are new, changed since they were
-last graded on this machine, or were graded below the target; the rest are carried with their grade, and `full`
+last graded on this machine, were graded below the target, or were graded more than 30 days ago (`max_age_days` in
+the entry changes the number); the rest are carried with their grade, and `full`
 after the command audits every item again. An entry may add `scope_with`: paths every item's grade rests on besides
 its own files - a change to one of them audits every item, and an entry under a root that the list names is no item.
 `hooks` is scoped only where its entry has the list. A change to an audit skill's `references/rubric.md` or

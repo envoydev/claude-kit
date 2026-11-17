@@ -83,11 +83,14 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    `commands`, `agents` and `rules` always, `hooks` only where its `audit` entry carries a `scope_with` list -
    the paths every item's grade rests on besides its own files. Run
    `node .claude/kit/audit-scope.mjs scope <kind> [--with <path>]... <root>...` with the entry's `roots` and one
-   `--with` for each `scope_with` path. Every path the script takes - a root, a `--with` path, `--run` - is
+   `--with` for each `scope_with` path, and `--max-age <days>` where the entry carries `max_age_days`: a carried
+   grade older than that - 30 days without the key - is audited again, since a carried item is never checked
+   against outside documentation. Every path the script takes - a root, a `--with` path, `--run` - is
    written from the repository root, never absolute. `full` after the command, or 'audit everything again' in
    chat, adds
    `--full`; it is no kind. Keep the output in `run.md`:
-   - an `audit <item>` line is an item to audit - new, changed, or graded below the target. Those items are the
+   - an `audit <item>` line is an item to audit - new, changed, graded below the target, or graded longer ago
+     than the age limit. Those items are the
      planner's targets, and where the audit skill says 'every item' it means every one of them;
    - a `carried <item>` line is an item graded at the target whose files have not changed since: it is not read
      or scored, and goes to the planner as printed, under `CARRIED:`;
@@ -114,7 +117,8 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    `Size: <kind> - <files> files, <total> characters, <N> batch(es), <seats> planner seat(s)` and
    `Models: audit <model>, review <model>, implement <model>` - `audit` is the planner seat's model, the
    `audit_model`. Where step 1 ran the scope, add its `Scope:` line
-   and, where it printed one, its line that the audit skill changed - the cue for `full`. One batch: add whether
+   and, where it printed them, its `age:` line and its line that the audit skill changed - the cue for `full`.
+   One batch: add whether
    the plan is graded, and go on. More than one batch: stop and ask,
    since each batch is its own planner on the stronger model and a graded plan costs a round or more on top:
 
