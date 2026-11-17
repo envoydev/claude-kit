@@ -11,6 +11,7 @@ test('with no variable set it prints the defaults and the model each agent file 
     assert.deepEqual(lines, {
         pass_score: '90 (default)',
         plan_model: "opus (the audit-planner agent's own)",
+        audit_model: 'opus (plan_model)',
         review_model: "opus (the plan-grader agent's own)",
         implement_model: "sonnet (the audit-editor agent's own)",
         search_model: 'haiku (default)',
@@ -25,6 +26,7 @@ test('each variable replaces its default and is named as the source', (t) =>
     const { lines } = printSettings(makeSettingsRepo(t), {
         KIT_PASS_SCORE: '95',
         KIT_PLAN_MODEL: 'fable',
+        KIT_AUDIT_MODEL: 'haiku',
         KIT_REVIEW_MODEL: 'opus',
         KIT_IMPLEMENT_MODEL: 'haiku',
         KIT_SEARCH_MODEL: 'sonnet',
@@ -36,6 +38,7 @@ test('each variable replaces its default and is named as the source', (t) =>
     assert.deepEqual(lines, {
         pass_score: '95 (KIT_PASS_SCORE)',
         plan_model: 'fable (KIT_PLAN_MODEL)',
+        audit_model: 'haiku (KIT_AUDIT_MODEL)',
         review_model: 'opus (KIT_REVIEW_MODEL)',
         implement_model: 'haiku (KIT_IMPLEMENT_MODEL)',
         search_model: 'sonnet (KIT_SEARCH_MODEL)',
@@ -81,6 +84,30 @@ test('a search model a dispatch cannot take falls back to haiku, the one role wi
     const { lines } = printSettings(makeSettingsRepo(t), { KIT_SEARCH_MODEL: 'claude-haiku-5-5' });
 
     assert.equal(lines.search_model, "haiku (default - KIT_SEARCH_MODEL='claude-haiku-5-5' is not one of sonnet, opus, haiku, fable)");
+});
+
+test("the audit model is the plan model's value until it is set, and its origin says so", (t) =>
+{
+    const fromAgent = printSettings(makeSettingsRepo(t)).lines;
+    const fromVariable = printSettings(makeSettingsRepo(t), { KIT_PLAN_MODEL: 'fable' }).lines;
+
+    assert.equal(fromAgent.audit_model, 'opus (plan_model)');
+    assert.equal(fromVariable.audit_model, 'fable (plan_model)');
+});
+
+test('KIT_AUDIT_MODEL sets the audit model alone and leaves the plan model as it was', (t) =>
+{
+    const { lines } = printSettings(makeSettingsRepo(t), { KIT_AUDIT_MODEL: 'haiku' });
+
+    assert.equal(lines.audit_model, 'haiku (KIT_AUDIT_MODEL)');
+    assert.equal(lines.plan_model, "opus (the audit-planner agent's own)");
+});
+
+test('an audit model a dispatch cannot take falls to the plan model and the line says why', (t) =>
+{
+    const { lines } = printSettings(makeSettingsRepo(t), { KIT_AUDIT_MODEL: 'gpt', KIT_PLAN_MODEL: 'fable' });
+
+    assert.equal(lines.audit_model, "fable (plan_model - KIT_AUDIT_MODEL='gpt' is not one of sonnet, opus, haiku, fable)");
 });
 
 test('a blank value counts as not set, so blanking a variable returns an open session to the default', (t) =>

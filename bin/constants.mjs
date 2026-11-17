@@ -8,6 +8,7 @@ export const MODELS = Object.freeze(['sonnet', 'opus', 'haiku', 'fable']);
 export const VARIABLE = Object.freeze({
     passScore: 'KIT_PASS_SCORE',
     planModel: 'KIT_PLAN_MODEL',
+    auditModel: 'KIT_AUDIT_MODEL',
     reviewModel: 'KIT_REVIEW_MODEL',
     implementModel: 'KIT_IMPLEMENT_MODEL',
     searchModel: 'KIT_SEARCH_MODEL',
@@ -20,6 +21,7 @@ export const VARIABLE = Object.freeze({
 export const SETTING = Object.freeze({
     passScore: 'pass_score',
     planModel: 'plan_model',
+    auditModel: 'audit_model',
     reviewModel: 'review_model',
     implementModel: 'implement_model',
     searchModel: 'search_model',
@@ -57,11 +59,12 @@ export const SWITCH_VERBS = Object.freeze({
 });
 // The verbs whose 'on' or 'off' may follow the mode's name: 'turn scoring off'.
 export const SPLIT_VERBS = Object.freeze(['turn', 'switch']);
-// The four roles whose model a request can name, in the order the user's line shows them. `setting` is the role's name
+// The five roles whose model a request can name, in the order the user's line shows them. `setting` is the role's name
 // among the settings, `label` its word on the user's line, `names` what a request may call it before 'model', and `verbs`
 // what a request may open with: 'audit with fable'.
 export const MODEL_ROLES = Object.freeze([
-    Object.freeze({ setting: SETTING.planModel, label: 'plan', names: Object.freeze(['plan', 'planning', 'planner']), verbs: Object.freeze(['plan', 'audit']) }),
+    Object.freeze({ setting: SETTING.planModel, label: 'plan', names: Object.freeze(['plan', 'planning', 'planner']), verbs: Object.freeze(['plan']) }),
+    Object.freeze({ setting: SETTING.auditModel, label: 'audit', names: Object.freeze(['audit', 'auditor']), verbs: Object.freeze(['audit']) }),
     Object.freeze({ setting: SETTING.reviewModel, label: 'review', names: Object.freeze(['review', 'reviewer', 'scoring', 'grading', 'grader']), verbs: Object.freeze(['review', 'grade', 'score']) }),
     Object.freeze({ setting: SETTING.implementModel, label: 'implement', names: Object.freeze(['implement', 'implementation', 'implementer', 'editor']), verbs: Object.freeze(['implement', 'build', 'edit']) }),
     Object.freeze({ setting: SETTING.searchModel, label: 'search', names: Object.freeze(['search']), verbs: Object.freeze(['search']) }),
@@ -93,7 +96,7 @@ export const VALUE_END = `(?:${BOUNDARY}| (?:${VALUE_TAILS.join('|')})(?:${BOUND
 // The kit's own settings folder and the file there, committed with the repo. It holds every setting, the switches too.
 export const KIT_FOLDER = '.claude/kit';
 export const KIT_SETTINGS_FILE = `${KIT_FOLDER}/settings.json`;
-export const MODEL_SETTINGS = Object.freeze([SETTING.planModel, SETTING.reviewModel, SETTING.implementModel, SETTING.searchModel]);
+export const MODEL_SETTINGS = Object.freeze([SETTING.planModel, SETTING.auditModel, SETTING.reviewModel, SETTING.implementModel, SETTING.searchModel]);
 export const SWITCH_SETTINGS = Object.freeze([SETTING.scoring, SETTING.autoRun, SETTING.autoApprove]);
 export const KIT_FILE_SETTINGS = Object.freeze([...MODEL_SETTINGS, SETTING.passScore, ...SWITCH_SETTINGS]);
 export const MIN_PASS_SCORE = 1;

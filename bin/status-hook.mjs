@@ -2,7 +2,7 @@
 // Copied into each repo as .claude/kit/status-hook.mjs by claude-kit's sync - edit it in claude-kit, never here.
 //
 // A UserPromptSubmit hook: with every request it shows the user one line - is auto-run on, is scoring on, does the run
-// approve its own plans, which model plans, reviews, implements and searches - and gives Claude the same values with their sources, so neither a new
+// approve its own plans, which model plans, audits, reviews, implements and searches - and gives Claude the same values with their sources, so neither a new
 // session nor a compacted one has to remember them. The values are the kit's file .claude/kit/settings.json, then the
 // KIT_* variables, then the defaults (kit-settings.mjs).
 //

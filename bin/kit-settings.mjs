@@ -6,7 +6,7 @@
 //
 // A value comes from the first of these that holds a usable one: the kit's file .claude/kit/settings.json, the
 // KIT_* variable, the default. The file is one JSON object committed with the repo, with these names: plan_model,
-// review_model, implement_model, search_model (a model), pass_score (a whole number from 1 to 100) and scoring,
+// audit_model, review_model, implement_model, search_model (a model), pass_score (a whole number from 1 to 100) and scoring,
 // auto_run and auto_approve ('on' or 'off'). It is written by `node .claude/kit/settings.mjs set <name> <value>` and by the status hook
 // when the user tells a session a model or a switch in chat: what the user says is saved until the user changes it
 // (the user's ruling, 2026-11-16). The file may switch scoring, auto-run and auto-approve because the user chose it; a
@@ -16,7 +16,8 @@
 // or .claude/settings.local.json). Claude Code decides which file wins and puts the value in the environment:
 //
 //   KIT_PASS_SCORE        the score a graded spec or plan must reach, a whole number from 1 to 100 (90 without it)
-//   KIT_PLAN_MODEL        the model that writes plans: the audit planner, a spec or plan written by a dispatched agent
+//   KIT_PLAN_MODEL        the model that writes plans: a spec or plan written by a dispatched agent, and the audit planner where no audit model is set
+//   KIT_AUDIT_MODEL       the model of the audit planner seat (the plan model without it)
 //   KIT_REVIEW_MODEL      the model that reviews: the refining-plans reviewer, the review of a finished change
 //   KIT_IMPLEMENT_MODEL   the model that implements: the audit editor, a plan's build
 //   KIT_SEARCH_MODEL      the model that finds things in the code for the other three (haiku without it)
@@ -25,7 +26,8 @@
 //   KIT_AUTO_APPROVE      on or off: whether the run approves a spec, design or plan itself (off without it: the user does)
 //
 // A model is one of sonnet, opus, haiku, fable - what a dispatch accepts. Without a value it is the model the role's
-// agent file names; the search role has no agent file, so its default is fixed. KIT_SCORING, KIT_AUTO_RUN and
+// agent file names; the audit role has no agent file of its own and takes the plan model's value, and the search role
+// has no agent file, so its default is fixed. KIT_SCORING, KIT_AUTO_RUN and
 // KIT_AUTO_APPROVE switch a safeguard off, so a variable counts only from a file that is not committed: one found in .claude/settings.json is
 // ignored and named. Claude Code applies a new or changed variable to a session that is already open, but a deleted
 // one stays set there until it restarts: to switch one back at once, set its other value (KIT_AUTO_RUN=off).
@@ -112,6 +114,16 @@ function roleModel(env, root, variable, agent)
     return { value: fallback.value, origin: `${fallback.origin} - ${variable}='${value}' is ${MODEL_REASON}` };
 }
 
+// The audit model has no agent file: without a usable file value or variable it is the plan model's value, named as such.
+function auditModel(env, plan)
+{
+    const fallback = { value: plan.value, origin: SETTING.planModel };
+    const value = readVariable(env, VARIABLE.auditModel);
+    if (value === null) return fallback;
+    if (MODELS.includes(value)) return { value, origin: VARIABLE.auditModel };
+    return { value: fallback.value, origin: `${fallback.origin} - ${VARIABLE.auditModel}='${value}' is ${MODEL_REASON}` };
+}
+
 function searchModel(env)
 {
     const value = readVariable(env, VARIABLE.searchModel);
@@ -161,9 +173,11 @@ export function resolveKitSettings(env, root)
     const committedNames = committedEnvNames(root);
     const loaded = loadKitFile(root);
     const fileSettings = loaded.ok ? loaded.settings : {};
+    const plan = fromKitFile(fileSettings, SETTING.planModel, roleModel(env, root, VARIABLE.planModel, 'audit-planner'));
     return {
         [SETTING.passScore]: fromKitFile(fileSettings, SETTING.passScore, passScore(env)),
-        [SETTING.planModel]: fromKitFile(fileSettings, SETTING.planModel, roleModel(env, root, VARIABLE.planModel, 'audit-planner')),
+        [SETTING.planModel]: plan,
+        [SETTING.auditModel]: fromKitFile(fileSettings, SETTING.auditModel, auditModel(env, plan)),
         [SETTING.reviewModel]: fromKitFile(fileSettings, SETTING.reviewModel, roleModel(env, root, VARIABLE.reviewModel, 'plan-grader')),
         [SETTING.implementModel]: fromKitFile(fileSettings, SETTING.implementModel, roleModel(env, root, VARIABLE.implementModel, 'audit-editor')),
         [SETTING.searchModel]: fromKitFile(fileSettings, SETTING.searchModel, searchModel(env)),

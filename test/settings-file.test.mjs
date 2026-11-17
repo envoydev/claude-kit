@@ -23,6 +23,19 @@ test('a value in the kit file outranks its variable and names the file as its or
     assert.equal(lines.search_model, `opus (${KIT_FILE})`);
 });
 
+test("the audit model is the plan model's value when that comes from the kit file, and the audit model in the file outranks the variable", (t) =>
+{
+    const fallingThrough = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { plan_model: 'fable' } });
+    const own = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { audit_model: 'haiku' } });
+
+    const fromPlan = printSettings(fallingThrough, { KIT_AUDIT_MODEL: '' }).lines;
+    const fromFile = printSettings(own, { KIT_AUDIT_MODEL: 'sonnet', KIT_PLAN_MODEL: 'fable' }).lines;
+
+    assert.equal(fromPlan.audit_model, 'fable (plan_model)');
+    assert.equal(fromFile.audit_model, `haiku (${KIT_FILE})`);
+    assert.equal(fromFile.plan_model, 'fable (KIT_PLAN_MODEL)');
+});
+
 test('a pass score written as a string of digits in the kit file counts', (t) =>
 {
     const { lines } = printSettings(makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { pass_score: '96' } }));
@@ -67,6 +80,7 @@ test('the kit file outranks a variable the committed settings file names, which 
 
 for (const [name, fileValue, variables, expected] of [
     ['plan_model', 'gpt', {}, `opus (the audit-planner agent's own - plan_model="gpt" in ${KIT_FILE} ${MODEL_REASON})`],
+    ['audit_model', 'gpt', {}, `opus (plan_model - audit_model="gpt" in ${KIT_FILE} ${MODEL_REASON})`],
     ['review_model', 7, {}, `opus (the plan-grader agent's own - review_model=7 in ${KIT_FILE} ${MODEL_REASON})`],
     ['implement_model', 'Opus', { KIT_IMPLEMENT_MODEL: 'haiku' }, `haiku (KIT_IMPLEMENT_MODEL - implement_model="Opus" in ${KIT_FILE} ${MODEL_REASON})`],
     ['search_model', 'gpt', {}, `haiku (default - search_model="gpt" in ${KIT_FILE} ${MODEL_REASON})`],
@@ -159,6 +173,7 @@ test('set keeps every other key already in the file, unknown ones too, and store
 for (const [label, args, existing] of [
     ['a name the file may not hold', ['set', 'plan_modle', 'fable'], '{"search_model":"opus"}'],
     ['a model the dispatch cannot take', ['set', 'plan_model', 'gpt'], '{"search_model":"opus"}'],
+    ['an audit model the dispatch cannot take', ['set', 'audit_model', 'gpt'], '{"search_model":"opus"}'],
     ['a switch that is neither on nor off', ['set', 'scoring', 'maybe'], '{"search_model":"opus"}'],
     ['an auto-run that is not on or off', ['set', 'auto_run', 'true'], '{"search_model":"opus"}'],
     ['an auto-approve that is not on or off', ['set', 'auto_approve', 'plans'], '{"search_model":"opus"}'],
@@ -211,6 +226,20 @@ test('unset removes the name and prints the line it falls back to', (t) =>
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, "plan_model: opus (the audit-planner agent's own)\n");
     assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { search_model: 'sonnet' });
+});
+
+test('set audit_model saves it beside the plan model, and unset removes it so it follows the plan model again', (t) =>
+{
+    const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { plan_model: 'fable' } });
+
+    const saved = runSettings(repo, ['set', 'audit_model', 'opus']);
+    const removed = runSettings(repo, ['unset', 'audit_model']);
+
+    assert.equal(saved.status, 0, saved.stderr);
+    assert.equal(saved.stdout, `audit_model: opus (${KIT_FILE})\n`);
+    assert.equal(removed.status, 0, removed.stderr);
+    assert.equal(removed.stdout, 'audit_model: fable (plan_model)\n');
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { plan_model: 'fable' });
 });
 
 test('unset auto_run removes the switch and prints what it falls back to', (t) =>

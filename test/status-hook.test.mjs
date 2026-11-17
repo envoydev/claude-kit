@@ -12,11 +12,11 @@ test('with nothing set it shows the user one line with the defaults and gives Cl
     const { status, output } = runHook(makeHookRepo(t), promptInput());
 
     assert.equal(status, 0);
-    assert.equal(output.systemMessage, 'kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review opus | implement sonnet | search haiku');
+    assert.equal(output.systemMessage, 'kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit opus | review opus | implement sonnet | search haiku');
     assert.equal(output.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
     assert.equal(
         contextOf(output),
-        "kit status (.claude/kit/status-hook.mjs): auto_run=off (default); scoring=on (default); pass_score=90 (default); auto_approve=off (default); plan_model=opus (the audit-planner agent's own); review_model=opus (the plan-grader agent's own); implement_model=sonnet (the audit-editor agent's own); search_model=haiku (default);",
+        "kit status (.claude/kit/status-hook.mjs): auto_run=off (default); scoring=on (default); pass_score=90 (default); auto_approve=off (default); plan_model=opus (the audit-planner agent's own); audit_model=opus (plan_model); review_model=opus (the plan-grader agent's own); implement_model=sonnet (the audit-editor agent's own); search_model=haiku (default);",
     );
 });
 
@@ -32,7 +32,7 @@ test("the settings variables change the line, and only Claude's values name them
         KIT_SEARCH_MODEL: 'sonnet',
     });
 
-    assert.equal(output.systemMessage, 'kit: auto-run on | scoring off | auto-approve on | plan fable | review opus | implement haiku | search sonnet');
+    assert.equal(output.systemMessage, 'kit: auto-run on | scoring off | auto-approve on | plan fable | audit fable | review opus | implement haiku | search sonnet');
     for (const part of ['auto_run=on (KIT_AUTO_RUN)', 'scoring=off (KIT_SCORING)', 'auto_approve=on (KIT_AUTO_APPROVE)', 'pass_score=95 (KIT_PASS_SCORE)'])
         assert.ok(contextOf(output).includes(part), `${part} missing from: ${contextOf(output)}`);
 });
@@ -51,7 +51,7 @@ test("the kit's file outranks the variables, names itself in Claude's values and
 
     const { output } = runHook(repo, promptInput(), { KIT_AUTO_RUN: 'off', KIT_SCORING: 'on', KIT_AUTO_APPROVE: 'off', KIT_PLAN_MODEL: 'haiku', KIT_PASS_SCORE: '95' });
 
-    assert.equal(output.systemMessage, 'kit: auto-run on | scoring off | auto-approve on | plan fable | review opus | implement sonnet | search haiku');
+    assert.equal(output.systemMessage, 'kit: auto-run on | scoring off | auto-approve on | plan fable | audit fable | review opus | implement sonnet | search haiku');
     for (const part of [`auto_run=on (${KIT_FILE});`, `scoring=off (${KIT_FILE});`, `auto_approve=on (${KIT_FILE});`, `plan_model=fable (${KIT_FILE});`, `pass_score=80 (${KIT_FILE});`])
         assert.ok(contextOf(output).includes(part), `${part} missing from: ${contextOf(output)}`);
 });

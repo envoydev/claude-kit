@@ -5,8 +5,8 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { KIT_FILE, kitFileExists, makeHookRepo, promptInput, readKitFile, runHook } from './support.mjs';
 
-const MODEL_VARIABLES = ['KIT_PLAN_MODEL', 'KIT_REVIEW_MODEL', 'KIT_IMPLEMENT_MODEL', 'KIT_SEARCH_MODEL'];
-const LABELS = { plan_model: 'plan', review_model: 'review', implement_model: 'implement', search_model: 'search' };
+const MODEL_VARIABLES = ['KIT_PLAN_MODEL', 'KIT_AUDIT_MODEL', 'KIT_REVIEW_MODEL', 'KIT_IMPLEMENT_MODEL', 'KIT_SEARCH_MODEL'];
+const LABELS = { plan_model: 'plan', audit_model: 'audit', review_model: 'review', implement_model: 'implement', search_model: 'search' };
 const otherModel = (model) => (model === 'sonnet' ? 'opus' : 'sonnet');
 const contextOf = (output) => output.hookSpecificOutput.additionalContext;
 const showable = (prompt) => prompt.replaceAll('\n', '\\n').replaceAll('\t', '\\t');
@@ -24,7 +24,11 @@ for (const [prompt, saved] of [
     ['grader model fable', { review_model: 'fable' }],
     ['editor model on haiku', { implement_model: 'haiku' }],
     ['scoring model fable', { review_model: 'fable' }],
-    ['audit with fable', { plan_model: 'fable' }],
+    ['audit with fable', { audit_model: 'fable' }],
+    ['plan with fable', { plan_model: 'fable' }],
+    ['audit model opus', { audit_model: 'opus' }],
+    ['set the audit model to opus', { audit_model: 'opus' }],
+    ['plan and audit models fable', { plan_model: 'fable', audit_model: 'fable' }],
     ['edit with haiku, then report', { implement_model: 'haiku' }],
     ['Review with opus', { review_model: 'opus' }],
     ['plan model opus, review model sonnet', { plan_model: 'opus' }],
@@ -85,6 +89,7 @@ for (const prompt of [
     'build on sonnet the new feature',
     'edit model haiku to sonnet in the config',
     'plan model fable foralways',
+    'audit with fable?',
     'plan model fable for good measure',
     'plan model fable for goodness sake',
     'plan model opus for this one',
