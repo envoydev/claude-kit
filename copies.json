@@ -223,7 +223,7 @@
         "site": "shared/skills/repo-audit-skills/SKILL.md",
         "markers": [
           "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-          "stop the flow adds is its ask before any edit lands"
+          "stops the flow adds are its own asks, one of them before any edit lands"
         ]
       },
       "copies": [
@@ -231,35 +231,35 @@
           "site": "shared/skills/repo-audit-agent-md/SKILL.md",
           "markers": [
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-            "stop the flow adds is its ask before any edit lands"
+            "stops the flow adds are its own asks, one of them before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-agents/SKILL.md",
           "markers": [
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-            "stop the flow adds is its ask before any edit lands"
+            "stops the flow adds are its own asks, one of them before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-hooks/SKILL.md",
           "markers": [
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-            "stop the flow adds is its ask before any edit lands"
+            "stops the flow adds are its own asks, one of them before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-tools/SKILL.md",
           "markers": [
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-            "stop the flow adds is its ask before any edit lands"
+            "stops the flow adds are its own asks, one of them before any edit lands"
           ]
         },
         {
           "site": "shared/skills/repo-audit-rules/SKILL.md",
           "markers": [
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-            "stop the flow adds is its ask before any edit lands"
+            "stops the flow adds are its own asks, one of them before any edit lands"
           ]
         },
         {
@@ -272,7 +272,7 @@
           "site": "shared/skills/repo-audit-commands/SKILL.md",
           "markers": [
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
-            "stop the flow adds is its ask before any edit lands"
+            "stops the flow adds are its own asks, one of them before any edit lands"
           ]
         }
       ]
@@ -491,6 +491,222 @@
           "markers": [
             "`auto_approve=on`: the run approves the draft",
             "`auto_approve=off`: the draft waits for the user"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-targets-step",
+      "why": "Every repo-audit-<kind> skill opens its run with the same step - its entry in the audit map of .claude/kit/repo.json, the roots, the checks and the notes - worded for its own kind, because each runs alone and never loads a sibling's file.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/SKILL.md",
+        "markers": [
+          "Read `.claude/kit/repo.json` -> `audit.",
+          "follow every `notes` line wherever this skill touches"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-hooks/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-rules/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-system/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-tools/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-usage/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-stop-conditions",
+      "why": "The seven audits that run a bounded loop end the run on the same two conditions and the same closing rule, with the noun changed, each in its own body.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/SKILL.md",
+        "markers": [
+          "Stop the whole run when either holds",
+          "Report the remainder honestly rather than inflating grades to force a clean sweep."
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-hooks/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-rules/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-tools/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-grade-bands",
+      "why": "Eight audits map a total to a grade through the same band table, and the flow's target and scorecard read every one of them as A / 9, so each rubric carries the table.",
+      "owner": {
+        "site": "shared/skills/repo-audit-skills/references/rubric.md",
+        "markers": [
+          "| 90-100 and all floors met | A | 9 |"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-agent-md/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-agents/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-commands/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-hooks/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-rules/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-system/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-tools/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-short-loop",
+      "why": "The hooks audit and the tools audit keep a shorter wording of the bounded loop the other audits register as audit-remediation-loop, each in its own remediation file.",
+      "owner": {
+        "site": "shared/skills/repo-audit-hooks/references/remediation.md",
+        "markers": [
+          "Rank the deductions by points lost. Fix the largest first.",
+          "Do not carry the previous score forward."
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-tools/references/remediation.md",
+          "markers": [
+            "Rank the deductions by points lost. Fix the largest first.",
+            "Do not carry the previous score forward."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skill-description-rule",
+      "why": "The skill-authoring skill owns the house rule for a description - one line of at most 160 characters - and the skills audit scores by the same cap from its own rubric, because an audit never loads a sibling skill; bin/check.mjs enforces the number.",
+      "owner": {
+        "site": "shared/skills/skill-authoring/SKILL.md",
+        "markers": [
+          "At most 160 characters, on one line"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/skills/repo-audit-skills/references/rubric.md",
+          "markers": [
+            "the house cap holds the pair to 160"
           ]
         }
       ]

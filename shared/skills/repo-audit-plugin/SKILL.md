@@ -135,8 +135,8 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    verification phase on what was edited, re-grades those items and writes `final.md`. A batched run verifies side
    by side: each batch's own planner gets that message in one turn and writes `final-<n>.md` for its items, then
    the `set` planner is sent those files, re-checks the set-wide findings and merges them into `final.md`. An edit
-   the ledger marks `SKIPPED` is rewritten by the planner against the file as it now is, and steps 9 and 10 run
-   again - at most the audit skill's `MAX_ITERATIONS` rounds in all.
+   the ledger marks `SKIPPED` or `FAILED` is rewritten by the planner against the file as it now is, and steps 9 and
+   10 run again - at most the audit skill's `MAX_ITERATIONS` rounds in all, four where it names none.
 11. **Report.** Print the audit skill's output contract from `final.md`, then the scorecard - the quality before
     the edits against the quality after them, from the audit's own grades:
 

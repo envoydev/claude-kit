@@ -79,8 +79,8 @@ copies them there, the baseline and final reports as `report.md`.
    guard-route map and the awareness checklist.
 4. **Phase 1 - scoring.** S1-S5 per profile and the packaging grade (`references/rubric.md`), every
    point citing its line or row. Produce the baseline report (the output contract) before any proposal.
-5. **Phase 1b - currency.** Re-read each fact row of `references/currency.md` against the live pages
-   before scoring with it; correct a DRIFTED row in the same run.
+5. **Phase 1b - currency.** Done inside Phase 1, not after it: re-read each fact row of
+   `references/currency.md` against the live pages before scoring with it; correct a DRIFTED row in the same run.
 6. **Phase 2 - one ask** (`references/remediation.md`): the fix list, most severe first, each row with
    both sides, the chosen home and the files, or a handoff. Stop for the answer.
 7. **Phase 3 - apply and verify**, below, for what the answer picked.

@@ -1,4 +1,4 @@
-# Plugin audit - Phase 1 rubric
+# Tools audit - Phase 1 rubric
 
 Read at Phase 1. Every point awarded or deducted cites the line that justifies it.
 

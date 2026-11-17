@@ -52,8 +52,8 @@ It is this repo's own maintenance tool, not part of the shipped catalog.
 
 **Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow.** Its planner seat does Phases 0
 to 1b and writes Phase 2's edits as a plan, its editor seat applies them, and the planner does Phase 3. This session
-coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the one
-stop the flow adds is its ask before any edit lands. Stop otherwise only on the stop conditions
+coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the stops
+the flow adds are its own asks, one of them before any edit lands. Stop otherwise only on the stop conditions
 below. Any change to a MACHINE (uninstall, disable, prune, a cache wipe, a registration removed) is the
 user's to make: collect those as proposals for one AskUserQuestion at the end, never run them inside the
 audit.
@@ -73,8 +73,8 @@ audit.
 4. **Phase 1 - scoring.** Score each consumed unit and each dependency in its closure on the rubric in
    `references/rubric.md`, citing evidence for every point, and map the totals through its grade bands
    and floors. Produce the baseline report (the output contract below) before any editing.
-5. **Phase 1b - currency.** Re-read each fact row in `references/currency.md` against the live pages
-   before scoring with it.
+5. **Phase 1b - currency.** Done inside Phase 1, not after it: re-read each fact row in
+   `references/currency.md` against the live pages before scoring with it.
 6. **Phase 2 - remediation.** Follow `references/remediation.md`: set-level defects first, then the
    bounded per-unit loop; machine-state changes are collected, not run. Its anti-gaming guards
    override the A target.

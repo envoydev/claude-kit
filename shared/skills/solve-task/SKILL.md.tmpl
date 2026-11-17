@@ -67,7 +67,10 @@ things in the code for the other three.
 7. Review - one fresh review of the whole branch on the review model, one fix pass (each fix RED then GREEN), minors deferred to
    the ledger.
 8. Commit - one commit per plan task as its commit step says, else one commit for the change; by pathspec,
-   {{commit}}. No version bump, push or merge without the user's word.
+   {{commit}}. A run the session loaded by itself - no `/solve-task`, no ask for this flow in the user's words - has
+   no word for a commit: before its first one, in whichever step it falls, it asks once (AskUserQuestion: 'Commit
+   locally (Recommended)' / 'Leave the change uncommitted') and holds the answer - on 'Leave', every commit step is
+   skipped and the close lists the files left uncommitted. No version bump, push or merge without the user's word.
 
 ## The close
 

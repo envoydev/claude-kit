@@ -33,8 +33,8 @@ assume a particular set. It is this repo's own maintenance tool, not part of the
 
 **Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow.** Its planner seat does Phases 0
 to 1b and writes Phase 2's edits as a plan, its editor seat applies them, and the planner does Phase 3. This session
-coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the one
-stop the flow adds is its ask before any edit lands. Stop otherwise only on the stop conditions
+coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the stops
+the flow adds are its own asks, one of them before any edit lands. Stop otherwise only on the stop conditions
 below. When a stop or finding genuinely needs the user's answer - a proposed split, a conflict with no
 repo-decided winner, a blocker only they can waive - put the question through the AskUserQuestion tool
 with concrete options and a marked recommendation, never a prose question buried in a report.
@@ -96,5 +96,6 @@ Produce a single report with:
 4. Invocation and conflict map: every cycle found and how it was broken, every contradiction and its resolution (or why it is unresolved and the skills are blocked), any genericity flags with cited lines, and every named cite of an optional skill or MCP server converted to a description (file, line, before, after).
 5. If `WRITE` is true, the list of files edited, moved, or created, including any multi-home registry entries added or updated, and the snapshot location for rollback.
 6. The repo's `checks` - each command with its result line, before and after the edits - and, per edited skill, the fresh-session check of Phase 3 step 7: run, or owed with its three prompts.
+7. The Phase 1b currency table with this run's verdicts.
 
 Keep the report dense. No preamble, no restating this skill back, no filler.

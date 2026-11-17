@@ -72,11 +72,12 @@ Two places, because one is a record and the other is the switch:
   decides it, as the `plan-approval` rule says (the user, 2026-11-16, replacing the rulings of 2026-11-04 and
   2026-11-10 that tied approval to auto-run and to a waiver said in the session). The trigger words above switch
   auto-run alone.
-  - `auto_approve=on`: the run approves the draft, the ledger gets
-    `Ruling: approval of <path> - approved by the run at <score path> - <cost if wrong>`, and the build starts in the
-    same turn with the execution method its handoff recommends. A skill's own 'ask the user to review' step, its
-    handoff included, is that approval and is not put: a turn that ends on 'please review the plan' is this rule
-    skipped (2026-11-04: two such stops in one run).
+  - `auto_approve=on`: the run approves the draft and says so in the rule's line,
+    `Approved by the run (auto-approve on): <path> - <score path>`, written to the file's status line and to the run
+    ledger as well, and the next step starts in the same turn - for a plan, the build, with the execution method its
+    handoff recommends. A skill's own 'ask the user to review' step, its handoff included, is that approval and is
+    not put: a turn that ends on 'please review the plan' is this rule skipped (2026-11-04: two such stops in one
+    run).
   - `auto_approve=off`: the draft waits for the user, who is notified, and the run goes on with work that does not
     depend on it.
   - A spec or plan whose grade loop ended under the pass score, on its best round, waits under either value with its

@@ -1,4 +1,4 @@
-# Plugin audit - Phase 1b currency check
+# Tools audit - Phase 1b currency check
 
 Read at Phase 1b, before any row drives a score or an edit.
 

@@ -40,8 +40,8 @@ manifest, never assume a particular set. It is this repo's own maintenance tool,
 
 **Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow.** Its planner seat does Phases 0
 to 1b and writes Phase 2's edits as a plan, its editor seat applies them, and the planner does Phase 3. This session
-coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the one
-stop the flow adds is its ask before any edit lands. Stop otherwise only on the stop conditions
+coordinates and is the only one that asks the user. The seats do not ask for confirmation between phases; the stops
+the flow adds are its own asks, one of them before any edit lands. Stop otherwise only on the stop conditions
 below. When a stop or finding genuinely needs the user's answer - a rename, a command that should be a skill, a
 conflict with no repo-decided winner - put the question through the AskUserQuestion tool
 with concrete options and a marked recommendation, never a prose question buried in a report.
@@ -118,5 +118,6 @@ Produce a single report with:
    location for rollback.
 8. The repo's `checks` - each command with its result line, before and after the edits - and the owed checks of
    Phase 3 step 6.
+9. The Phase 1b currency table with this run's verdicts.
 
 Keep the report dense. No preamble, no restating this skill back, no filler.

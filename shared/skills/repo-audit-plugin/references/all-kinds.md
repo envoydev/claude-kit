@@ -23,9 +23,10 @@ this order, whatever order the request names them in.
      `exclude tools, usage, system` runs the six others.
    - Otherwise: the kinds named, and only those.
 
-   A word that is no kind is named back with the list above, and the run goes on with the rest. Say in one line
-   which kinds run and which were left out, before anything else. Then read `.claude/kit/repo.json` ->
-   `audit`: a kind with no entry there is listed as `no targets` and not run.
+   The word `commit` is no kind: it is step 8's word for committing each kind's edits. Any other word that is no
+   kind is named back with the list above, and the run goes on with the rest. Say in one line which kinds run and
+   which were left out, before anything else. Then read `.claude/kit/repo.json` -> `audit`: a kind with no entry
+   there is listed as `no targets` and not run.
 2. **The queue file.** Write `docs/superpowers/audits/<date>-all/queue.md`: one line per kind with its wave, its
    status - `pending`, `planning`, `graded <score>`, `waiting for approval`, `applying`, `verifying`,
    `done <baseline> -> <final>`, `no targets`, `NOT RUN - <why>` - its run folder and its commit. Update a line

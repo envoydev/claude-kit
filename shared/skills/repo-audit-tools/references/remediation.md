@@ -1,4 +1,4 @@
-# Plugin audit - Phase 2 remediation
+# Tools audit - Phase 2 remediation
 
 Read before the first edit. The anti-gaming guards at the end override the grade target.
 
