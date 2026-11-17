@@ -327,6 +327,31 @@ test('a grades line for a path with no file is skipped and named', (t) =>
     assert.equal(result.stdout, `skipped rules/zzz.md - no tracked file\nRecorded: 2 graded, 0 kept, 0 dropped, 1 skipped - ${STATE}\n`);
 });
 
+for (const outside of ['/elsewhere/plugins/hooks/h.js', '../other/x.md'])
+{
+    test(`a grades line for ${outside}, outside the repository, is skipped and named, never refused`, (t) =>
+    {
+        const p = project(t);
+
+        const result = p.record(`${BOTH_A}${outside}\tA\t9\tyes\n`, 'rules');
+
+        assert.equal(result.status, 0);
+        assert.equal(result.stderr, '');
+        assert.equal(result.stdout, `skipped ${outside} - no tracked file\nRecorded: 2 graded, 0 kept, 0 dropped, 1 skipped - ${STATE}\n`);
+        assert.deepEqual(Object.keys(p.state().items), ['rules/a.md', 'rules/b.md']);
+    });
+}
+
+test('a Finder file anywhere in the audit skill folder does not change its hash', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    p.write(`${SKILL}/.DS_Store`, 'finder\n');
+    p.write(`${SKILL}/references/.DS_Store`, 'finder\n');
+
+    assert.deepEqual(lines(p.scope('rules')), [carried('rules/a.md', 'A / 9'), carried('rules/b.md', 'A / 9.5'), 'Scope: 0 of 2 items audited, 2 carried']);
+});
+
 for (const scoringFile of ['rubric.md', 'currency.md'])
 {
     test(`a changed ${scoringFile} makes every item changed`, (t) =>

@@ -6,13 +6,14 @@
 // grade is carried while its files, the --with files and the scoring files (the audit skill's rubric and currency
 // text) hold the hashes they had when it was graded.
 //
-//   node .claude/kit/audit-scope.mjs scope <kind> [--full] [--with <path>]... <root>...    run at the repository root
+//   node .claude/kit/audit-scope.mjs scope <kind> [--full] [--with <path>]... <root>...    run in any folder of the repository
 //   node .claude/kit/audit-scope.mjs record <kind> --run <run folder> --grades <file> [--under <scoring hash> <folder hash>] [--with <path>]... <root>...
 //
 // scope prints `audit <id> - <why>` for each item to read and `carried <id> - ...` for each that keeps its grade, and
 // writes nothing. record reads the grades file (one `<id> TAB <letter> TAB <numeric> TAB yes|no` per line) and writes
-// only docs/superpowers/audits/state/<kind>.json, through a temp file in that folder. Every path is from the
-// repository root. Exits 0 when done, 2 when the command line or the state file cannot be used.
+// only docs/superpowers/audits/state/<kind>.json, through a temp file in that folder. Every path but --grades is
+// from the repository root, whatever folder of the repository the command runs in; --grades is read relative to the
+// working directory. Exits 0 when done, 2 when the command line or the state file cannot be used.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
@@ -35,6 +36,7 @@ const STATE_FOLDER = 'docs/superpowers/audits/state';
 const AUDIT_SKILL_PREFIX = '.claude/skills/repo-audit-';
 const SCORING_FILES = Object.freeze(['references/rubric.md', 'references/currency.md']);
 const STATE_TEXT_KEYS = Object.freeze(['letter', 'numeric', 'date', 'run', 'scoring', 'folder']);
+const IGNORED_FILE_NAME = '.DS_Store';
 const NOT_A_FOLDER_CODES = new Set(['ENOENT', 'ENOTDIR']);
 const GIT_MAX_BUFFER = 256 * 1024 * 1024;
 const HASH_BATCH_SIZE = 100;
@@ -180,7 +182,7 @@ function regularFilesUnder(root, folder)
 {
     try
     {
-        const entries = readdirSync(path.join(root, folder), { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile());
+        const entries = readdirSync(path.join(root, folder), { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile() && entry.name !== IGNORED_FILE_NAME);
         return entries.map((entry) => path.relative(root, path.join(entry.parentPath, entry.name)).split(path.sep).join('/'));
     }
     catch (error)
@@ -343,18 +345,18 @@ function scopeLines({ items, gone, state, full, withHashes, scoring, folder })
     return lines;
 }
 
-// One grades line as { grade }, or { problem }.
+// One grades line as { grade }, or { problem }. An id that is no path of this repository stays text with no present
+// file, so `record` skips it and never builds a path from it.
 function gradeOf(line)
 {
     const fields = line.split('\t');
     if (fields.length !== GRADE_FIELDS) return { problem: `expected ${GRADE_FIELDS} tab-separated fields, found ${fields.length}` };
     const [rawId, letter, numeric, flag] = fields;
-    const id = checkedPath(rawId);
-    if (id.problem !== undefined) return { problem: `the id ${id.problem}` };
+    if (rawId === '') return { problem: 'the id is empty' };
     if (!LETTER_PATTERN.test(letter)) return { problem: `letter ${letter} is not A to F with an optional + or -` };
     if (!NUMERIC_PATTERN.test(numeric)) return { problem: `numeric ${numeric} is not a number` };
     if (!Object.hasOwn(AT_TARGET, flag)) return { problem: `${flag} is not ${AT_TARGET.yes} or ${AT_TARGET.no}` };
-    return { grade: { id: id.path, letter, numeric, atTarget: flag === AT_TARGET.yes } };
+    return { grade: { id: checkedPath(rawId).path ?? rawId, letter, numeric, atTarget: flag === AT_TARGET.yes } };
 }
 
 function parseGrades(text)
