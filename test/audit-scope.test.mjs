@@ -34,6 +34,14 @@ const FILES = {
 
 const localDate = (now) => [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((part) => String(part).padStart(2, '0')).join('-');
 const TODAY = localDate(new Date());
+const EARLIER = daysAgo(20);
+const LATER = daysAgo(10);
+
+function daysAgo(count)
+{
+    const now = new Date();
+    return localDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - count));
+}
 
 function git(repo, ...args)
 {
@@ -368,14 +376,14 @@ test('a change elsewhere in the audit skill carries the grades and says so', (t)
 {
     const p = project(t);
     p.record(BOTH_A, 'rules');
-    p.setState((state) => { state.items['rules/a.md'].date = '2026-10-01'; state.items['rules/b.md'].date = '2026-11-02'; });
+    p.setState((state) => { state.items['rules/a.md'].date = EARLIER; state.items['rules/b.md'].date = LATER; });
     p.write(`${SKILL}/SKILL.md`, 'audit 2\n');
 
     assert.deepEqual(lines(p.scope('rules')), [
-        carried('rules/a.md', 'A / 9', '2026-10-01'),
-        carried('rules/b.md', 'A / 9.5', '2026-11-02'),
+        carried('rules/a.md', 'A / 9', EARLIER),
+        carried('rules/b.md', 'A / 9.5', LATER),
         'Scope: 0 of 2 items audited, 2 carried',
-        'the audit skill changed since 2026-10-01: 2 carried grades stand under the earlier text',
+        `the audit skill changed since ${EARLIER}: 2 carried grades stand under the earlier text`,
     ]);
 });
 
@@ -383,7 +391,7 @@ test('the audit skill line still counts the kept items after a later record', (t
 {
     const p = project(t);
     p.record(BOTH_A, 'rules');
-    p.setState((state) => { state.items['rules/a.md'].date = '2026-10-01'; state.items['rules/b.md'].date = '2026-11-02'; });
+    p.setState((state) => { state.items['rules/a.md'].date = EARLIER; state.items['rules/b.md'].date = LATER; });
     p.write(`${SKILL}/SKILL.md`, 'audit 2\n');
     p.write('rules/c.md', 'C\n');
     p.add('rules/c.md');
@@ -392,7 +400,7 @@ test('the audit skill line still counts the kept items after a later record', (t
     const printed = lines(p.scope('rules'));
 
     assert.match(recorded.stdout, /^Recorded: 1 graded, 2 kept, 0 dropped, 0 skipped - /);
-    assert.equal(printed.at(-1), 'the audit skill changed since 2026-10-01: 2 carried grades stand under the earlier text');
+    assert.equal(printed.at(-1), `the audit skill changed since ${EARLIER}: 2 carried grades stand under the earlier text`);
 });
 
 test('--under stores the hashes given instead of the current ones', (t) =>
@@ -508,4 +516,122 @@ test('a trailing slash and a working directory below the root change nothing', (
 
     assert.equal(p.scope('rules/').stdout, expected);
     assert.equal(p.scope('rules', { cwd: path.join(p.repo, 'rules') }).stdout, expected);
+});
+
+const AGE_LINE = (count, limit) => `age: ${count} items graded more than ${limit} days ago are audited again`;
+
+test('a grade older than the limit is audited again', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const old = daysAgo(31);
+    p.setState((state) => { state.items['rules/a.md'].date = old; });
+
+    assert.deepEqual(lines(p.scope('rules')), [
+        `audit rules/a.md - older than 30 days (A / 9 from ${old})`,
+        carried('rules/b.md', 'A / 9.5'),
+        'Scope: 1 of 2 items audited, 1 carried',
+        AGE_LINE(1, 30),
+    ]);
+});
+
+test('a grade exactly at the limit is carried', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const edge = daysAgo(30);
+    p.setState((state) => { state.items['rules/a.md'].date = edge; });
+
+    assert.deepEqual(lines(p.scope('rules')), [carried('rules/a.md', 'A / 9', edge), carried('rules/b.md', 'A / 9.5'), 'Scope: 0 of 2 items audited, 2 carried']);
+});
+
+test('a grade dated in the future is carried', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const later = daysAgo(-5);
+    p.setState((state) => { state.items['rules/a.md'].date = later; });
+
+    assert.deepEqual(lines(p.scope('rules')), [carried('rules/a.md', 'A / 9', later), carried('rules/b.md', 'A / 9.5'), 'Scope: 0 of 2 items audited, 2 carried']);
+});
+
+test('--max-age changes the limit', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const old = daysAgo(8);
+    p.setState((state) => { state.items['rules/a.md'].date = old; });
+
+    const printed = lines(p.scope('--max-age', '7', 'rules'));
+
+    assert.ok(printed.includes(`audit rules/a.md - older than 7 days (A / 9 from ${old})`));
+    assert.ok(printed.includes(AGE_LINE(1, 7)));
+});
+
+test('below the target outranks age', (t) =>
+{
+    const p = project(t);
+    p.record('rules/a.md\tA\t9\tyes\nrules/b.md\tB\t7\tno\n', 'rules');
+    p.setState((state) => { state.items['rules/b.md'].date = daysAgo(40); });
+
+    const printed = lines(p.scope('rules'));
+
+    assert.ok(printed.includes('audit rules/b.md - below the target (B / 7)'));
+    assert.equal(printed.some((line) => line.startsWith('age:')), false);
+});
+
+test('the age line sits between the Scope line and the audit skill line', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const old = daysAgo(40);
+    p.setState((state) => { state.items['rules/a.md'].date = old; });
+    p.write(`${SKILL}/SKILL.md`, 'audit 2\n');
+
+    const printed = lines(p.scope('rules'));
+
+    assert.deepEqual(printed.slice(-3), [
+        'Scope: 1 of 2 items audited, 1 carried',
+        AGE_LINE(1, 30),
+        `the audit skill changed since ${TODAY}: 1 carried grades stand under the earlier text`,
+    ]);
+});
+
+test('--full reads full, not older', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    p.setState((state) =>
+    {
+        state.items['rules/a.md'].date = daysAgo(40);
+        state.items['rules/b.md'].date = daysAgo(40);
+    });
+
+    assert.deepEqual(lines(p.scope('--full', 'rules')), ['audit rules/a.md - full', 'audit rules/b.md - full', 'Scope: 2 of 2 items audited, 0 carried']);
+});
+
+test('a bad --max-age is a usage error and writes nothing', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const before = p.tree();
+
+    for (const value of ['0', '-1', 'x', '1.5'])
+        refused(p.scope('--max-age', value, 'rules'));
+    refused(p.scope('rules', '--max-age'));
+    refused(p.run(['record', 'rules', '--run', RUN, '--grades', GRADES, '--max-age', '7', 'rules']));
+
+    assert.deepEqual(p.tree(), before);
+});
+
+test('a stored date that is no date is an unreadable state file', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    p.setState((state) => { state.items['rules/a.md'].date = 'yesterday'; });
+
+    const result = p.scope('rules');
+
+    refused(result);
+    assert.match(result.stderr, /^audit-scope: cannot read the state file/);
 });

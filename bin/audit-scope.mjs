@@ -4,9 +4,10 @@
 // Keeps what an audit graded beside the hashes of the files it graded, in a machine-local state file, so the next
 // audit reads only what changed. An item is a file, or a folder named by its first path segment below a root; its
 // grade is carried while its files, the --with files and the scoring files (the audit skill's rubric and currency
-// text) hold the hashes they had when it was graded.
+// text) hold the hashes they had when it was graded, and while it is no more than --max-age days old (30 by default),
+// so an audit reads an item against outside documentation again before a grade grows old.
 //
-//   node .claude/kit/audit-scope.mjs scope <kind> [--full] [--with <path>]... <root>...    run in any folder of the repository
+//   node .claude/kit/audit-scope.mjs scope <kind> [--full] [--max-age <days>] [--with <path>]... <root>...    run in any folder of the repository
 //   node .claude/kit/audit-scope.mjs record <kind> --run <run folder> --grades <file> [--under <scoring hash> <folder hash>] [--with <path>]... <root>...
 //
 // scope prints `audit <id> - <why>` for each item to read and `carried <id> - ...` for each that keeps its grade, and
@@ -21,15 +22,19 @@ import path from 'node:path';
 
 const EXIT = Object.freeze({ done: 0, usage: 2 });
 const COMMAND = Object.freeze({ scope: 'scope', record: 'record' });
-const OPTION = Object.freeze({ full: '--full', with: '--with', run: '--run', grades: '--grades', under: '--under' });
+const OPTION = Object.freeze({ full: '--full', with: '--with', run: '--run', grades: '--grades', under: '--under', maxAge: '--max-age' });
 const COMMAND_OPTIONS = Object.freeze({
-    [COMMAND.scope]: [OPTION.full, OPTION.with],
+    [COMMAND.scope]: [OPTION.full, OPTION.with, OPTION.maxAge],
     [COMMAND.record]: [OPTION.run, OPTION.grades, OPTION.under, OPTION.with],
 });
 const KIND_PATTERN = /^[a-z][a-z-]*$/;
 const LETTER_PATTERN = /^[A-F][+-]?$/;
 const NUMERIC_PATTERN = /^\d+(\.\d+)?$/;
 const HASH_PATTERN = /^[0-9a-f]{40}$/;
+const DAYS_PATTERN = /^[1-9]\d*$/;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const DEFAULT_MAX_AGE_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const AT_TARGET = Object.freeze({ yes: 'yes', no: 'no' });
 const GRADE_FIELDS = 4;
 const STATE_FOLDER = 'docs/superpowers/audits/state';
@@ -86,6 +91,17 @@ function localDate(now)
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
+// Whole calendar days from the first date to the second, both as YYYY-MM-DD; a clock change never shifts the count.
+function daysBetween(from, to)
+{
+    const utcDay = (date) =>
+    {
+        const [year, month, day] = date.split('-').map(Number);
+        return Date.UTC(year, month - 1, day);
+    };
+    return Math.round((utcDay(to) - utcDay(from)) / MS_PER_DAY);
+}
+
 // A path as the command line gives it, from the repository root with '/' and no trailing '/', or the problem with it.
 function checkedPath(text)
 {
@@ -118,7 +134,7 @@ function parseArguments(args)
     if (command === undefined || !Object.hasOwn(COMMAND_OPTIONS, command)) fail(`${command === undefined ? 'no command' : `unknown command ${command}`} - ${NO_COMMAND_USAGE}`);
     if (kind === undefined || kind.startsWith('-')) fail(`no kind - ${NO_COMMAND_USAGE}`);
     if (!KIND_PATTERN.test(kind)) fail(`kind ${kind} does not match ${KIND_PATTERN}`);
-    const options = { command, kind, roots: new Set(), withPaths: new Set(), full: false, run: null, grades: null, under: null };
+    const options = { command, kind, roots: new Set(), withPaths: new Set(), full: false, maxAgeDays: DEFAULT_MAX_AGE_DAYS, run: null, grades: null, under: null };
     for (let index = 0; index < rest.length; index++)
     {
         const argument = rest[index];
@@ -135,6 +151,11 @@ function parseArguments(args)
         {
             const [value] = takeValues(rest, index++, 1, argument);
             if (argument === OPTION.with) options.withPaths.add(requirePath(value, `${argument} path`));
+            else if (argument === OPTION.maxAge)
+            {
+                if (!DAYS_PATTERN.test(value)) fail(`${argument} takes a whole number of days, 1 or more`);
+                options.maxAgeDays = Number(value);
+            }
             else if (argument === OPTION.run) options.run = requirePath(value, `${argument} folder`);
             else options.grades = value;
         }
@@ -218,7 +239,7 @@ function parseState(text, kind)
     const items = new Map();
     for (const [id, entry] of Object.entries(data.items))
     {
-        const sound = isRecord(entry) && STATE_TEXT_KEYS.every((key) => typeof entry[key] === 'string') && typeof entry.atTarget === 'boolean' && isHashRecord(entry.files);
+        const sound = isRecord(entry) && STATE_TEXT_KEYS.every((key) => typeof entry[key] === 'string') && typeof entry.atTarget === 'boolean' && DATE_PATTERN.test(entry.date) && isHashRecord(entry.files);
         if (!sound) return { problem: `item ${id} is not an audit entry` };
         items.set(id, { ...entry, files: new Map(Object.entries(entry.files)) });
     }
@@ -301,26 +322,29 @@ function firstDifference(now, before)
     return [...new Set([...now.keys(), ...before.keys()])].sort().find((file) => now.get(file) !== before.get(file));
 }
 
-// Why an item is audited, as the text after `audit <id> - `, or null when it keeps its grade. The first rule that holds wins.
+// Why an item is audited - the text after `audit <id> - `, and whether its age is the reason - or null when it keeps its
+// grade. The first rule that holds wins.
 function reasonToAudit(item, entry, context)
 {
-    if (entry === undefined) return 'new';
-    if (context.full) return 'full';
-    if (!sameHashes(item.hashes, entry.files)) return 'changed';
+    if (entry === undefined) return { text: 'new', aged: false };
+    if (context.full) return { text: 'full', aged: false };
+    if (!sameHashes(item.hashes, entry.files)) return { text: 'changed', aged: false };
     const moved = firstDifference(context.withHashes, context.state.with);
-    if (moved !== undefined) return `changed (${moved})`;
-    if (context.scoring !== entry.scoring) return 'changed (the rubric)';
-    if (!entry.atTarget) return `below the target (${entry.letter} / ${entry.numeric})`;
+    if (moved !== undefined) return { text: `changed (${moved})`, aged: false };
+    if (context.scoring !== entry.scoring) return { text: 'changed (the rubric)', aged: false };
+    if (!entry.atTarget) return { text: `below the target (${entry.letter} / ${entry.numeric})`, aged: false };
+    if (daysBetween(entry.date, context.today) > context.maxAgeDays) return { text: `older than ${context.maxAgeDays} days (${entry.letter} / ${entry.numeric} from ${entry.date})`, aged: true };
     return null;
 }
 
 // Every line `scope` prints. Each item is { id, hashes }; `state` is null where there is no state file.
-function scopeLines({ items, gone, state, full, withHashes, scoring, folder })
+function scopeLines({ items, gone, state, full, withHashes, scoring, folder, today, maxAgeDays })
 {
-    const context = { full, withHashes, state, scoring };
+    const context = { full, withHashes, state, scoring, today, maxAgeDays };
     const lines = state === null ? ['no earlier audit on this machine'] : [];
     const kept = [];
     let audited = 0;
+    let aged = 0;
     for (const item of items)
     {
         const entry = state?.items.get(item.id);
@@ -328,13 +352,15 @@ function scopeLines({ items, gone, state, full, withHashes, scoring, folder })
         if (reason !== null)
         {
             audited++;
-            lines.push(`audit ${item.id} - ${reason}`);
+            if (reason.aged) aged++;
+            lines.push(`audit ${item.id} - ${reason.text}`);
             continue;
         }
         kept.push(entry);
         lines.push(`carried ${item.id} - ${entry.letter} / ${entry.numeric} from ${entry.date} - ${entry.run}`);
     }
     lines.push(...gone.map((id) => `gone ${id}`), `Scope: ${audited} of ${items.length} items audited, ${kept.length} carried`);
+    if (aged > 0) lines.push(`age: ${aged} items graded more than ${maxAgeDays} days ago are audited again`);
     const earlier = kept.filter((entry) => entry.folder !== folder);
     if (earlier.length > 0)
     {
@@ -430,7 +456,7 @@ function scope(options, root)
     const { scoring, folder } = auditSkillHashes(root, options.kind);
     const hashes = hashFiles(root, [...new Set([...items.flatMap((item) => item.files), ...withFiles])]);
     const hashed = items.map((item) => ({ id: item.id, hashes: hashMap(item.files, hashes) }));
-    return scopeLines({ items: hashed, gone, state, full: options.full, withHashes: hashMap(withFiles, hashes), scoring, folder });
+    return scopeLines({ items: hashed, gone, state, full: options.full, withHashes: hashMap(withFiles, hashes), scoring, folder, today: localDate(new Date()), maxAgeDays: options.maxAgeDays });
 }
 
 function record(options, root)
