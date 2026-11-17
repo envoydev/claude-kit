@@ -712,3 +712,45 @@ test('plan-level and usage errors stay exit 2 with one prove-plan line and no st
     }
     assert.equal(p.run('--check').stderr, 'prove-plan: no plan path - usage: node prove-plan.mjs [--check] <plan> [--without E<n>[,E<m>]]...\n');
 });
+
+test('check names combined differences in the fixed order: folder, extras, the Applies line, then the variant', (t) =>
+{
+    const { p, plan } = checkProject(t, { ...VARIANT_PROJECT, applies: 'Applies: 1 of 2 edits', prove: false });
+    assert.equal(p.run(plan, '--without', 'E2').status, 0);
+    writeFiles(p.repo, {
+        [`${EXPECTED}/a.txt`]: 'x\n',
+        [`${EXPECTED}/stray.txt`]: 'extra\n',
+        [`${EXPECTED}-without-E2/a.txt`]: 'y\n',
+        [`${EXPECTED}-without-E2/extra.txt`]: 'extra\n',
+    });
+
+    const result = runWriteless(p, '--check', plan, '--without', 'E2');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, [
+        'expected/a.txt: differs',
+        'expected/stray.txt: not a file of this plan',
+        "the plan says 'Applies: 1 of 2 edits'",
+        'expected-without-E2/a.txt: differs',
+        'expected-without-E2/extra.txt: not a file of this plan',
+        '',
+    ].join('\n'));
+});
+
+test('check counts a variant whose replay fails as a difference, with the writing mode failure line', (t) =>
+{
+    const { p, plan } = checkProject(t, {
+        files: { 'a.txt': 'dup A\ndup B\n' },
+        edits: [replaceEdit(1, 'a.txt', 'dup A', 'first'), replaceEdit(2, 'a.txt', 'dup', 'second')],
+    });
+    const writing = p.run(plan, '--without', 'E1');
+    assert.equal(writing.status, 1);
+
+    const result = runWriteless(p, '--check', plan, '--without', 'E1');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, writing.stderr);
+    assert.equal(result.stderr, 'expected-without-E1: E2 - a.txt: Old found 2 times\n');
+});

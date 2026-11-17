@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { REAL_KIT, makeRepo, makeTempDir, runNode, writeFiles } from './support.mjs';
+import { REAL_KIT, cannotLockFolders, makeRepo, makeTempDir, runNode, writeFiles } from './support.mjs';
 
 const AUDIT_SCOPE = path.join(REAL_KIT, 'bin', 'audit-scope.mjs');
 const SKILL = '.claude/skills/repo-audit-rules';
@@ -634,4 +634,80 @@ test('a stored date that is no date is an unreadable state file', (t) =>
 
     refused(result);
     assert.match(result.stderr, /^audit-scope: cannot read the state file/);
+});
+
+test('a state folder that cannot be written is one audit-scope line and leaves no temp file', { skip: cannotLockFolders() }, (t) =>
+{
+    const p = project(t);
+    const stateFolder = path.join(p.repo, path.dirname(STATE));
+    fs.mkdirSync(stateFolder, { recursive: true });
+    fs.chmodSync(stateFolder, 0o555);
+
+    const result = p.record(BOTH_A, 'rules');
+
+    refused(result);
+    assert.deepEqual(fs.readdirSync(stateFolder), []);
+});
+
+for (const outside of ['..\\outside', 'a\\..\\b', 'C:\\x', '\\\\server\\x'])
+{
+    test(`a root of ${outside} is outside the repository`, (t) =>
+    {
+        refused(project(t).scope(outside), `root ${outside} is outside the repository`);
+    });
+}
+
+const SAME_REPOSITORY = 'names the repository itself';
+const REPOSITORY_ROOT_CASES = {
+    'a root of .': [(p) => p.scope('.'), `root . ${SAME_REPOSITORY}`],
+    'a --with of .': [(p) => p.scope('--with', '.', 'rules'), `--with path . ${SAME_REPOSITORY}`],
+    'a --run of .': [(p) => p.run(['record', 'rules', '--run', '.', '--grades', GRADES, 'rules']), `--run folder . ${SAME_REPOSITORY}`],
+    'a --with of ../x': [(p) => p.scope('--with', '../x', 'rules'), '--with path ../x is outside the repository'],
+    'a --run of ../x': [(p) => p.run(['record', 'rules', '--run', '../x', '--grades', GRADES, 'rules']), '--run folder ../x is outside the repository'],
+    'an option whose value is the next option': [(p) => p.run(['record', 'rules', '--run', '--grades', GRADES, 'rules']), '--run needs a value'],
+};
+
+for (const [name, [attempt, message]] of Object.entries(REPOSITORY_ROOT_CASES))
+{
+    test(`usage error: ${name}`, (t) =>
+    {
+        const p = project(t);
+        p.write(GRADES, BOTH_A);
+
+        refused(attempt(p), message);
+    });
+}
+
+test('usage error: a state file of another kind', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    p.setState((state) => { state.kind = 'hooks'; });
+
+    refused(p.scope('rules'), `cannot read the state file ${STATE}: not the state of an audit of kind rules`);
+});
+
+test('a grades line for a stored item that has no file now is skipped and its entry is gone', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    p.remove('rules/b.md');
+
+    const result = p.record(`${ONLY_A}rules/b.md\tA\t9.5\tyes\n`, 'rules');
+
+    assert.equal(result.stdout, `skipped rules/b.md - no tracked file\nRecorded: 1 graded, 0 kept, 0 dropped, 1 skipped - ${STATE}\n`);
+    assert.deepEqual(Object.keys(p.state().items), ['rules/a.md']);
+});
+
+test('record run from a folder below the root writes the same state as from the root', (t) =>
+{
+    const p = project(t);
+    p.record(BOTH_A, 'rules');
+    const fromRoot = fs.readFileSync(path.join(p.repo, STATE), 'utf8');
+    fs.rmSync(path.join(p.repo, STATE));
+
+    const result = p.run(['record', 'rules', '--run', RUN, '--grades', 'grades.tsv', 'rules'], { cwd: path.join(p.repo, 'docs') });
+
+    assert.equal(result.status, 0);
+    assert.equal(fs.readFileSync(path.join(p.repo, STATE), 'utf8'), fromRoot);
 });

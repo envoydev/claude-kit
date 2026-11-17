@@ -27,6 +27,7 @@ const COMMAND_OPTIONS = Object.freeze({
     [COMMAND.scope]: [OPTION.full, OPTION.with, OPTION.maxAge],
     [COMMAND.record]: [OPTION.run, OPTION.grades, OPTION.under, OPTION.with],
 });
+const PATH_SEPARATOR_PATTERN = /[\\/]/;
 const KIND_PATTERN = /^[a-z][a-z-]*$/;
 const LETTER_PATTERN = /^[A-F][+-]?$/;
 const NUMERIC_PATTERN = /^\d+(\.\d+)?$/;
@@ -107,9 +108,8 @@ function checkedPath(text)
 {
     if (text === '') return { problem: 'is empty' };
     if (path.posix.isAbsolute(text) || path.win32.isAbsolute(text)) return { problem: 'is outside the repository' };
-    const segments = text.split('/');
-    if (segments.includes('..')) return { problem: 'is outside the repository' };
-    const clean = segments.filter((segment) => segment !== '' && segment !== '.').join('/');
+    if (text.split(PATH_SEPARATOR_PATTERN).includes('..')) return { problem: 'is outside the repository' };
+    const clean = text.split('/').filter((segment) => segment !== '' && segment !== '.').join('/');
     return clean === '' ? { problem: 'names the repository itself' } : { path: clean };
 }
 
@@ -473,7 +473,7 @@ function record(options, root)
     const parsed = parseGrades(text);
     if (parsed.problem !== undefined) fail(`${options.grades} ${parsed.problem}`);
     const { present, withFiles, state: previous } = load(options, root);
-    const [scoring, folder] = options.under ?? Object.values(auditSkillHashes(root, options.kind));
+    const { scoring, folder } = options.under === null ? auditSkillHashes(root, options.kind) : { scoring: options.under[0], folder: options.under[1] };
     const ids = [...parsed.grades.map((grade) => grade.id), ...(previous?.items.keys() ?? [])];
     const hashes = hashFiles(root, [...new Set([...ids.flatMap((id) => filesUnder(present, id)), ...withFiles])]);
     const result = recordState({
@@ -509,8 +509,8 @@ try
 }
 catch (error)
 {
-    // A file the command cannot read or write (an error with a string code) is as unusable as a bad command line.
-    if (!(error instanceof UsageError) && typeof error.code !== 'string') throw error;
+    // A failed read, write, rename or mkdir (an error naming its syscall) is as unusable as a bad command line; any other error is a fault here.
+    if (!(error instanceof UsageError) && typeof error.syscall !== 'string') throw error;
     console.error(`audit-scope: ${error.message}`);
     process.exitCode = EXIT.usage;
 }
