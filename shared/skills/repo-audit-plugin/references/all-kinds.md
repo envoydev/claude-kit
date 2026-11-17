@@ -54,7 +54,8 @@ time.
    it reads no audited file and scores nothing.
 4. **Size and models, once for the run.** Do the flow's steps 1 to 3 for each kind, its scope included, then state
    `Size:` with one entry per kind (items audited and carried, files, characters, batches) and the total planner
-   seats, and `Models:` as the flow gives them.
+   seats, `Models:` as the flow gives them, and under them each kind's line that its audit skill changed or its
+   `audit-scope:` line, where its scope printed one.
    With more than one kind to run, ask once before the first planner starts:
 
    ```ask
@@ -66,9 +67,11 @@ time.
 
    Under `auto-run` the ask is not put: the recommended option is taken and ledgered. It replaces each kind's own
    size ask (the flow's step 4) for this run.
-5. **Plan.** One kind at a time: before a kind's planner starts, repeat the flow's step 1 for it - the clean
-   check and the scope - since an earlier kind's edits may have reached its items; the later result is the one
-   its planner gets and its `run.md` keeps. A kind whose targets hold an earlier kind's uncommitted edits is
+5. **Plan.** One kind at a time: at each kind's turn in the run order, before its planner starts, repeat the
+   flow's step 1 for it - the clean check and the scope - since an earlier kind's edits may have reached its
+   items; the later result is the one its planner gets and its `run.md` keeps. A kind step 4 found all carried
+   takes its turn too: with an `audit` line now it is planned like any other, with none it stays
+   `done - all <n> items carried`. A kind whose targets hold an earlier kind's uncommitted edits is
    `NOT RUN - targets edited by <kind>, uncommitted` before any seat starts. Then dispatch its planners (the
    flow's step 5), two seats at a time, and put its open questions (step 6) when they return. With `parallel`:
    dispatch the planners of every wave 1 kind in one message, at most four planner seats running at a time
@@ -102,7 +105,9 @@ time.
    outside `parallel`, that is before the next plan is applied. Where another kind's plan was applied after this kind's planner started -
    `auto_approve` off, or `parallel` - first run its scope once more and name in the verify message each
    carried item that now reads `changed`: `final.md` and the scorecard list it as 'changed after planning - not
-   audited', never as carried. Where that plan edits a path under this kind's roots or its `scope_with`, the
+   audited', never as carried. A kind that is `done - all <n> items carried` is scoped once more the same way
+   before the close, and its scorecard lists such an item the same way. Where that plan edits a path under this
+   kind's roots or its `scope_with`, the
    kind is not recorded, as the flow's step 10 says.
 10. **Wave 2.** Run steps 5 to 9 again for whichever of `system` and `usage` the run includes, on the tree as wave 1
     left it. Where wave 1 edited

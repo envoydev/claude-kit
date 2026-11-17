@@ -82,7 +82,9 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    `commands`, `agents` and `rules` always, `hooks` only where its `audit` entry carries a `scope_with` list -
    the paths every item's grade rests on besides its own files. Run
    `node .claude/kit/audit-scope.mjs scope <kind> [--with <path>]... <root>...` with the entry's `roots` and one
-   `--with` for each `scope_with` path. `full` after the command, or 'audit everything again' in chat, adds
+   `--with` for each `scope_with` path. Every path the script takes - a root, a `--with` path, `--run` - is
+   written from the repository root, never absolute. `full` after the command, or 'audit everything again' in
+   chat, adds
    `--full`; it is no kind. Keep the output in `run.md`:
    - an `audit <item>` line is an item to audit - new, changed, or graded below the target. Those items are the
      planner's targets, and where the audit skill says 'every item' it means every one of them;
@@ -140,7 +142,8 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    `git status --porcelain -- <targets>` both print nothing, and, where the repository holds
    `.claude/kit/prove-plan.mjs`, `node .claude/kit/prove-plan.mjs --check <plan>` exits 0. Pass it one
    `--without` for each folder beside the plan named `<the plan's expected folder>-without-<edits>` whose edits
-   the plan still holds; a folder that names an edit struck since is stale - name it in `run.md` and pass it to
+   the plan still holds - `expected-without-E5-E8` is `--without E5,E8`; a folder that names an edit struck
+   since is stale - name it in `run.md` and pass it to
    nothing. A target that changed since the plan was written, or a check that fails, goes back to the planner
    with SendMessage - re-audit those items, prove the plan again - before anything is graded or asked. A plan
    with no edit - every audited item already at the target - is a report-only run from here: no check, no grade,
@@ -202,8 +205,10 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    with step 1's paths and roots, as soon as the last `final.md` is written - in a run that takes its kinds one
    at a time, before any later kind's plan is applied, so that no grade is stored beside the hash of a later edit. A report-only
    run records the same way at step 8, its baseline grades standing. A run that stops before its verify records
-   nothing, so the items it edited read `changed` next time. Where `record` exits 2, print its line in the report
-   and go on. Where another kind's plan was applied after this kind's planner started and edits a path under
+   nothing, so the items it edited read `changed` next time. Keep what `record` printed in `run.md` and print
+   its `Recorded:` line and each `skipped` line in the report; where it exits 2, print its `audit-scope:` line
+   there instead and go on. Where another kind's plan was applied after this kind's planner started and edits a
+   path under
    this kind's roots or its `scope_with`, do not record the kind: the edited items then read `changed` next time.
 11. **Report.** Print the audit skill's output contract from `final.md`, then the scorecard - the quality before
     the edits against the quality after them, from the audit's own grades, the
