@@ -51,7 +51,9 @@ test('ships the check, settings, status-hook, prove-plan and audit-scope scripts
         ['constants.mjs', 'constants.mjs'],
         ['status-hook.mjs', 'status-hook.mjs'],
         ['prove-plan.mjs', 'prove-plan.mjs'],
+        ['plan-replay.mjs', 'plan-replay.mjs'],
         ['audit-scope.mjs', 'audit-scope.mjs'],
+        ['audit-items.mjs', 'audit-items.mjs'],
         ['README.md', 'kit-readme.md'],
     ];
     for (const [shipped, source] of shippedFiles)

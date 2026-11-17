@@ -1,4 +1,5 @@
 // Shared by the suites: throwaway kits and repos on disk, and a way to run one of the kit's scripts against them.
+import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -144,3 +145,189 @@ export function makeSibling(t, repo, files)
     writeFiles(folder, files);
     return name;
 }
+
+// bin/prove-plan.mjs, run in a throwaway git repository holding a plan in a folder of its own.
+export const PROVE_SCRIPT = path.join(REAL_KIT, 'bin', 'prove-plan.mjs');
+export const PLAN_RUN_FOLDER = 'docs/run';
+export const PLAN_EXPECTED_FOLDER = `${PLAN_RUN_FOLDER}/expected`;
+export const ALPHA_TEXT = 'alpha\nbeta\ngamma\n';
+
+export function runGit(repo, ...args)
+{
+    const result = spawnSync('git', ['-c', 'user.name=tester', '-c', 'user.email=tester@example.com', '-c', 'commit.gpgsign=false', '-C', repo, ...args], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+}
+
+export function commitAllFiles(repo, message)
+{
+    runGit(repo, 'add', '-A');
+    runGit(repo, 'commit', '-q', '-m', message);
+    return runGit(repo, 'rev-parse', '--short', 'HEAD');
+}
+
+// An outer fence one backtick longer than any run inside the text, as the plan format asks.
+function fenced(text)
+{
+    const longest = Math.max(0, ...(text.match(/`+/g) ?? []).map((run) => run.length));
+    const fence = '`'.repeat(Math.max(3, longest + 1));
+    return `${fence}text\n${text}\n${fence}`;
+}
+
+function renderEdit({ n, path: file, kind = 'replace', needs, old, new: replacement })
+{
+    const lines = [`### E${n} - ${file}`, '', '- Item: demo', `- Kind: ${kind}`];
+    if (needs) lines.push(`- Needs: ${needs}`);
+    lines.push('');
+    if (old !== undefined) lines.push('Old:', '', fenced(old), '');
+    if (replacement !== undefined) lines.push('New:', '', fenced(replacement), '');
+    return lines.join('\n');
+}
+
+// `applies` (a line or lines) sits between the Baseline line and ## Summary; `tail` (lines) follows the last section.
+export function renderPlan({ baseline, edits, applies, tail = [] })
+{
+    const appliesLines = applies === undefined || applies === null ? [] : [applies].flat();
+    return [
+        '# Audit plan - demo - 2026-11-17', '', `Baseline: ${baseline} - 2026-11-17 10:00`, '',
+        ...(appliesLines.length > 0 ? [...appliesLines, ''] : []),
+        '## Summary', '', '| Item | Baseline | Edits | Expected |', '|---|---|---|---|', '| demo | 80 | E1 | 90 |', '',
+        '## Edits', '', ...edits.map(renderEdit), '## Open questions', '', '- none', '', ...tail,
+    ].join('\n');
+}
+
+// Every regular file under the run folder, path to text, so a test can show that a run wrote nothing.
+export function readRunFolder(p)
+{
+    const entries = fs.readdirSync(path.join(p.repo, PLAN_RUN_FOLDER), { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile());
+    return new Map(entries.map((entry) =>
+    {
+        const file = path.join(entry.parentPath, entry.name);
+        return [path.relative(p.repo, file).split(path.sep).join('/'), fs.readFileSync(file, 'utf8')];
+    }));
+}
+
+// A repository with one commit holding `files`; `plan(edits)` writes plan.md at its Baseline, `run(...)` runs the prover in it.
+export function makePlanProject(t, files)
+{
+    const repo = makeRepo(t, files);
+    const baseline = commitAllFiles(repo, 'baseline');
+    const plan = (edits, { name = 'plan.md', rev = baseline, applies, tail } = {}) =>
+    {
+        const file = `${PLAN_RUN_FOLDER}/${name}`;
+        writeFiles(repo, { [file]: renderPlan({ baseline: rev, edits, applies, tail }) });
+        return file;
+    };
+    const run = (...args) => runNode(PROVE_SCRIPT, args, { cwd: repo });
+    const read = (rel) => fs.readFileSync(path.join(repo, rel), 'utf8');
+    const exists = (rel) => fs.existsSync(path.join(repo, rel));
+    const list = (rel) => fs.readdirSync(path.join(repo, rel), { recursive: true }).map((name) => name.split(path.sep).join('/')).sort();
+    return { repo, baseline, plan, run, read, exists, list };
+}
+
+export const makeReplaceEdit = (n, file, old, replacement, more = {}) => ({ n, path: file, kind: 'replace', old, new: replacement, ...more });
+
+// bin/audit-scope.mjs, run in a throwaway git repository of rules, skills and hooks.
+export const SCOPE_SCRIPT = path.join(REAL_KIT, 'bin', 'audit-scope.mjs');
+export const SCOPE_SKILL = '.claude/skills/repo-audit-rules';
+export const SCOPE_RUN = 'docs/superpowers/audits/2026-11-17-rules';
+export const SCOPE_STATE = 'docs/superpowers/audits/state/rules.json';
+export const GRADES_FILE = 'docs/grades.tsv';
+export const GRADES_A_AND_B = 'rules/a.md\tA\t9\tyes\nrules/b.md\tA\t9.5\tyes\n';
+export const GRADES_A_ONLY = 'rules/a.md\tA\t9\tyes\n';
+const GRADED = /^Graded under: [0-9a-f]{40} [0-9a-f]{40}$/;
+export const WITH_DEFAULTS = ['--with', 'cfg/defaults.json', 'rules'];
+const FILES = {
+    '.gitignore': '.claude/\ndocs/\n',
+    'rules/a.md': 'A\n',
+    'rules/b.md': 'B\n',
+    'AGENTS.md': 'agents\n',
+    'skills/one/SCOPE_SKILL.md': 'one\n',
+    'skills/one/references/x.md': 'x\n',
+    'skills/two/SCOPE_SKILL.md': 'two\n',
+    'hooks/guard.mjs': 'guard\n',
+    'hooks/helper.mjs': 'helper\n',
+    'hooks/data/list.json': '[]\n',
+    'cfg/defaults.json': '{}\n',
+    [`${SCOPE_SKILL}/SCOPE_SKILL.md`]: 'audit\n',
+    [`${SCOPE_SKILL}/references/rubric.md`]: 'rubric\n',
+    [`${SCOPE_SKILL}/references/currency.md`]: 'currency\n',
+};
+
+const localDate = (now) => [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((part) => String(part).padStart(2, '0')).join('-');
+export const TODAY = localDate(new Date());
+export const EARLIER = daysAgo(20);
+export const LATER = daysAgo(10);
+
+export function daysAgo(count)
+{
+    const now = new Date();
+    return localDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - count));
+}
+
+export const carriedLine = (id, grade, date = TODAY) => `carried ${id} - ${grade} from ${date} - ${SCOPE_RUN}`;
+const splitOptions = (args) => (typeof args.at(-1) === 'object' ? [args.slice(0, -1), args.at(-1)] : [args, {}]);
+
+// The lines a successful run printed, less its last one, which always says what the grades were given under.
+export function printedLines(result)
+{
+    assert.equal(result.stderr, '');
+    assert.equal(result.status, 0);
+    const printed = result.stdout.split('\n');
+    assert.equal(printed.pop(), '');
+    assert.match(printed.pop(), GRADED);
+    return printed;
+}
+
+export function expectRefused(result, message)
+{
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    if (message === undefined) assert.match(result.stderr, /^audit-scope: [^\n]+\n$/);
+    else assert.equal(result.stderr, `audit-scope: ${message}\n`);
+}
+
+// A repository holding FILES, all committed but what .gitignore leaves out. `scope` and `record` take the kind as an option last.
+export function makeScopeProject(t)
+{
+    const repo = makeRepo(t, FILES);
+    runGit(repo, 'add', '-A');
+    runGit(repo, 'commit', '-q', '-m', 'baseline');
+    const run = (args, { cwd = repo } = {}) => runNode(SCOPE_SCRIPT, args, { cwd });
+    const stateFile = (kind) => path.join(repo, `docs/superpowers/audits/state/${kind}.json`);
+    return {
+        repo,
+        run,
+        scope(...args)
+        {
+            const [rest, { kind = 'rules', cwd }] = splitOptions(args);
+            return run(['scope', kind, ...rest], { cwd });
+        },
+        record(grades, ...args)
+        {
+            const [rest, { kind = 'rules' }] = splitOptions(args);
+            writeFiles(repo, { [GRADES_FILE]: grades });
+            return run(['record', kind, '--run', `docs/superpowers/audits/2026-11-17-${kind}`, '--grades', GRADES_FILE, ...rest]);
+        },
+        state: (kind = 'rules') => JSON.parse(fs.readFileSync(stateFile(kind), 'utf8')),
+        setState(change, kind = 'rules')
+        {
+            const state = JSON.parse(fs.readFileSync(stateFile(kind), 'utf8'));
+            change(state);
+            fs.writeFileSync(stateFile(kind), `${JSON.stringify(state, null, 2)}\n`);
+        },
+        write: (rel, text) => writeFiles(repo, { [rel]: text }),
+        remove: (rel) => fs.rmSync(path.join(repo, rel)),
+        add: (...rels) => runGit(repo, 'add', ...rels),
+        commit: () => runGit(repo, 'commit', '-q', '-m', 'more'),
+        tree()
+        {
+            const entries = fs.readdirSync(repo, { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile());
+            const files = entries.map((entry) => path.relative(repo, path.join(entry.parentPath, entry.name)).split(path.sep).join('/'));
+            return new Map(files.filter((rel) => !rel.startsWith('.git/')).sort().map((rel) => [rel, fs.readFileSync(path.join(repo, rel), 'utf8')]));
+        },
+    };
+}
+
+// The grades file the helper writes is no change a run made.
+export const withoutGradesFile = (tree) => new Map([...tree].filter(([rel]) => rel !== GRADES_FILE));
