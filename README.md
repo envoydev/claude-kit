@@ -77,7 +77,7 @@ user, the same values with their sources for Claude - so neither a new session n
 them. `node .claude/kit/settings.mjs` prints them on demand.
 
 ```text
-kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review opus | implement sonnet | search haiku
+kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit opus | review opus | implement sonnet | search haiku
 ```
 
 | Name | Variable | What it sets | Without it |
@@ -114,7 +114,7 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | review
 - Because the file is committed, everyone who works in a clone runs with its values, `auto_run`, `auto_approve` and
   `scoring` included (the user's choice, 2026-11-16). The variables keep the older rule: `KIT_SCORING`, `KIT_AUTO_RUN`
   and `KIT_AUTO_APPROVE` count only from a file that is not committed - `.claude/settings.local.json` or `~/.claude/settings.json` - and the
-  script ignores one in `.claude/settings.json`. The other five variables may go in any settings file; the sync
+  script ignores one in `.claude/settings.json`. The other six variables may go in any settings file; the sync
   leaves a repo's `env` block alone.
 - The pass score and scoring govern the grade of a spec or a plan, an audit's edit plan included. An audit's own
   score of each file, and its grade A bar, belong to the audit skill and are never switched off.

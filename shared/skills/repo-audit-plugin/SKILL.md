@@ -43,7 +43,7 @@ Two ways in. Say in one line which one this run took:
   `audit_model` or `implement_model` of step 2's settings - the audit model is the `plan_model` until it is set
   (Opus plans and Sonnet edits where nothing sets another). A
   model named without that limit ('audit with fable', 'edit with haiku') is a saved setting and reaches the seat that
-  way. A value of `none`
+  way; 'planner model fable' names the `plan_model`, not this seat. A value of `none`
   passes no `model`. The grader runs on the `review_model`.
 - **No dispatch available**, or one seat failing twice: run that seat's work here in a separate step, mark it
   `INLINE` in the report, and say the model split did not hold for it.
@@ -112,7 +112,7 @@ all' is taken and ledgered; off, the ask is put and the user is notified that th
    one batch.
 4. **Size before spend.** No planner starts before the user has seen two lines, in this form:
    `Size: <kind> - <files> files, <total> characters, <N> batch(es), <seats> planner seat(s)` and
-   `Models: plan <model>, review <model>, implement <model>` - `plan` is the planner seat's model, the
+   `Models: audit <model>, review <model>, implement <model>` - `audit` is the planner seat's model, the
    `audit_model`. Where step 1 ran the scope, add its `Scope:` line
    and, where it printed one, its line that the audit skill changed - the cue for `full`. One batch: add whether
    the plan is graded, and go on. More than one batch: stop and ask,

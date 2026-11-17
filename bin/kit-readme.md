@@ -6,7 +6,7 @@ run its sync, which rewrites them in every repo.
 
 - `npm run kit:check` (or `node .claude/kit/check.mjs`) fails when a managed file was edited or removed here, when a
   `CLAUDE.md` hides `AGENTS.md`, and when a managed skill's description is not one line of at most 160 characters.
-- `node .claude/kit/settings.mjs` prints the values the kit's skills run on - the pass score, the plan, review,
+- `node .claude/kit/settings.mjs` prints the values the kit's skills run on - the pass score, the plan, audit, review,
   implement and search models, whether scoring, auto-run and auto-approve are on - read from `settings.json` beside it, then the
   `KIT_*` variables of a settings file's `env` block; the header of `kit-settings.mjs` lists them and
   `constants.mjs` holds their names and defaults. `settings.json` here is this repo's own and is never synced: it
