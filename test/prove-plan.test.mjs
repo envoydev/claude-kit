@@ -44,13 +44,27 @@ function renderEdit({ n, path: file, kind = 'replace', needs, old, new: replacem
     return lines.join('\n');
 }
 
-function renderPlan({ baseline, edits })
+// `applies` (a line or lines) sits between the Baseline line and ## Summary; `tail` (lines) follows the last section.
+function renderPlan({ baseline, edits, applies, tail = [] })
 {
+    const appliesLines = applies === undefined || applies === null ? [] : [applies].flat();
     return [
         '# Audit plan - demo - 2026-11-17', '', `Baseline: ${baseline} - 2026-11-17 10:00`, '',
+        ...(appliesLines.length > 0 ? [...appliesLines, ''] : []),
         '## Summary', '', '| Item | Baseline | Edits | Expected |', '|---|---|---|---|', '| demo | 80 | E1 | 90 |', '',
-        '## Edits', '', ...edits.map(renderEdit), '## Open questions', '', '- none', '',
+        '## Edits', '', ...edits.map(renderEdit), '## Open questions', '', '- none', '', ...tail,
     ].join('\n');
+}
+
+// Every regular file under the run folder, path to text, so a test can show that a run wrote nothing.
+function files(p)
+{
+    const entries = fs.readdirSync(path.join(p.repo, RUN_FOLDER), { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile());
+    return new Map(entries.map((entry) =>
+    {
+        const file = path.join(entry.parentPath, entry.name);
+        return [path.relative(p.repo, file).split(path.sep).join('/'), fs.readFileSync(file, 'utf8')];
+    }));
 }
 
 // A repository with one commit holding `files`; `plan(edits)` writes plan.md at its Baseline, `run(...)` runs the prover in it.
@@ -58,10 +72,10 @@ function project(t, files)
 {
     const repo = makeRepo(t, files);
     const baseline = commitAll(repo, 'baseline');
-    const plan = (edits, { name = 'plan.md', rev = baseline } = {}) =>
+    const plan = (edits, { name = 'plan.md', rev = baseline, applies, tail } = {}) =>
     {
         const file = `${RUN_FOLDER}/${name}`;
-        writeFiles(repo, { [file]: renderPlan({ baseline: rev, edits }) });
+        writeFiles(repo, { [file]: renderPlan({ baseline: rev, edits, applies, tail }) });
         return file;
     };
     const run = (...args) => runNode(PROVE, args, { cwd: repo });
@@ -453,4 +467,248 @@ test('outside a git repository it exits 2', (t) =>
 
     assert.equal(result.status, 2);
     assert.match(result.stderr, /^prove-plan: [^\n]+\n$/);
+});
+
+const CHECK_FILES = { 'a.txt': 'one\ntwo\nthree\n', 'dir/b.txt': 'x = 1\n' };
+const checkEdits = () => [replaceEdit(1, 'a.txt', 'two', 'TWO!'), replaceEdit(2, 'dir/b.txt', 'x = 1', 'x = 22')];
+const APPLIES_TWO = 'Applies: 2 of 2 edits';
+const APPLIES_MISSING = 'the plan has no Applies line\n';
+const PROVED_TWO = 'Proved: 2 of 2 edits; expected/ holds the 2 proved files\n';
+
+// The fixture of the --check cases: a plan with a matching Applies line, the writing mode run once unless `prove` is false.
+function checkProject(t, { files: baselineFiles = CHECK_FILES, edits = checkEdits(), applies = APPLIES_TWO, prove = true, ...options } = {})
+{
+    const p = project(t, baselineFiles);
+    const plan = p.plan(edits, { applies, ...options });
+    if (prove) assert.equal(p.run(plan).status, 0);
+    return { p, plan };
+}
+
+// Runs the prover and shows that it wrote, changed and removed nothing under the run folder.
+function runWriteless(p, ...args)
+{
+    const before = files(p);
+    const result = p.run(...args);
+    assert.deepEqual(files(p), before);
+    return result;
+}
+
+test('check passes on a proved plan: exit 0, one Proved line and nothing on stderr', (t) =>
+{
+    const { p, plan } = checkProject(t);
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stderr, '');
+    assert.equal(result.stdout, PROVED_TWO);
+});
+
+test('check accepts the flag after the plan path', (t) =>
+{
+    const { p, plan } = checkProject(t);
+
+    const result = runWriteless(p, plan, '--check');
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stderr, '');
+    assert.equal(result.stdout, PROVED_TWO);
+});
+
+test('check names a differing, a missing and an extra file', (t) =>
+{
+    const { p, plan } = checkProject(t);
+    writeFiles(p.repo, { [`${EXPECTED}/a.txt`]: 'tampered\n', [`${EXPECTED}/stray.txt`]: 'extra\n' });
+    fs.rmSync(path.join(p.repo, EXPECTED, 'dir/b.txt'));
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, 'expected/a.txt: differs\nexpected/dir/b.txt: missing\nexpected/stray.txt: not a file of this plan\n');
+});
+
+test('check with no expected folder names every file missing and does not make the folder', (t) =>
+{
+    const { p, plan } = checkProject(t, { prove: false });
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, 'expected/a.txt: missing\nexpected/dir/b.txt: missing\n');
+    assert.equal(p.exists(EXPECTED), false);
+});
+
+test('check ignores a .DS_Store in the expected folder', (t) =>
+{
+    const { p, plan } = checkProject(t);
+    writeFiles(p.repo, { [`${EXPECTED}/.DS_Store`]: 'junk', [`${EXPECTED}/dir/.DS_Store`]: 'junk' });
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, PROVED_TWO);
+});
+
+for (const line of ['Applies: 1 of 2 edits', 'Applies: 3 of 3 edits'])
+{
+    test(`a stale Applies line fails the check: '${line}'`, (t) =>
+    {
+        const { p, plan } = checkProject(t, { applies: line });
+
+        const result = runWriteless(p, '--check', plan);
+
+        assert.equal(result.status, 1);
+        assert.equal(result.stdout, '');
+        assert.equal(result.stderr, `the plan says '${line}'\n`);
+    });
+}
+
+test('a plan with no Applies line fails the check', (t) =>
+{
+    const { p, plan } = checkProject(t, { applies: null });
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, APPLIES_MISSING);
+});
+
+test('text after the count of the Applies line is allowed', (t) =>
+{
+    const { p, plan } = checkProject(t, { applies: 'Applies: 2 of 2 edits - proved on a copy' });
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, PROVED_TWO);
+});
+
+test('an Applies line inside a fence is ignored', (t) =>
+{
+    const { p, plan } = checkProject(t, { applies: ['```text', 'Applies: 9 of 9 edits', '```', APPLIES_TWO] });
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, PROVED_TWO);
+});
+
+for (const [name, options] of [
+    ['only inside a fence', { applies: ['```text', APPLIES_TWO, '```'] }],
+    ['only below ## Summary', { applies: null, tail: [APPLIES_TWO] }],
+])
+{
+    test(`an Applies line ${name} is no Applies line`, (t) =>
+    {
+        const { p, plan } = checkProject(t, options);
+
+        const result = runWriteless(p, '--check', plan);
+
+        assert.equal(result.status, 1);
+        assert.equal(result.stdout, '');
+        assert.equal(result.stderr, APPLIES_MISSING);
+    });
+}
+
+for (const [name, folder] of [['plan-2.md', 'expected-2'], ['retro-plan.md', 'retro-expected']])
+{
+    test(`${name} names its folder ${folder}/ in the Proved line`, (t) =>
+    {
+        const { p, plan } = checkProject(t, { files: { 'a.txt': ALPHA }, edits: [replaceEdit(1, 'a.txt', 'beta', 'BETA')], name, applies: 'Applies: 1 of 1 edits' });
+
+        const result = runWriteless(p, '--check', plan);
+
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(result.stdout, `Proved: 1 of 1 edits; ${folder}/ holds the 1 proved files\n`);
+    });
+}
+
+test('a plan that writes no file passes with no expected folder', (t) =>
+{
+    const { p, plan } = checkProject(t, { files: { 'a.txt': ALPHA }, edits: [{ n: 1, path: 'a.txt', kind: 'delete-file' }], applies: 'Applies: 1 of 1 edits', prove: false });
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'Proved: 1 of 1 edits; expected/ holds the 0 proved files\n');
+    assert.equal(p.exists(EXPECTED), false);
+});
+
+const VARIANT_PROJECT = { files: { 'a.txt': ALPHA }, edits: [replaceEdit(1, 'a.txt', 'alpha', 'ALPHA'), replaceEdit(2, 'a.txt', 'beta', 'BETA')] };
+
+function variantProject(t)
+{
+    const { p, plan } = checkProject(t, { ...VARIANT_PROJECT, prove: false });
+    assert.equal(p.run(plan, '--without', 'E2').status, 0);
+    return { p, plan };
+}
+
+test('check with --without compares the variant folder too', (t) =>
+{
+    const { p, plan } = variantProject(t);
+
+    const result = runWriteless(p, '--check', plan, '--without', 'E2');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.equal(result.stdout, 'Proved: 2 of 2 edits; expected/ holds the 1 proved files\nProved: expected-without-E2/ holds the 1 proved files\n');
+});
+
+test('a variant folder that differs or is missing fails the check', (t) =>
+{
+    const { p, plan } = variantProject(t);
+    writeFiles(p.repo, { [`${EXPECTED}-without-E2/a.txt`]: 'x\n' });
+
+    const differs = runWriteless(p, '--check', plan, '--without', 'E2');
+
+    assert.equal(differs.status, 1);
+    assert.equal(differs.stdout, '');
+    assert.equal(differs.stderr, 'expected-without-E2/a.txt: differs\n');
+
+    fs.rmSync(path.join(p.repo, `${EXPECTED}-without-E2`), { recursive: true });
+    const missing = runWriteless(p, '--check', plan, '--without', 'E2');
+
+    assert.equal(missing.status, 1);
+    assert.equal(missing.stdout, '');
+    assert.equal(missing.stderr, 'expected-without-E2/a.txt: missing\n');
+});
+
+test('a failed replay prints the writing mode lines and compares nothing', (t) =>
+{
+    const { p, plan } = checkProject(t, { edits: [replaceEdit(1, 'a.txt', 'absent', 'ABSENT'), replaceEdit(2, 'dir/b.txt', 'x = 1', 'x = 22')], prove: false });
+    const writing = p.run(plan);
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, writing.stdout);
+    assert.equal(result.stderr, writing.stderr);
+    assert.doesNotMatch(result.stderr, /missing/);
+});
+
+test('plan-level and usage errors stay exit 2 with one prove-plan line and no stdout', (t) =>
+{
+    const { p, plan } = checkProject(t);
+    const noEdit = `${RUN_FOLDER}/no-edit.md`;
+    writeFiles(p.repo, { [noEdit]: renderPlan({ baseline: p.baseline, edits: [], applies: APPLIES_TWO }) });
+    const unknownRevision = p.plan(checkEdits(), { name: 'unknown-revision.md', rev: 'nosuchrev', applies: APPLIES_TWO });
+
+    const cases = {
+        'a plan with no edit': ['--check', noEdit],
+        'an unknown revision': ['--check', unknownRevision],
+        '--without an edit the plan lacks': ['--check', plan, '--without', 'E9'],
+        'no plan path': ['--check'],
+    };
+    for (const [name, args] of Object.entries(cases))
+    {
+        const result = runWriteless(p, ...args);
+
+        assert.equal(result.status, 2, name);
+        assert.match(result.stderr, /^prove-plan: [^\n]+\n$/, name);
+        assert.equal(result.stdout, '', name);
+    }
+    assert.equal(p.run('--check').stderr, 'prove-plan: no plan path - usage: node prove-plan.mjs [--check] <plan> [--without E<n>[,E<m>]]...\n');
 });
