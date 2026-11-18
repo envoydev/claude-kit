@@ -40,12 +40,12 @@
       "notes": [
         "shared/skills is the one home: bin/sync.ts copies each skill into .claude/skills of this repo and of alfred-code, alfred-mods and alfred-tools. No plugin install carries them, so there is no manifest, catalog or eval suite - the tested surface is the sync and each repo's kit:check.",
         "A file ending in .tmpl (solve-task/SKILL.md.tmpl) is a template: audit its text with the {{key}} slots as written, and the filled copy at .claude/skills/solve-task/SKILL.md for what a session reads. A slot's value is each repo's own, in its .claude/kit/repo.json.",
-        "The nine repo-audit-<kind> skills carry disable-model-invocation: their descriptions are not in context, so the trigger grade judges the slash-menu line, not model triggering. repo-audit-plugin is model-invocable on purpose: it holds the flow those nine load at the start of a run, and for a run of several kinds it Reads each audit's SKILL.md by path, on the user's ask for the run. Every other skill is model-invocable.",
+        "The ten repo-audit-<kind> skills carry disable-model-invocation: their descriptions are not in context, so the trigger grade judges the slash-menu line, not model triggering. repo-audit-plugin is model-invocable on purpose: it holds the flow those ten load at the start of a run, and for a run of several kinds it Reads each audit's SKILL.md by path, on the user's ask for the run. Every other skill is model-invocable.",
         "The authoring method is this repo's own skill-authoring skill: a description of at most 160 characters on one line, opening on its trigger. The skills name each other freely because the whole set is always synced together.",
         "javascript, typescript, ts-js-testing, npm, markdown-style and code-comments began as copies of Alfred Code stack skills and have diverged; alfred-code's stack/skills copies are that repo's product and are not kept in step from here.",
         "A fix lands under shared/skills, never in a .claude/ copy; after it, npm run sync and one commit in each of the three repos.",
         "No usage ledger exists for these skills.",
-        "The multi-home registry is copies.json at the kit's root: the auto-run, refining-plans and typescript SKILL.md files own text their rules repeat on purpose, the refining-plans reviewer prompt owns the contract the plan-grader agent repeats, and repo-audit-skills and repo-audit-rules own the six blocks the audit family shares - each pinned by marker phrases. A pass that rewords such text updates the copies and the registry in the same pass; `node .claude/kit/check.mjs` fails here when a site lacks one of its markers, and when a skill's description is not one line of at most 160 characters."
+        "The multi-home registry is copies.json at the kit's root: the auto-run, refining-plans and typescript SKILL.md files own text their rules repeat on purpose, the refining-plans reviewer prompt owns the contract the plan-grader agent repeats, and repo-audit-skills, repo-audit-rules and repo-audit-hooks own the ten blocks the audit family shares - each pinned by marker phrases. A pass that rewords such text updates the copies and the registry in the same pass; `node .claude/kit/check.mjs` fails here when a site lacks one of its markers, and when a skill's description is not one line of at most 160 characters."
       ]
     },
     "agents": {
@@ -114,6 +114,31 @@
       ],
       "notes": [
         "One hook, by the user's request of 2026-11-15, which replaced that morning's no-hook decision: bin/status-hook.mjs, a UserPromptSubmit command hook wired in shared/settings.base.json and merged into each repo's .claude/settings.json by bin/sync.ts, which recognises a kit hook by the .claude/kit/ path in its command. It shows one status line to the user and the same values to Claude, saves in .claude/kit/settings.json a request whose first line is only words to switch auto-run or scoring or to name a role's model ('plan model fable'), where it holds until it is changed, and never blocks a request; test/status-hook.test.mjs and test/status-hook-models.test.mjs cover it. Any other hook still waits for a rule that is seen to fail. The audit also covers the hooks that enabled plugins bring into a session here: the plugins in .claude/settings.json enabledPlugins and those enabled at user scope."
+      ]
+    },
+    "code": {
+      "roots": [
+        "bin",
+        "test"
+      ],
+      "checks": [
+        "npm test",
+        "../alfred-tools/node_modules/.bin/tsc --noEmit --strict --target es2023 --module nodenext --moduleResolution nodenext --allowImportingTsExtensions --typeRoots ../alfred-tools/node_modules/@types --types node bin/sync.ts"
+      ],
+      "notes": [
+        "bin/ is flat by contract, and its .mjs files are copied by name into every repo's .claude/kit/ (KIT_FILES in bin/sync.ts), where that repo's own Node runs them: they stay JavaScript under // @ts-check. A rename of one is a change to KIT_FILES, to the status hook's command in shared/settings.base.json and to every repo's next sync.",
+        "bin/sync.ts runs through Node's type stripping (engines ^22.18.0 || >=23.6.0), so it and every converted file hold erasable syntax only.",
+        "The repo has no dependencies, and no tsconfig.json until ts-convert writes one: the compiler and Node's types come from the alfred-tools checkout beside this one, as the tsc line of AGENTS.md takes them.",
+        "npm test selects test/*.test.mjs with Node's own runner; test/support.mjs builds the throwaway kits and repos the tests run against.",
+        "bin/kit-readme.md is prose the sync copies as .claude/kit/README.md: an item with no code.",
+        "bin/status-hook.mjs is also the hooks audit's one target: that audit owns its event, its exit contract and its timeout, this one the rest.",
+        "The repo is public: no private project names or absolute local paths in a tracked file."
+      ],
+      "keep_js": [
+        {
+          "path": "bin/*.mjs",
+          "reason": "outside runtime - the sync copies each into every repo's .claude/kit/ by name (KIT_FILES in bin/sync.ts), and that repo's Node runs it there"
+        }
       ]
     }
   }

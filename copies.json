@@ -274,12 +274,19 @@
             "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
             "stops the flow adds are its own asks, one of them before any edit lands"
           ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/SKILL.md",
+          "markers": [
+            "Load the `repo-audit-plugin` skill before step 1 and run this audit through its flow",
+            "stops the flow adds are its own asks, one of them before any edit lands"
+          ]
         }
       ]
     },
     {
       "id": "audit-ask-shape",
-      "why": "The four audits that can stop on a question each say in their own body how it is put, because a body pointer to a sibling would not load.",
+      "why": "The six audits that can stop on a question each say in their own body how it is put, because a body pointer to a sibling would not load.",
       "owner": {
         "site": "shared/skills/repo-audit-skills/SKILL.md",
         "markers": [
@@ -315,12 +322,19 @@
             "put the question through the AskUserQuestion tool",
             "with concrete options and a marked recommendation, never a prose question buried in a report"
           ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/SKILL.md",
+          "markers": [
+            "put the question through the AskUserQuestion tool",
+            "with concrete options and a marked recommendation, never a prose question buried in a report"
+          ]
         }
       ]
     },
     {
       "id": "audit-currency-procedure",
-      "why": "The lookup procedure for outside claims is the same in four audits and each reads only its own references.",
+      "why": "The lookup procedure for outside claims is the same in six audits and each reads only its own references.",
       "owner": {
         "site": "shared/skills/repo-audit-skills/references/currency.md",
         "markers": [
@@ -356,6 +370,14 @@
         },
         {
           "site": "shared/skills/repo-audit-commands/references/currency.md",
+          "markers": [
+            "Training-data recall drifts",
+            "never substitute recall for the lookup",
+            "judgment stays in the artifact, drifting facts are fetched live"
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/references/currency.md",
           "markers": [
             "Training-data recall drifts",
             "never substitute recall for the lookup",
@@ -561,12 +583,19 @@
             "Read `.claude/kit/repo.json` -> `audit.",
             "follow every `notes` line wherever this skill touches"
           ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/SKILL.md",
+          "markers": [
+            "Read `.claude/kit/repo.json` -> `audit.",
+            "follow every `notes` line wherever this skill touches"
+          ]
         }
       ]
     },
     {
       "id": "audit-stop-conditions",
-      "why": "The seven audits that run a bounded loop end the run on the same two conditions and the same closing rule, with the noun changed, each in its own body.",
+      "why": "The eight audits that run a bounded loop end the run on the same two conditions and the same closing rule, with the noun changed, each in its own body.",
       "owner": {
         "site": "shared/skills/repo-audit-skills/SKILL.md",
         "markers": [
@@ -616,12 +645,19 @@
             "Stop the whole run when either holds",
             "Report the remainder honestly rather than inflating grades to force a clean sweep."
           ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/SKILL.md",
+          "markers": [
+            "Stop the whole run when either holds",
+            "Report the remainder honestly rather than inflating grades to force a clean sweep."
+          ]
         }
       ]
     },
     {
       "id": "audit-grade-bands",
-      "why": "Eight audits map a total to a grade through the same band table, and the flow's target and scorecard read every one of them as A / 9, so each rubric carries the table.",
+      "why": "Nine audits map a total to a grade through the same band table, and the flow's target and scorecard read every one of them as A / 9, so each rubric carries the table.",
       "owner": {
         "site": "shared/skills/repo-audit-skills/references/rubric.md",
         "markers": [
@@ -670,12 +706,18 @@
           "markers": [
             "| 90-100 and all floors met | A | 9 |"
           ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/references/rubric.md",
+          "markers": [
+            "| 90-100 and all floors met | A | 9 |"
+          ]
         }
       ]
     },
     {
       "id": "audit-short-loop",
-      "why": "The hooks audit and the tools audit keep a shorter wording of the bounded loop the other audits register as audit-remediation-loop, each in its own remediation file.",
+      "why": "The hooks audit, the tools audit and the code audit keep a shorter wording of the bounded loop the other audits register as audit-remediation-loop, each in its own remediation file.",
       "owner": {
         "site": "shared/skills/repo-audit-hooks/references/remediation.md",
         "markers": [
@@ -686,6 +728,13 @@
       "copies": [
         {
           "site": "shared/skills/repo-audit-tools/references/remediation.md",
+          "markers": [
+            "Rank the deductions by points lost. Fix the largest first.",
+            "Do not carry the previous score forward."
+          ]
+        },
+        {
+          "site": "shared/skills/repo-audit-code/references/remediation.md",
           "markers": [
             "Rank the deductions by points lost. Fix the largest first.",
             "Do not carry the previous score forward."

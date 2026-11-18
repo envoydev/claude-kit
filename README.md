@@ -12,7 +12,7 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 | Path | What it is |
 |---|---|
 | `shared/rules/` | `auto-run`, `commits`, `execution` (a template), `javascript`, `typescript`, `plan-approval`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `superpowers-location` |
-| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), the nine `repo-audit-<kind>` audits and `repo-audit-plugin`, which holds the flow they run through and runs them together |
+| `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), `ts-convert`, the ten `repo-audit-<kind>` audits and `repo-audit-plugin`, which holds the flow they run through and runs them together |
 | `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
 | `shared/defaults.json` | the kit's own value for a template key - `plan_model` (opus), `review_model` (opus), `implement_model` (sonnet), the model each agent file is written with. A project changes a seat's model in its settings (below), not here |
 | `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow`, the `attribution` block that keeps Claude Code's own trailer, PR line and session link out of commits and PRs, and the status hook - merged into each repo's `.claude/settings.json`, the repo's own hooks kept |
@@ -29,7 +29,7 @@ attach the rule that loads it. A key that neither the repo nor
 
 An audit is typed (`/repo-audit-skills`, `-rules`, ...) and runs through the flow in `repo-audit-plugin`. `/repo-audit-plugin` runs every
 kind the repo has targets for, `/repo-audit-plugin exclude tools, usage` every kind but those, and
-`/repo-audit-plugin skills, hooks` only those - one kind at a time, `hooks` last in its wave, or side by side where the request says `parallel` - and, unlike the nine, it can also be started by asking in chat
+`/repo-audit-plugin skills, hooks` only those - one kind at a time, `code` last in its wave, after `hooks`, or side by side where the request says `parallel` - and, unlike the ten, it can also be started by asking in chat
 ('run all the audits'). In each audit the planner agent reads,
 scores and writes an edit plan with the exact text of every change, `refining-plans` grades that plan unless plan grading
 is off, the plan is approved before anything is edited - by the user, or by the run where `auto_approve` is on - the
@@ -42,12 +42,15 @@ grade, it waits for the user. So the
 judgment runs on the stronger model and the edits on the cheaper one, whatever model the session is on.
 
 The `repo-audit-*` skills are one generic copy each. What they audit in a repo comes from that repo's `repo.json`
-`audit` map, one entry per kind (`skills`, `commands`, `agents`, `rules`, `agent-md`, `hooks`, `tools`, `system`,
-`usage`):
+`audit` map, one entry per kind (`skills`, `commands`, `agents`, `rules`, `agent-md`, `hooks`, `tools`, `code`,
+`system`, `usage`):
 `roots` (the paths audited), `checks` (the commands that are its mechanical gate) and `notes` (its own registries,
-graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit.
+graders and catalogs, one sentence each). A kind with no entry is reported as nothing to audit. The `code` entry
+takes one key more, `keep_js`: a list of `{ "path": "<glob>", "reason": "<one line>" }` naming the JavaScript that
+stays JavaScript under `// @ts-check` - code a runtime outside the repo loads, such as this kit's `bin/*.mjs`,
+which every repo runs from its `.claude/kit/`.
 
-An audit of `skills`, `commands`, `agents` or `rules` reads only the items that are new, changed since they were
+An audit of `skills`, `commands`, `agents`, `rules` or `code` reads only the items that are new, changed since they were
 last graded on this machine, were graded below the target, or were graded more than 30 days ago (`max_age_days` in
 the entry changes the number); the rest are carried with their grade, and `full`
 after the command audits every item again. An entry may add `scope_with`: paths every item's grade rests on besides
@@ -55,6 +58,15 @@ its own files - a change to one of them audits every item, and an entry under a 
 `hooks` is scoped only where its entry has the list. A change to an audit skill's `references/rubric.md` or
 `references/currency.md` audits every item of its kind again; a change to its other text carries the grades and
 says so. The first audit of a kind on a machine is always a full one.
+
+`/repo-audit-code` audits a repo's own working code - structure, correctness, language and style, comments, tests,
+consistency - against the shared `project-structure`, `javascript`, `typescript`, `code-comments` and
+`ts-js-testing` skills and the repo's own `structure_map`. Before it reads anything it converts the repo's
+JavaScript to TypeScript with `ts-convert`: one seat plans the conversion, then one seat at a time converts a
+batch, and a batch is committed only when the whole-repo typecheck and its tests pass. `/repo-audit-code
+no-convert` audits the tree as it stands. `ts-convert` also runs alone - 'convert this repo to TypeScript' - and
+keeps its plan and its progress under `docs/superpowers/convert/<date>/`. An item with no code file is listed
+beside the scorecard as not scored.
 
 `copies.json` at the root is this repo's registry of text kept on purpose in more than one file - a rule and its skill,
 a rule and each repo's `AGENTS.md`: each entry names the owner, every copy and the marker phrases each keeps, so an

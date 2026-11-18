@@ -94,7 +94,8 @@ from `.claude/rules/`:
 The other four rules there attach by path, and each exists to load its skills when a matching file is touched.
 
 Procedures live in skills, under `shared/skills/`: `solve-task` runs a change of more than a sentence end to end -
-spec, plan, build, checks, review. The `repo-audit-*` audits are the user's to start (`README.md`).
+spec, plan, build, checks, review. The `repo-audit-*` audits are the user's to start (`README.md`); `ts-convert`
+converts JavaScript to TypeScript batch by batch, alone or as the first step of `/repo-audit-code`.
 
 ## Related repos
 
