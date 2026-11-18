@@ -44,7 +44,10 @@ It has to hold for a repo of several megabytes, so each step is a command or a s
    `require.extensions`, `module.` used as a value, a top-level `await`. Keep the output as `constructs.tsv`.
 4. **The outside runtimes.** The shipped folders are the ones the repo's `notes` and instruction file name as
    shipped. Search every tracked file under them for tokens of the form `scripts/<path>.js`, `.mjs` or `.cjs`,
-   whatever precedes the token; each token that is a tracked path is a reason (a) file. Then follow the graph from
+   whatever precedes the token; each token that is a tracked path is a reason (a) file - except a token on a
+   comment line of a code file (one that starts with `//`, `/*`, `*` or `#` after its indent), which runs nothing.
+   A token in prose that is not a command (a JSON description, say) still counts, and its `keep_js` reason says
+   so, for the user to prune. Then follow the graph from
    every (a) file and every `keep_js` file to its end: each file reached is reason (b).
 5. **The globs.** Search for every glob that selects code by extension: `package.json` scripts, the test runner's
    own pattern where the repo has a runner script, `structure_paths` in `.claude/kit/repo.json`, lint globs,

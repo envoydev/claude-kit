@@ -49,7 +49,8 @@ Every `.js`, `.mjs`, `.cjs` and `.jsx` file under the targets takes one class - 
      users' projects, run by users (an installer, or a script a shipped command runs), or copied into another repo
      by name. Found by a scan, never by memory: every token of the form `scripts/<path>.js`, `.mjs` or `.cjs`,
      whatever precedes it, in every shipped file - the folders the repo's `notes` and instruction file name as
-     shipped - names an (a) file when that path is a tracked file.
+     shipped - names an (a) file when that path is a tracked file. A token on a comment line of a code file (one
+     that starts with `//`, `/*`, `*` or `#`) names nothing: a comment that cites a maintainer script runs nothing.
    - **(b) closure** - it is in the `require` and `import` closure of an (a) file, followed to its end: the outside
      runtime loads those too.
    - **(c) construct** - it holds a CommonJS construct with no ES module form that keeps its behaviour
