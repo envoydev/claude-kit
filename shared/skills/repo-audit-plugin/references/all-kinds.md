@@ -25,7 +25,8 @@ by side' in chat, is the other mode: steps 5, 6 and 9 run across a wave's kinds 
 time.
 
 **`code`, after the others.** The conversion and `code`'s planners start only once every other wave 1 kind's plan
-is applied, committed under the run's `commit` word and recorded, so no other kind's planner reads a file the
+is applied, committed under the run's `commit` word and recorded - a kind whose plan is left waiting or `NOT RUN`
+does not hold them back, since it edits nothing - so no other kind's planner reads a file the
 conversion edits and no plan of theirs goes stale:
 
 - `auto_approve` on, one kind at a time: the run order already holds it - `code`'s turn comes after the kinds
@@ -151,8 +152,8 @@ step 8 says: the conversion starts only on a clean tree.
     Items a kind's scorecard lists as not scored are in neither `<n>` nor a mean.
 
     Then the path of each kind's `final.md` for its full report and owed checks, one line per seat with the model it
-    ran on, and under `Left for you` every kind not run with its reason, every plan still waiting and every commit
-    not made.
+    ran on, and under `Left for you` every kind not run with its reason, every plan still waiting, a conversion's
+    remaining batches with the command that continues them, and every commit not made.
 13. **Self-review, once for the run** (the flow's step 12), and only where this repo is the audit skills' home:
     anywhere else the run ends at step 12. The planners wrote their retro files with their last verify; send the
     `retro` message, in one turn, only to a planner that has none. Add this run's own findings - a kind that was

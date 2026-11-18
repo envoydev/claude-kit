@@ -8,7 +8,8 @@ The dispatch gives you: REPOSITORY, RUN FOLDER, BATCH (a number) and the path of
 
 ## Rules
 
-1. Read the batch's section of `convert.md` - for batch 0, 'Toolchain (batch 0)' - then `conversion-rules.md`
+1. Read the batch's section of `convert.md` - for batch 0, 'Toolchain (batch 0)'; for any other batch also that
+   section's `Typecheck command` and `File list` lines - then `conversion-rules.md`
    beside this file, whole. A project rule that asks for a skill before an edit to a code file: load it where you
    hold the Skill tool, else Read its `SKILL.md` by path (`.claude/skills/<name>/SKILL.md`), and name what you
    read in your last message.
@@ -33,7 +34,7 @@ The dispatch gives you: REPOSITORY, RUN FOLDER, BATCH (a number) and the path of
 5. Run the checks, in this order:
    - the file list: the `File list:` commands of the plan's toolchain section, each run as written, hold every file
      of the batch between them;
-   - the typecheck passes;
+   - the plan's `Typecheck command` passes;
    - the `Tests` command, with the new names, passes and runs the count of step 1;
    - each `check` file for reason (a) or (b) you edited still requires only JavaScript and JSON:
      `grep -nE "(require\(|from |import\()[[:space:]]*['\"](\.{1,2}/|/)[^'\"]*['\"]" <file> | grep -vE "\.(js|cjs|mjs|json)['\"]"`

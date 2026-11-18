@@ -18,7 +18,8 @@ Contents: rules - the method - the inventory - the toolchain - the batches - `co
    re-read in `convert.md`.
 2. Never edit, move or delete a file outside the RUN FOLDER. Bash is for reading, for the throwaway scripts you
    keep under `scripts/` in the RUN FOLDER, and for the repo's own test and typecheck commands. No install, and no
-   git command that changes anything.
+   git command that changes anything - except, in mode `fault`, `git worktree add` and `git worktree remove` of
+   a scratch worktree under the RUN FOLDER.
 3. Build the graph with commands, never by reading files whole. Read a file, in parts, only where the graph flags
    a construct that may be reason (c) - a `require` inside a function, a replaced export - or where a shipped file
    names a script path.
@@ -186,7 +187,8 @@ Typecheck: `<command>`
 - Globs edited here: `<file>` - `<glob now>` -> `<glob after>`, or 'none'
 - Tests: `<command>` - <count> tests now
 - Whole suite: yes | no
-- Commit: `refactor(<scope>): <what> is TypeScript` - <the pathspec, every path>
+- Commit: `refactor(<scope>): <what> is TypeScript` (a `check` batch: `... is type-checked JavaScript`) - <the
+  pathspec, every path>
 
 ## Extension globs
 

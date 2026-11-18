@@ -63,9 +63,9 @@ says so. The first audit of a kind on a machine is always a full one.
 consistency - against the shared `project-structure`, `javascript`, `typescript`, `code-comments` and
 `ts-js-testing` skills and the repo's own `structure_map`. Before it reads anything it converts the repo's
 JavaScript to TypeScript with `ts-convert`: one seat plans the conversion, then one seat at a time converts a
-batch, and a batch is committed only when the whole-repo typecheck and its tests pass. `/repo-audit-code
-no-convert` audits the tree as it stands. `ts-convert` also runs alone - 'convert this repo to TypeScript' - and
-keeps its plan and its progress under `docs/superpowers/convert/<date>/`. An item with no code file is listed
+batch, and a batch is committed only when the whole-repo typecheck and its tests pass.
+`/repo-audit-code no-convert` audits the tree as it stands. `ts-convert` also runs alone - 'convert this repo
+to TypeScript' - and keeps its plan and its progress under `docs/superpowers/convert/<date>/`. An item with no code file is listed
 beside the scorecard as not scored.
 
 `copies.json` at the root is this repo's registry of text kept on purpose in more than one file - a rule and its skill,

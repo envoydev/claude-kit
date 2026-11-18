@@ -89,7 +89,7 @@ code does, loosen a type or weaken a test to reach a grade.
 4. **The size line.** Under the flow's two lines add
    `Unconverted: <files> files, <characters> characters of class convert - <why>`: the files a conversion left
    `FAILED`, or, under `no-convert` or `WRITE` false, every JavaScript file under the roots that no `KEEP_JS` path
-   matches (`git ls-files -- <roots> ':(exclude,glob)<keep_js path>'...`, sized with `wc -c`). Each of them caps
+   matches and no `notes` line classes `leave` (`git ls-files -- <roots> ':(exclude,glob)<keep_js path>'...`, sized with `wc -c`). Each of them caps
    its item at B and is read again at every run.
 5. **The checks, in a batched run.** With more than one batch, this session runs every `checks` command once before
    the planners start and once after the edits land - it runs the commands and reads only their output - and keeps

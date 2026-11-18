@@ -24,7 +24,8 @@ converts one batch, and a batch lands only when the whole-repo typecheck and its
 
 ## The seats
 
-- **This session coordinates.** It reads no code file. It lists files, starts the seats, runs the checks' commands
+- **This session coordinates.** It reads no code file beyond the first five lines of a `keep_js` file,
+  for its `// @ts-check` line (step 2). It lists files, starts the seats, runs the checks' commands
   and reads only their output, asks the user, commits, and prints the result.
 - **The planner** is a general-purpose agent on the `plan_model`, dispatched with `references/plan-brief.md`, the
   targets and the run folder. It builds the inventory, the import graph, the batches and `convert.md`. A revision
@@ -174,13 +175,19 @@ the approval of the plan follows the `plan-approval` rule whatever auto-run says
 
 ## Resume
 
-A later run - `/repo-audit-code` again, or this skill alone - finds the newest run folder whose `progress.md` has
-a batch that is not `done`. A `FAILED` batch is not done: a resume tries it again. It checks two things without
-reading code: `git diff --name-only <the commit of the newest batch marked done in progress.md, or the toolchain
-commit where none is> -- <the files of every batch not done>` prints nothing - not the plan's Baseline revision,
-since a done batch edits the imports in files of later batches and those edits are the plan's own - and every JavaScript file `git ls-files -- <targets>` lists is in the plan's inventory. Both hold: the
-approved `convert.md` continues from its first batch not done, with no new plan and no new grade. Either fails: the
-planner, in mode `replan`, plans the rest again, and that plan is graded and approved again.
+A later run - `/repo-audit-code` again, or this skill alone - finds the newest run folder under
+`docs/superpowers/audits/` or `docs/superpowers/convert/` whose `progress.md` has a batch that is not `done`, and
+writes the resumed run's `convert-run.md` and `progress.md` there - a fresh audit run folder holds the audit's files
+only. A `FAILED` batch is not done: a resume tries it again. It checks two things without reading code:
+
+- `git diff --name-only <base> -- <the files of every batch not done>` prints nothing. The base is the commit of
+  the newest batch marked done in `progress.md`, else the toolchain commit, else the plan's Baseline revision -
+  never the Baseline once a batch is done, since a done batch edits the imports in files of later batches and those
+  edits are the plan's own.
+- Every JavaScript file `git ls-files -- <targets>` lists is in the plan's inventory.
+
+Both hold: the approved `convert.md` continues from its first batch not done, with no new plan and no new grade.
+Either fails: the planner, in mode `replan`, plans the rest again, and that plan is graded and approved again.
 
 The resume prints the size line for the batches left and puts the same ask, with one change: once a batch of this
 plan is green, 'One batch first' has done its work. The options are then 'All <N> remaining batches', 'The next 20
