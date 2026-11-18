@@ -35,7 +35,8 @@ It has to hold for a repo of several megabytes, so each step is a command or a s
 1. **The files.** `git ls-files -- <targets>`, and the size of each code file (`wc -c`). Keep the list as
    `files.tsv` in the RUN FOLDER.
 2. **The graph.** A script, `scripts/graph.mjs`, reads every code file's `require('...')`, `import ... from
-   '...'`, `export ... from '...'` and `import('...')` specifiers, resolves each relative one to a tracked file
+   '...'`, `export ... from '...'` and `import('...')` specifiers - over the whole file text, not line by line, so an import list that spans
+   lines is read - resolves each relative one to a tracked file
    (as written, then with `.js`, `.cjs`, `.mjs`, `.ts`, `.mts`, then `/index.js`), and writes `graph.json`: each
    file with the files it imports, the files that import it, and every cycle with its members.
 3. **The constructs.** One search per construct of `conversion-rules.md`'s table, each printing file and line:

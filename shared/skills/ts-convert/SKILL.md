@@ -143,8 +143,10 @@ the approval of the plan follows the `plan-approval` rule whatever auto-run says
    - **Each batch, in order, one seat at a time.** Dispatch a converter with the brief, the batch's section of
      `convert.md`, the conversion rules and the paths that name the batch's files. On `GREEN`: run the typecheck
      command and the batch's test command yourself, compare the counts with the seat's, then commit by pathspec -
-     `refactor(<scope>): <batch> is TypeScript`, or `refactor(<scope>): <batch> is type-checked JavaScript` for a
-     `check` batch - with no trace of the agent, and mark the batch `done <commit>` in `progress.md`.
+     `git add` the new and edited paths (an old path `git mv` moved is already staged, and `git add` of it fails),
+     then `git commit -- <every old and new path>` - as `refactor(<scope>): <batch> is TypeScript`, or
+     `refactor(<scope>): <batch> is type-checked JavaScript` for a `check` batch, with no trace of the agent - and
+     mark the batch `done <commit>` in `progress.md`.
    - **A `FAILED` batch.** The seat restores it. Confirm that `git status --porcelain` over the batch's old and
      new paths prints nothing - where it does not, run the restore of 'Rollback' yourself - then mark it
      `FAILED: <the first error line>` and every batch that imports it `waiting on <n>`. The others go on.
