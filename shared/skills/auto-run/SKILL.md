@@ -59,6 +59,8 @@ Two places, because one is a record and the other is the switch:
 - A push, a merge, a version bump, a billed run (named with its cost), anything irreversible or outward-facing (a
   publish, a deletion outside the scratchpad and the docs root with no backup, a message to another person), and a
   security-sensitive action - unless the user's own words in this session already authorised that exact act.
+  - A thing this run made and the `cleanup` rule removes is not such a deletion: it is removed by its recorded
+    identity alone, and it holds no work (the user's ruling, 2026-11-19).
   - A merge can be refused even then: Claude Code's auto permission mode denied a `gh pr merge` the user had asked
     for (2026-11-04). When the run will end in a merge, ask for it before the user leaves - they merge it themselves
     (`! gh pr merge <n> --merge`) or add a permission rule for it. Never route around a denial; what depends on the

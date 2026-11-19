@@ -783,6 +783,24 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cleanup-not-a-stop",
+      "why": "The auto-run skill owns its stops; the cleanup rule repeats that its removals are not one, so a run reading either text deletes the same things.",
+      "owner": {
+        "site": "shared/skills/auto-run/SKILL.md",
+        "markers": [
+          "the `cleanup` rule removes is not such a deletion"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/cleanup.md",
+          "markers": [
+            "one of `auto-run`'s stops, as that skill says"
+          ]
+        }
+      ]
     }
   ]
 }
