@@ -29,8 +29,8 @@ test('a replace plan passes: exit 0, the Applies line, the exact expected bytes 
     assert.equal(result.stderr, '');
     assert.equal(result.status, 0);
     assert.equal(result.stdout, 'Applies: 2 of 2 edits\n  a.txt (14 -> 15 characters)\n  dir/b.txt (6 -> 7 characters)\n');
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt`), 'one\nTWO!\nthree\n');
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/dir/b.txt`), 'x = 22\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt.expected`), 'one\nTWO!\nthree\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/dir/b.txt.expected`), 'x = 22\n');
     assert.equal(p.read('a.txt'), 'one\ntwo\nthree\n');
 });
 
@@ -45,7 +45,7 @@ test('the files are read at the Baseline revision, neither at HEAD nor in a dirt
     const result = p.run(plan);
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt`), 'alpha\nBETA\ngamma\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt.expected`), 'alpha\nBETA\ngamma\n');
 });
 
 const FAILURES = [
@@ -157,7 +157,7 @@ for (const [name, edit, expected] of [
         const result = p.run(plan);
 
         assert.equal(result.status, 0, result.stderr);
-        assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt`), expected);
+        assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt.expected`), expected);
     });
 }
 
@@ -169,7 +169,7 @@ test('new-file writes New plus a final newline and prints (new, <n> characters)'
     const result = p.run(plan);
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/docs/fresh.md`), 'hello\nworld\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/docs/fresh.md.expected`), 'hello\nworld\n');
     assert.equal(result.stdout, 'Applies: 1 of 1 edits\n  docs/fresh.md (new, 12 characters)\n');
 });
 
@@ -188,7 +188,7 @@ test('delete-file and move-file count as applied and write no file', (t) =>
     assert.match(result.stdout, /^Applies: 3 of 3 edits$/m);
     assert.match(result.stdout, /^E1 - a\.txt: delete-file - path checked, nothing to replay$/m);
     assert.match(result.stdout, /^E2 - b\.txt: move-file - path checked, nothing to replay$/m);
-    assert.deepEqual(p.list(PLAN_EXPECTED_FOLDER), ['c.txt']);
+    assert.deepEqual(p.list(PLAN_EXPECTED_FOLDER), ['c.txt.expected']);
 });
 
 test('an edit to a path a delete-file named fails with deleted by E<m>', (t) =>
@@ -238,8 +238,8 @@ test('a three-backtick fence inside New and a ## Checks line inside New end neit
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^Applies: 2 of 2 edits$/m);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt`), `${inner}\n`);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/b.txt`), 'SECOND\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt.expected`), `${inner}\n`);
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/b.txt.expected`), 'SECOND\n');
 });
 
 for (const [name, folder] of [['plan.md', 'expected'], ['plan-2.md', 'expected-2'], ['retro-plan.md', 'retro-expected'], ['other.md', 'other-expected']])
@@ -253,7 +253,7 @@ for (const [name, folder] of [['plan.md', 'expected'], ['plan-2.md', 'expected-2
 
         assert.equal(result.status, 0, result.stderr);
         assert.deepEqual(p.list(PLAN_RUN_FOLDER).filter((entry) => !entry.includes('/')), [folder, name].sort());
-        assert.equal(p.read(`${PLAN_RUN_FOLDER}/${folder}/a.txt`), 'alpha\nBETA\ngamma\n');
+        assert.equal(p.read(`${PLAN_RUN_FOLDER}/${folder}/a.txt.expected`), 'alpha\nBETA\ngamma\n');
     });
 }
 
@@ -266,8 +266,8 @@ test('the expected folder is replaced whole: a stale file in it is gone after a 
     const result = p.run(plan);
 
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(p.list(PLAN_EXPECTED_FOLDER), ['a.txt']);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt`), 'alpha\nBETA\ngamma\n');
+    assert.deepEqual(p.list(PLAN_EXPECTED_FOLDER), ['a.txt.expected']);
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt.expected`), 'alpha\nBETA\ngamma\n');
 });
 
 const WITHOUT_FILES = { 'a.txt': 'one\nfour\n', 'b.txt': 'two\n', 'c.txt': 'three\n' };
@@ -287,10 +287,10 @@ test('--without writes the variant folder, leaving out the edit and the edits th
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^expected-without-E1: 2 of 4 edits, left out E1, E2; files: a\.txt, b\.txt$/m);
-    assert.deepEqual(p.list(`${PLAN_EXPECTED_FOLDER}-without-E1`), ['a.txt', 'b.txt']);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E1/a.txt`), 'one\nFOUR\n');
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E1/b.txt`), 'two\n');
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt`), 'ONE\nFOUR\n');
+    assert.deepEqual(p.list(`${PLAN_EXPECTED_FOLDER}-without-E1`), ['a.txt.expected', 'b.txt.expected']);
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E1/a.txt.expected`), 'one\nFOUR\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E1/b.txt.expected`), 'two\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/a.txt.expected`), 'ONE\nFOUR\n');
 });
 
 test('--without E2,E8 leaves both out in one variant named expected-without-E2-E8, and is repeatable', (t) =>
@@ -302,9 +302,9 @@ test('--without E2,E8 leaves both out in one variant named expected-without-E2-E
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^expected-without-E2-E8: 1 of 3 edits, left out E2, E8; files: b\.txt, c\.txt$/m);
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E2-E8/b.txt`), 'two\n');
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E2-E8/c.txt`), 'three\n');
-    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E8/c.txt`), 'three\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E2-E8/b.txt.expected`), 'two\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E2-E8/c.txt.expected`), 'three\n');
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}-without-E8/c.txt.expected`), 'three\n');
 });
 
 test('--without leaves no file for a left-out new-file edit', (t) =>
@@ -316,7 +316,7 @@ test('--without leaves no file for a left-out new-file edit', (t) =>
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^expected-without-E1: 1 of 2 edits, left out E1; files: $/m);
-    assert.equal(p.exists(`${PLAN_EXPECTED_FOLDER}-without-E1/fresh.txt`), false);
+    assert.equal(p.exists(`${PLAN_EXPECTED_FOLDER}-without-E1/fresh.txt.expected`), false);
 });
 
 test('--without an edit number the plan does not hold is a usage error and writes nothing', (t) =>
@@ -401,3 +401,14 @@ test('outside a git repository it exits 2', (t) =>
     assert.match(result.stderr, /^prove-plan: [^\n]+\n$/);
 });
 
+test('an expected copy of a test file ends in .expected, so a test runner that globs *.test.ts skips it', (t) =>
+{
+    const p = makePlanProject(t, { 'src/a.test.ts': 'test(1);\n' });
+    const plan = p.plan([makeReplaceEdit(1, 'src/a.test.ts', 'test(1)', 'test(2)')]);
+
+    const result = p.run(plan);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(p.list(`${PLAN_EXPECTED_FOLDER}/src`), ['a.test.ts.expected']);
+    assert.equal(p.read(`${PLAN_EXPECTED_FOLDER}/src/a.test.ts.expected`), 'test(2);\n');
+});

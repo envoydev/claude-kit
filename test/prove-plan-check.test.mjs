@@ -63,8 +63,8 @@ test('check accepts the flag after the plan path', (t) =>
 test('check names a differing, a missing and an extra file', (t) =>
 {
     const { p, plan } = checkProject(t);
-    writeFiles(p.repo, { [`${PLAN_EXPECTED_FOLDER}/a.txt`]: 'tampered\n', [`${PLAN_EXPECTED_FOLDER}/stray.txt`]: 'extra\n' });
-    fs.rmSync(path.join(p.repo, PLAN_EXPECTED_FOLDER, 'dir/b.txt'));
+    writeFiles(p.repo, { [`${PLAN_EXPECTED_FOLDER}/a.txt.expected`]: 'tampered\n', [`${PLAN_EXPECTED_FOLDER}/stray.txt.expected`]: 'extra\n' });
+    fs.rmSync(path.join(p.repo, PLAN_EXPECTED_FOLDER, 'dir/b.txt.expected'));
 
     const result = runWriteless(p, '--check', plan);
 
@@ -205,7 +205,7 @@ test('check with --without compares the variant folder too', (t) =>
 test('a variant folder that differs or is missing fails the check', (t) =>
 {
     const { p, plan } = variantProject(t);
-    writeFiles(p.repo, { [`${PLAN_EXPECTED_FOLDER}-without-E2/a.txt`]: 'x\n' });
+    writeFiles(p.repo, { [`${PLAN_EXPECTED_FOLDER}-without-E2/a.txt.expected`]: 'x\n' });
 
     const differs = runWriteless(p, '--check', plan, '--without', 'E2');
 
@@ -263,10 +263,10 @@ test('check names combined differences in the fixed order: folder, extras, the A
     const { p, plan } = checkProject(t, { ...VARIANT_PROJECT, applies: 'Applies: 1 of 2 edits', prove: false });
     assert.equal(p.run(plan, '--without', 'E2').status, 0);
     writeFiles(p.repo, {
-        [`${PLAN_EXPECTED_FOLDER}/a.txt`]: 'x\n',
-        [`${PLAN_EXPECTED_FOLDER}/stray.txt`]: 'extra\n',
-        [`${PLAN_EXPECTED_FOLDER}-without-E2/a.txt`]: 'y\n',
-        [`${PLAN_EXPECTED_FOLDER}-without-E2/extra.txt`]: 'extra\n',
+        [`${PLAN_EXPECTED_FOLDER}/a.txt.expected`]: 'x\n',
+        [`${PLAN_EXPECTED_FOLDER}/stray.txt.expected`]: 'extra\n',
+        [`${PLAN_EXPECTED_FOLDER}-without-E2/a.txt.expected`]: 'y\n',
+        [`${PLAN_EXPECTED_FOLDER}-without-E2/extra.txt.expected`]: 'extra\n',
     });
 
     const result = runWriteless(p, '--check', plan, '--without', 'E2');
@@ -298,4 +298,17 @@ test('check counts a variant whose replay fails as a difference, with the writin
     assert.equal(result.stdout, '');
     assert.equal(result.stderr, writing.stderr);
     assert.equal(result.stderr, 'expected-without-E1: E2 - a.txt: Old found 2 times\n');
+});
+
+test('check still reads an expected folder written before the .expected suffix', (t) =>
+{
+    const { p, plan } = checkProject(t);
+    const folder = path.join(p.repo, PLAN_EXPECTED_FOLDER);
+    for (const file of ['a.txt', 'dir/b.txt']) fs.renameSync(path.join(folder, `${file}.expected`), path.join(folder, file));
+
+    const result = runWriteless(p, '--check', plan);
+
+    assert.equal(result.stderr, '');
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, PROVED_TWO);
 });
