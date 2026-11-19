@@ -72,7 +72,8 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 - **The order of a shared change:** edit under `shared/`, `npm run check`, commit here, `npm run sync`,
   `npm run kit:check` in each plugin repo, then one commit in each (`chore(kit): sync to claude-kit <sha>`).
-- **Branches.** `main` is the only branch. Commit or push only on the user's word. A `solve-task` run the user
+- **Branches.** Work is committed on `develop`, pushed, then merged into `main` (the user, 2026-11-19). Commit or
+  push only on the user's word. A `solve-task` run the user
   started - `/solve-task`, or asking for it in their words - has that word for its local commits, never for a push;
   a run the session loaded by itself does not.
 - **Commits.** `type(scope): what is now true`, as the log has it, with no trace of the agent - no co-author trailer,
