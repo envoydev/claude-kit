@@ -77,11 +77,12 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
   a run the session loaded by itself does not.
 - **Commits.** `type(scope): what is now true`, as the log has it, with no trace of the agent - no co-author trailer,
   session link or 'Generated with' line. The rule is `shared/rules/commits.md`, the same in all four repos.
-- **Voice.** Direct and lean, single dashes, single quotes in prose; recommend one option with a reason.
+- **Voice.** Direct and lean, single dashes, single quotes in prose; recommend one option with a reason. Replies to
+  the user follow `shared/rules/communication.md`.
 
 ## Rules and skills
 
-Six rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
+Seven rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
 from `.claude/rules/`:
 
 - `shared/rules/execution.md.tmpl` - one agent or several, the short plan, the check tiers and the close.
@@ -90,6 +91,7 @@ from `.claude/rules/`:
 - `shared/rules/auto-run.md` - when the `auto-run` skill loads: the user is away, or `auto_run=on`.
 - `shared/rules/superpowers-location.md` - what the superpowers skills write goes under `docs/superpowers/`.
 - `shared/rules/commits.md` - the Commits line above.
+- `shared/rules/communication.md` - how replies read and how the user is asked.
 
 The other four rules there attach by path, and each exists to load its skills when a matching file is touched.
 
