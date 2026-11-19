@@ -6,6 +6,9 @@
 # Machine-local: what the superpowers skills and the audits write
 docs/superpowers/
 
+# Machine-local: the plan and score files alfred-mods reads, written by the kit's skills
+.alfred-mods/
+
 # Copies of shared/ the sync writes here so this repo's own sessions load them - shared/ is their home
 .claude/rules/
 .claude/skills/

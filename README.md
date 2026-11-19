@@ -140,6 +140,20 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit 
 - A value meant for one run only - 'grade this one to 95' - goes into that run's `run.md`, not into the file, so a
   compaction keeps it and the next run does not inherit it.
 
+## Files alfred-mods reads
+
+- `refining-plans` writes `.alfred-mods/scores/<slug>.json` and `solve-task` writes
+  `.alfred-mods/plans/<slug>.json`. Their shapes are the ones in the alfred-mods README ('Plan and score
+  files').
+- Each repo the kit serves ignores `.alfred-mods/` by a line in its `.gitignore`. The folder sits outside `.claude/`,
+  where every write is a protected path that prompts or is denied.
+
+The `kit status` line that the status hook (`bin/status-hook.mjs`) adds to each request is a contract alfred-mods
+reads: the marker `kit status (` and the head end `):`, then items of the shape `name=value (source);` with no blank
+in a value and no `;` in a source, then an optional note that starts `saved:` or `not saved -`. It reads the settings
+by their names in `SETTING` and the value `on` (`bin/constants.mjs`). A change to any of these is made with a note to
+alfred-mods.
+
 ## Use
 
 The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../alfred-tools`).
