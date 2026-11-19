@@ -83,7 +83,7 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 ## Rules and skills
 
-Seven rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
+Eight rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
 from `.claude/rules/`:
 
 - `shared/rules/execution.md.tmpl` - one agent or several, the short plan, the check tiers and the close.
@@ -93,6 +93,7 @@ from `.claude/rules/`:
 - `shared/rules/superpowers-location.md` - what the superpowers skills write goes under `docs/superpowers/`.
 - `shared/rules/commits.md` - the Commits line above.
 - `shared/rules/communication.md` - how replies read and how the user is asked.
+- `shared/rules/cleanup.md` - when the work ends, the run removes or stops what it made or started that nothing needs any more.
 
 The other four rules there attach by path, and each exists to load its skills when a matching file is touched.
 
