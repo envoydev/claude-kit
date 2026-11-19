@@ -1,7 +1,7 @@
 {
   "auto_run": "on",
-  "plan_model": "fable",
-  "review_model": "fable",
+  "plan_model": "opus",
+  "review_model": "opus",
   "auto_approve": "on",
   "audit_model": "opus"
 }
