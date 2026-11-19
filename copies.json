@@ -759,6 +759,30 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cleanup-close-line",
+      "why": "The cleanup rule owns the `Cleanup:` line; each close form keeps a slot for it, so a close written from either form carries the line.",
+      "owner": {
+        "site": "shared/rules/cleanup.md",
+        "markers": [
+          "`Cleanup:` line after its checks"
+        ]
+      },
+      "copies": [
+        {
+          "site": "shared/rules/execution.md.tmpl",
+          "markers": [
+            "`Cleanup:` line"
+          ]
+        },
+        {
+          "site": "shared/skills/auto-run/SKILL.md",
+          "markers": [
+            "Cleanup: <"
+          ]
+        }
+      ]
     }
   ]
 }
