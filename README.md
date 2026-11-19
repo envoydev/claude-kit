@@ -142,11 +142,15 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit 
 
 ## Files alfred-mods reads
 
-- `refining-plans` writes `.alfred-mods/scores/<slug>.json` and `solve-task` writes
-  `.alfred-mods/plans/<slug>.json`. Their shapes are the ones in the alfred-mods README ('Plan and score
-  files').
-- Each repo the kit serves ignores `.alfred-mods/` by a line in its `.gitignore`. The folder sits outside `.claude/`,
-  where every write is a protected path that prompts or is denied.
+- `refining-plans` writes `<root>/scores/<slug>.json` and `solve-task` writes `<root>/plans/<slug>.json`. The root
+  is the folder the `"alfred-mods".plansFolder` setting picks - `.claude/session-inspector` for `"default"`,
+  `.alfred/alfred-mods` for `".alfred"`, `.alfred-mods` for `".alfred-mods"` - read from the project's
+  `.claude/settings.local.json`, then its `.claude/settings.json`, then the user settings, and `.alfred-mods` where
+  none gives a valid value; `refining-plans` holds the rule. Their shapes are
+  the ones in the alfred-mods README ('Plan and score files').
+- Each repo the kit serves ignores `.alfred-mods/` by a line in its `.gitignore`. That root sits outside `.claude/`,
+  where every write is a protected path that prompts or is denied; a project that picks `default` takes those
+  prompts. `/alfred-mods:update` adds the ignore line for `.alfred/alfred-mods/`.
 
 The `kit status` line that the status hook (`bin/status-hook.mjs`) adds to each request is a contract alfred-mods
 reads: the marker `kit status (` and the head end `):`, then items of the shape `name=value (source);` with no blank
