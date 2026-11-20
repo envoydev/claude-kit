@@ -78,7 +78,7 @@
         "npm run check"
       ],
       "notes": [
-        "Rules without a paths field load in every session of all four repos: auto-run, cleanup, commits, communication, execution, plan-approval, refining-plans, superpowers-location. execution.md.tmpl is a template whose check_batch and check_once come from each repo's repo.json. The path-scoped ones - javascript, typescript, skill-authoring, project-structure - each exist to load their skill; project-structure.md.tmpl is a template whose paths are each repo's structure_paths.",
+        "Rules without a paths field load in every session of all four repos: auto-run, cleanup, commits, communication, execution, plan-approval, refining-plans, superpowers-location, windows-vm. execution.md.tmpl is a template whose check_batch and check_once come from each repo's repo.json. The path-scoped ones - javascript, typescript, skill-authoring, project-structure - each exist to load their skill; project-structure.md.tmpl is a template whose paths are each repo's structure_paths.",
         "No always-on budget is enforced here; alfred-code's lint budget covers its stack rules, not these.",
         "The instruction file every rule sits beside is AGENTS.md at each repo's root, never a CLAUDE.md.",
         "The multi-home registry is copies.json at the kit's root: each text kept on purpose in more than one file - a rule and its skill, a rule and each repo's AGENTS.md, the load contract the path-scoped rules share - with its owner, every copy and the marker phrases each site keeps. A pass that adds, moves or rewords such text updates it in the same pass; `node .claude/kit/check.mjs` fails here when a site lacks one of its markers."
