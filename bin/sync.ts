@@ -11,6 +11,8 @@
 //   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the five role
 //     models and the three switches the repo's .claude/kit/settings.json carries, printed and saved
 //     for the skills that read them and added to every request by the UserPromptSubmit hook;
+//   - <repo>/.claude/kit/communication-hook.mjs and reply-budget.mjs: the second UserPromptSubmit hook, which sends the
+//     communication rule's reminder line and a note when the last reply went over;
 //   - <repo>/.claude/kit/settings.json completed: every one of the nine names it lacks is added, from the defaults and the
 //     repo's agent files, with an empty environment; the values it holds stay;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base

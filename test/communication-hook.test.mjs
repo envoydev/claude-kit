@@ -126,3 +126,16 @@ test('a missing sibling module never blocks: the hook exits 0 and says so on std
     assert.equal(stdout, '');
     assert.match(stderr, /^claude-kit communication hook: /);
 });
+
+test('empty or broken stdin still sends the reminder, with no note, and exits 0', (t) =>
+{
+    const repo = makeHookRepo(t, SHORT_RULE);
+
+    for (const input of ['', 'not json', '[]', 'null'])
+    {
+        const { status, output } = runCommunicationHook(repo, input);
+
+        assert.equal(status, 0, input);
+        assert.equal(contextOf(output), SHORT_LINE, input);
+    }
+});

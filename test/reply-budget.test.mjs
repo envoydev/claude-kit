@@ -26,7 +26,7 @@ test('a rule with no reminder line, or an empty one, gives no reminder', () =>
     assert.equal(reminderOf('- Each request carries this reminder:   \n'), null);
 });
 
-test("turns a ';' in the reminder into a ',' so alfred-mods' note parser keeps its end", () =>
+test("turns a ';' in the reminder into a ',' so the status line's note keeps its end if the two texts are joined", () =>
 {
     assert.equal(reminderOf('- Each request carries this reminder: short; clear\n'), 'short, clear');
 });
