@@ -50,6 +50,7 @@ test('ships the check, settings, status-hook, prove-plan and audit-scope scripts
         ['kit-settings.mjs', 'kit-settings.mjs'],
         ['constants.mjs', 'constants.mjs'],
         ['status-hook.mjs', 'status-hook.mjs'],
+        ['communication-hook.mjs', 'communication-hook.mjs'],
         ['reply-budget.mjs', 'reply-budget.mjs'],
         ['prove-plan.mjs', 'prove-plan.mjs'],
         ['plan-replay.mjs', 'plan-replay.mjs'],

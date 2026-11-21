@@ -45,10 +45,12 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 - **`shared/` is the one home.** A rule, skill or agent is edited under `shared/`, never in a `.claude/` copy here or
   in a plugin repo: `kit:check` fails on a local edit, and the next sync overwrites it.
-- **One shared hook, and it never blocks.** `shared/settings.base.json` wires `status-hook.mjs` on `UserPromptSubmit`
-  in every repo (the user's request of 2026-11-15). The sync tells a kit hook from a repo's own by the `.claude/kit/`
-  path in its command, so a repo's hooks are kept and a hook deleted from the base is removed everywhere. Another
-  hook waits for a rule that is seen to fail.
+- **Two shared hooks, and neither blocks.** `shared/settings.base.json` wires two on `UserPromptSubmit` in every
+  repo: `status-hook.mjs` sends the kit's settings line (the user's request of 2026-11-15), and
+  `communication-hook.mjs` sends the communication rule's reminder, with a note when the last reply went over (the
+  user, 2026-11-22: one hook per job). The sync tells a kit hook from a repo's own by the `.claude/kit/` path in its
+  command, so a repo's hooks are kept and a hook deleted from the base is removed everywhere. Another hook waits for a
+  rule that is seen to fail.
 - **A merge only adds.** Deleting a plugin or an MCP server from the shared list leaves it switched on in every repo;
   it is taken out by naming it in `shared/retired.json`.
 - **Enabling a plugin does not install it.** After a plugin joins `settings.base.json`, run

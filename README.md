@@ -180,8 +180,8 @@ A complete file, the names a user set first and the rest after them in the fixed
 
 The `kit status` line that the status hook (`bin/status-hook.mjs`) adds to each request is a contract alfred-mods
 reads: the marker `kit status (` and the head end `):`, then items of the shape `name=value (source);` with no blank
-in a value and no `;` in a source, then an optional note that starts `saved:` or `not saved -`. A second line may follow:
-the communication rule's reminder (`Reply limits (`), with no `;` in it, since the note ends at the text's last `;`. It reads the settings
+in a value and no `;` in a source, then an optional note that starts `saved:` or `not saved -`. The communication rule's reminder (`Reply limits (`)
+comes from its own hook, `bin/communication-hook.mjs`, and holds no `;`, in case a host joins the two texts. It reads the settings
 by their names in `SETTING` and the value `on` (`bin/constants.mjs`). A change to any of these is made with a note to
 alfred-mods.
 
@@ -206,7 +206,7 @@ applied; with `--check` it writes nothing and compares the replay with the files
 `.claude/kit/audit-scope.mjs` keeps, under `docs/superpowers/audits/state/`, each audited item's grade beside the
 hashes of its files: `scope` tells an audit which items to read, and `record` saves the grades once they are final.
 
-`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status hook, the plan
+`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status and communication hooks, the plan
 prover and the audit scope - against throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and
 cost nothing.
 
