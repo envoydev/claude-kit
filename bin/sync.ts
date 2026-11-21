@@ -190,13 +190,13 @@ function without<T>(record: Readonly<Record<string, T>>, names: readonly string[
 }
 
 // The repo's .claude/kit/settings.json holds all nine settings (the owner's ruling, 2026-11-21): a name it lacks is added with
-// the value the defaults and the repo's agent files give it. The environment is empty, so a maintainer's KIT_* variables never
-// land in a committed file. A file that does not parse is kept and named; the values a repo's own file holds are never changed.
+// the value the defaults and the repo's agent files give it. No KIT_* variable is read, so a maintainer's never
+// lands in a committed file. A file that does not parse is kept and named; the values a repo's own file holds are never changed.
 function syncKitSettings(repo: string, check: boolean, notes: string[]): void
 {
     const rel = '.claude/kit/settings.json';
     const existed = fs.existsSync(path.join(repo, rel));
-    const result = completeKitSettings(repo, {}, { check });
+    const result = completeKitSettings(repo, { check });
     if (!result.ok) notes.push(`kept ${result.error}`);
     else if (result.changed) notes.push(`${existed ? 'update' : 'add'} ${rel}`);
 }

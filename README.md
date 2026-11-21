@@ -124,12 +124,13 @@ A complete file, the names a user set first and the rest after them in the fixed
 
 - `.claude/kit/settings.json` is committed with the repo, so a value never has to go into a Claude Code settings file
   that may hold a key or a token. `node .claude/kit/settings.mjs set plan_model fable` writes one name and `unset
-  plan_model` drops the choice: the name goes back to the value the variable or the default gives, kept in its place.
-  Every write holds all nine names.
+  plan_model` drops the choice: the name goes back to its default - the agent file's model or the fixed default - kept in its
+  place, and from then on it no longer follows its source: a later change of an agent file's model does not reach a
+  completed file (the audit model included). Every write holds all nine names.
 - Who completes the file: each `set`, `unset` and chat save; the status hook, once, on a request that finds the file absent
-  or a name missing; and the sync, for each repo it serves, with an empty environment so a maintainer's `KIT_*` variables
-  never reach a committed file. A name is added after the names the file holds, with the value the variable or the
-  default gives it; a value the file holds is never changed, and a complete file is never rewritten. A file that is not a
+  or a name missing; and the sync, for each repo it serves. None of them reads a `KIT_*` variable: a variable never reaches the file, so one in a
+  personal settings file cannot become a value every clone runs on. A name is added after the names the file holds,
+  with its default; a value the file holds is never changed, and a complete file is never rewritten. A file that is not a
   JSON object is never rewritten by any of them: the hook says nothing, a save fails with 'fix or delete it' and the sync
   names it as kept. A model no agent file names (`none`) cannot be stored and stays out until one does.
 - What the user sets in chat is saved there and holds in every session until it is changed (the user's ruling,
@@ -142,9 +143,9 @@ A complete file, the names a user set first and the rest after them in the fixed
   runs the `set` command. The hook never blocks a request: when it fails, it says
   so in the debug log and the request goes through.
 - A value is the kit's file, else the `KIT_*` variable from the `env` block of a Claude Code settings file, else the
-  default. Since the file always holds all nine names, a variable applies only where the file lacks the name - after
-  completion, an absent or incomplete file - and the origin on the status line reads `.claude/kit/settings.json` for
-  every name. To change a value, run `node .claude/kit/settings.mjs set <name> <value>` or edit the file; a variable set
+  default. Since the file always holds all nine names, a variable applies only to a session whose file lacks the name, until
+  the next request or write completes it; with a complete file a variable has no effect, and the origin on the status
+  line reads `.claude/kit/settings.json` for every name. To change a value, run `node .claude/kit/settings.mjs set <name> <value>` or edit the file; a variable set
   later changes nothing for a name the file holds. A value the script cannot use falls back to the next source, and its
   line says why. The audit model is the plan model's value only while the file lacks it: once completed, it holds that
   value and no longer follows a later change of the plan model.
@@ -160,8 +161,8 @@ A complete file, the names a user set first and the rest after them in the fixed
   chat session runs on: a session cannot change its own model. A step whose model is the session's own runs there;
   any other goes to an agent with that model, and the closing report names the model each step actually ran on.
 - Claude Code applies a new or changed variable to sessions that are already open, but a deleted one stays set in
-  them until they restart: to switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value instead of
-  deleting the line - or save the value in the kit's file, which outranks it (and, once complete, always does).
+  them until they restart. That matters only for a file that lacks the name: once the file is complete it outranks every
+  variable, so a stale one changes nothing.
 - A value meant for one run only - 'grade this one to 95' - goes into that run's `run.md`, not into the file, so a
   compaction keeps it and the next run does not inherit it.
 
@@ -190,6 +191,7 @@ The repos sit beside this one (`../alfred-code`, `../alfred-mods`, `../alfred-to
 
 ```bash
 npm run check   # what a sync would change here and in each repo, nothing written; exit 1 on a difference
+                # (a repo's settings file that does not parse counts: exit 1 until it is fixed)
 npm run sync    # write the shared files, .claude/kit/lock.json and the kit's scripts here and into each repo
 ```
 

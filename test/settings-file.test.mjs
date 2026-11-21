@@ -242,24 +242,24 @@ test('set audit_model saves it beside the plan model, and unset removes it so it
     assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, plan_model: 'fable', audit_model: 'fable' });
 });
 
-test('unset auto_run removes the switch and prints what it falls back to', (t) =>
+test('unset auto_run removes the switch and prints its default, whatever KIT_AUTO_RUN says', (t) =>
 {
     const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { auto_run: 'on', scoring: 'off' } });
 
     const result = runSettings(repo, ['unset', 'auto_run'], { KIT_AUTO_RUN: 'on' });
 
-    assert.equal(result.stdout, `auto_run: on (${KIT_FILE})\n`);
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, scoring: 'off', auto_run: 'on' });
+    assert.equal(result.stdout, `auto_run: off (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, scoring: 'off', auto_run: 'off' });
 });
 
-test('unset of the only name keeps the file full, the name back with its variable value', (t) =>
+test('unset of the only name keeps the file full, the name back with its default and not its variable value', (t) =>
 {
     const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { plan_model: 'fable' } });
 
     const result = runSettings(repo, ['unset', 'plan_model'], { KIT_PLAN_MODEL: 'haiku' });
 
-    assert.equal(result.stdout, `plan_model: haiku (${KIT_FILE})\n`);
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, plan_model: 'haiku', audit_model: 'haiku' });
+    assert.equal(result.stdout, `plan_model: opus (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), DEFAULT_FILE);
 });
 
 test('unset of a name that is not in the file completes the file with its default', (t) =>

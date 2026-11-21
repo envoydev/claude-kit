@@ -20,7 +20,7 @@ test('with nothing set it shows the user one line with the defaults and gives Cl
     );
 });
 
-test("the settings variables fill a file that lacks the names: the line shows their values and Claude's values name the file as the source", (t) =>
+test("the settings variables never fill a file that lacks the names: the hook writes the defaults, and the line shows them with the file as the source", (t) =>
 {
     const repo = makeHookRepo(t);
     const { output } = runHook(repo, promptInput(), {
@@ -33,11 +33,11 @@ test("the settings variables fill a file that lacks the names: the line shows th
         KIT_SEARCH_MODEL: 'sonnet',
     });
 
-    assert.equal(output.systemMessage, 'kit: auto-run on | scoring off | auto-approve on | plan fable | audit fable | review opus | implement haiku | search sonnet');
-    for (const part of [`auto_run=on (${KIT_FILE})`, `scoring=off (${KIT_FILE})`, `auto_approve=on (${KIT_FILE})`, `pass_score=95 (${KIT_FILE})`])
+    assert.equal(output.systemMessage, 'kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit opus | review opus | implement sonnet | search haiku');
+    for (const part of [`auto_run=off (${KIT_FILE})`, `scoring=on (${KIT_FILE})`, `auto_approve=off (${KIT_FILE})`, `pass_score=90 (${KIT_FILE})`])
         assert.ok(contextOf(output).includes(part), `${part} missing from: ${contextOf(output)}`);
     assert.equal(contextOf(output).includes('KIT_'), false);
-    assert.deepEqual(readKitFile(repo), { ...DEFAULT_FILE, auto_run: 'on', scoring: 'off', auto_approve: 'on', pass_score: 95, plan_model: 'fable', audit_model: 'fable', implement_model: 'haiku', search_model: 'sonnet' });
+    assert.deepEqual(readKitFile(repo), DEFAULT_FILE);
 });
 
 test("scoring that KIT_SCORING turns on shows its pass score on the user's line, never the variable's name", (t) =>

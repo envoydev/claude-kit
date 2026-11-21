@@ -30,20 +30,20 @@ test('a set on a repo with no file writes all nine names, the pass score as a nu
     assert.equal(typeof readKitFile(repo).pass_score, 'number');
 });
 
-test("a set fills each missing name with the value a variable gives it, and the audit model follows the plan model it just got", (t) =>
+test('a set fills each missing name with its default, never a KIT_* variable, and the audit model follows the plan model it just got', (t) =>
 {
     const repo = makeSettingsRepo(t);
 
-    runSettings(repo, ['set', 'plan_model', 'fable'], { KIT_SEARCH_MODEL: 'sonnet', KIT_PASS_SCORE: '75', KIT_SCORING: 'off' });
+    runSettings(repo, ['set', 'plan_model', 'fable'], { KIT_SEARCH_MODEL: 'sonnet', KIT_PASS_SCORE: '75', KIT_SCORING: 'off', KIT_AUTO_APPROVE: 'on', KIT_REVIEW_MODEL: 'haiku' });
 
-    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, plan_model: 'fable', audit_model: 'fable', search_model: 'sonnet', pass_score: 75, scoring: 'off' });
+    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, plan_model: 'fable', audit_model: 'fable' });
 });
 
 test('a set keeps the names, values and order the file has, and adds the missing names after them in the fixed order', (t) =>
 {
     const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { auto_run: 'on', plan_model: 'fable', note: 'kept', search_model: 'opus' } });
 
-    setKitSetting(repo, 'scoring', 'off', {});
+    setKitSetting(repo, 'scoring', 'off');
 
     assert.deepEqual(Object.keys(readKitFile(repo)), ['auto_run', 'plan_model', 'note', 'search_model', 'scoring', 'audit_model', 'review_model', 'implement_model', 'pass_score', 'auto_approve']);
     assert.deepEqual(readKitFile(repo), {
@@ -52,14 +52,14 @@ test('a set keeps the names, values and order the file has, and adds the missing
     });
 });
 
-test('an unset puts the name back in its own place with the variable value, else the default - the choice is dropped', (t) =>
+test('an unset puts the name back in its own place with its default, never a KIT_* variable - the choice is dropped', (t) =>
 {
     const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { ...DEFAULTS, plan_model: 'fable', search_model: 'opus' } });
 
     const withVariable = runSettings(repo, ['unset', 'plan_model'], { KIT_PLAN_MODEL: 'haiku' });
     assert.equal(withVariable.status, 0, withVariable.stderr);
-    assert.equal(withVariable.stdout.trim(), `plan_model: haiku (${KIT_FILE})`);
-    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, plan_model: 'haiku', search_model: 'opus' });
+    assert.equal(withVariable.stdout.trim(), `plan_model: opus (${KIT_FILE})`);
+    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, search_model: 'opus' });
 
     runSettings(repo, ['set', 'plan_model', 'fable']);
     const withDefault = runSettings(repo, ['unset', 'plan_model']);
@@ -72,13 +72,13 @@ test('an unset on a partial file completes it, and an unset that changes nothing
 {
     const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { auto_run: 'on', scoring: 'off' } });
 
-    unsetKitSetting(repo, 'scoring', {});
+    unsetKitSetting(repo, 'scoring');
 
     assert.deepEqual(readKitFile(repo), { auto_run: 'on', scoring: 'on', ...Object.fromEntries(NAMES.filter((name) => !['scoring', 'auto_run'].includes(name)).map((name) => [name, DEFAULTS[name]])) });
     const before = readText(repo);
     fs.utimesSync(kitFilePath(repo), 1_000, 1_000);
 
-    unsetKitSetting(repo, 'scoring', {});
+    unsetKitSetting(repo, 'scoring');
 
     assert.equal(readText(repo), before);
     assert.equal(fs.statSync(kitFilePath(repo)).mtimeMs, 1_000_000);
@@ -95,19 +95,49 @@ test('an unset or a set on a file that is not JSON leaves it as it is and fails'
     assert.equal(readText(repo), '{ not json');
 });
 
-test('the hook writes the full file for a request when the file is absent, and shows the file as every origin', (t) =>
+test('the hook writes the full file for a request when the file is absent, from defaults and never from a KIT_* variable', (t) =>
 {
     const repo = makeHookRepo(t);
 
-    const { status, output } = runHook(repo, promptInput(), { KIT_SEARCH_MODEL: 'sonnet' });
+    const { status, output } = runHook(repo, promptInput(), { KIT_SEARCH_MODEL: 'sonnet', KIT_AUTO_APPROVE: 'on', KIT_AUTO_RUN: 'on', KIT_SCORING: 'off', KIT_PASS_SCORE: '70', KIT_PLAN_MODEL: 'fable' });
 
     assert.equal(status, 0);
-    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, search_model: 'sonnet' });
+    assert.deepEqual(readKitFile(repo), DEFAULTS);
     assert.deepEqual(Object.keys(readKitFile(repo)), NAMES);
     const context = output.hookSpecificOutput.additionalContext;
     for (const name of NAMES) assert.ok(context.includes(`${name}=`), name);
     assert.equal(context.match(new RegExp(`\\(${KIT_FILE.replaceAll('.', '\\.')}\\);`, 'g')).length, 9);
-    assert.ok(context.includes(`search_model=sonnet (${KIT_FILE});`));
+    assert.ok(context.includes(`search_model=haiku (${KIT_FILE});`));
+});
+
+test('the hook completes a partial file from defaults, never from a KIT_* variable', (t) =>
+{
+    const repo = makeHookRepo(t, { [KIT_FILE]: { plan_model: 'fable' } });
+
+    runHook(repo, promptInput(), { KIT_REVIEW_MODEL: 'haiku', KIT_AUTO_APPROVE: 'on', KIT_SCORING: 'off' });
+
+    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, plan_model: 'fable', audit_model: 'fable' });
+});
+
+test('a chat save on a partial file completes it from defaults, never from a KIT_* variable', (t) =>
+{
+    const repo = makeHookRepo(t, { [KIT_FILE]: { plan_model: 'fable' } });
+
+    const { output } = runHook(repo, promptInput('auto run on'), { KIT_REVIEW_MODEL: 'haiku', KIT_AUTO_APPROVE: 'on', KIT_SCORING: 'off' });
+
+    assert.deepEqual(readKitFile(repo), { ...DEFAULTS, plan_model: 'fable', audit_model: 'fable', auto_run: 'on' });
+    assert.ok(output.hookSpecificOutput.additionalContext.includes('auto_approve=off'));
+});
+
+test('a variable has no effect on the status line once the file is complete', (t) =>
+{
+    const repo = makeHookRepo(t, { [KIT_FILE]: DEFAULTS });
+
+    const { output } = runHook(repo, promptInput(), { KIT_AUTO_APPROVE: 'on', KIT_REVIEW_MODEL: 'haiku' });
+
+    const context = output.hookSpecificOutput.additionalContext;
+    assert.ok(context.includes(`auto_approve=off (${KIT_FILE});`));
+    assert.ok(context.includes(`review_model=opus (${KIT_FILE});`));
 });
 
 test('the hook completes a partial file in place: names, values and order kept, the missing names after them', (t) =>
@@ -164,10 +194,10 @@ test('a name with no storable value is left out, and the next run does not rewri
 {
     const root = makeTempDir(t, 'no-agents');
 
-    const first = completeKitSettings(root, {});
+    const first = completeKitSettings(root);
     const afterFirst = readText(root);
     fs.utimesSync(kitFilePath(root), 1_000, 1_000);
-    const second = completeKitSettings(root, {});
+    const second = completeKitSettings(root);
 
     assert.deepEqual(first, { ok: true, changed: true });
     assert.deepEqual(readKitFile(root), { search_model: 'haiku', pass_score: 90, scoring: 'on', auto_run: 'off', auto_approve: 'off' });
@@ -180,7 +210,7 @@ test('a check completion says what it would do and writes nothing', (t) =>
 {
     const repo = makeSettingsRepo(t);
 
-    const result = completeKitSettings(repo, {}, { check: true });
+    const result = completeKitSettings(repo, { check: true });
 
     assert.deepEqual(result, { ok: true, changed: true });
     assert.equal(fs.existsSync(kitFilePath(repo)), false);
