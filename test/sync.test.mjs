@@ -124,7 +124,7 @@ test('a second sync, and a --check after it, find the repo current', (t) =>
     assert.match(check.stdout, /: current \(check only\)$/m);
 });
 
-test("the kit's own settings file in a repo is left alone: byte for byte, and no change under --check or a sync", (t) =>
+test("the kit's own settings file in a repo keeps the values it holds as written and is completed once; a second sync finds it current", (t) =>
 {
     const kit = makeKit(t, SHARED);
     const content = '{\n    "plan_model": "fable",\n    "note": "kept as written"\n}\n';
@@ -132,13 +132,18 @@ test("the kit's own settings file in a repo is left alone: byte for byte, and no
 
     const before = sync(kit, '--check', repo);
     const synced = sync(kit, repo);
+    const completed = read(repo, '.claude/kit/settings.json');
     const after = sync(kit, '--check', repo);
+    const again = sync(kit, repo);
 
-    for (const result of [before, synced, after])
-        assert.doesNotMatch(result.stdout, /\.claude\/kit\/settings\.json/);
+    assert.match(before.stdout, /update \.claude\/kit\/settings\.json/);
+    assert.equal(before.status, 1);
+    assert.match(synced.stdout, /update \.claude\/kit\/settings\.json/);
     assert.equal(synced.status, 0, synced.stderr);
-    assert.equal(after.status, 0, after.stdout);
-    assert.equal(read(repo, '.claude/kit/settings.json'), content);
+    assert.deepEqual(JSON.parse(completed), { plan_model: 'fable', note: 'kept as written', audit_model: 'fable', search_model: 'haiku', pass_score: 90, scoring: 'on', auto_run: 'off', auto_approve: 'off' });
+    assert.doesNotMatch(after.stdout, /\.claude\/kit\/settings\.json/);
+    assert.doesNotMatch(again.stdout, /\.claude\/kit\/settings\.json/);
+    assert.equal(read(repo, '.claude/kit/settings.json'), completed);
     assert.equal(Object.keys(readJson(path.join(repo, '.claude/kit/lock.json')).files).includes('.claude/kit/settings.json'), false);
 });
 

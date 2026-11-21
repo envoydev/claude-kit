@@ -76,7 +76,7 @@ fails when a site lacks one of its markers; a line wrap inside a marker counts a
 This repo takes the same files into its own `.claude/`, so a session here loads the rules and skills it shares. Those
 copies are git-ignored - `shared/` is their one home - so a fresh clone runs `npm run sync` once to get them, and an
 edit goes into `shared/`, never into the copy. Only `.claude/settings.json`, `.claude/kit/repo.json` (this repo's
-own template values) and `.claude/kit/settings.json` (its saved kit settings, once one is set) are tracked.
+own template values) and `.claude/kit/settings.json` (its saved kit settings, always complete) are tracked.
 
 Each repo keeps its own `AGENTS.md`, its `repo-*` rules and skills, `plugin-handling.md` and `repo.json`: they name
 that repo's layout, commands and release path.
@@ -84,7 +84,8 @@ that repo's layout, commands and release path.
 ## Settings a project can change
 
 Nine values - the pass score, five models and three switches - live in the kit's own file, `.claude/kit/settings.json`,
-which the chat writes: say 'plan model fable' or 'stop scoring' and it is saved there until it is changed. The status
+which the chat writes: say 'plan model fable' or 'stop scoring' and it is saved there until it is changed. The file always
+holds all nine names (the owner's ruling, 2026-11-21: 'All the data must be present inside .claude/kit/settings.json'). The status
 hook (`.claude/kit/status-hook.mjs`, a `UserPromptSubmit` hook) shows them with every request - one line for the
 user, the same values with their sources for Claude - so neither a new session nor a compacted one has to remember
 them. `node .claude/kit/settings.mjs` prints them on demand.
@@ -93,7 +94,7 @@ them. `node .claude/kit/settings.mjs` prints them on demand.
 kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit opus | review opus | implement sonnet | search haiku
 ```
 
-| Name | Variable | What it sets | Without it |
+| Name | Variable | What it sets | Where the file lacks it |
 |---|---|---|---|
 | `pass_score` | `KIT_PASS_SCORE` | the score `refining-plans` grades a spec or plan to, a whole number from 1 to 100 | 90 |
 | `plan_model` | `KIT_PLAN_MODEL` | the model that writes plans: the plan step of `solve-task`, and the `audit-planner` agent where no `audit_model` is set | the `audit-planner` agent's own (opus) |
@@ -105,13 +106,32 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit 
 | `auto_run` | `KIT_AUTO_RUN` | whether a session runs in auto-run from its first ask, `on` or `off` | off |
 | `auto_approve` | `KIT_AUTO_APPROVE` | who approves a spec, a design or a plan: `on`, the run does once it is at the pass score; `off`, it waits for the user, who is notified | off |
 
+A complete file, the names a user set first and the rest after them in the fixed order (the five models, the pass score, scoring, auto-run, auto-approve):
+
 ```json
-{ "plan_model": "fable", "review_model": "fable", "pass_score": 95, "auto_run": "on" }
+{
+  "plan_model": "fable",
+  "review_model": "fable",
+  "pass_score": 95,
+  "auto_run": "on",
+  "audit_model": "fable",
+  "implement_model": "sonnet",
+  "search_model": "haiku",
+  "scoring": "on",
+  "auto_approve": "off"
+}
 ```
 
 - `.claude/kit/settings.json` is committed with the repo, so a value never has to go into a Claude Code settings file
   that may hold a key or a token. `node .claude/kit/settings.mjs set plan_model fable` writes one name and `unset
-  plan_model` removes it; the sync never touches the file.
+  plan_model` drops the choice: the name goes back to the value the variable or the default gives, kept in its place.
+  Every write holds all nine names.
+- Who completes the file: each `set`, `unset` and chat save; the status hook, once, on a request that finds the file absent
+  or a name missing; and the sync, for each repo it serves, with an empty environment so a maintainer's `KIT_*` variables
+  never reach a committed file. A name is added after the names the file holds, with the value the variable or the
+  default gives it; a value the file holds is never changed, and a complete file is never rewritten. A file that is not a
+  JSON object is never rewritten by any of them: the hook says nothing, a save fails with 'fix or delete it' and the sync
+  names it as kept. A model no agent file names (`none`) cannot be stored and stays out until one does.
 - What the user sets in chat is saved there and holds in every session until it is changed (the user's ruling,
   2026-11-16, which replaced the per-session switches of 2026-11-15). A request whose first line is only
   words to switch a mode - 'stop scoring', 'turn on scoring', 'enable auto run', 'turn auto run off', 'auto approve
@@ -122,10 +142,15 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit 
   runs the `set` command. The hook never blocks a request: when it fails, it says
   so in the debug log and the request goes through.
 - A value is the kit's file, else the `KIT_*` variable from the `env` block of a Claude Code settings file, else the
-  default. A value the script cannot use falls back to the next source, and its line says why.
+  default. Since the file always holds all nine names, a variable applies only where the file lacks the name - after
+  completion, an absent or incomplete file - and the origin on the status line reads `.claude/kit/settings.json` for
+  every name. To change a value, run `node .claude/kit/settings.mjs set <name> <value>` or edit the file; a variable set
+  later changes nothing for a name the file holds. A value the script cannot use falls back to the next source, and its
+  line says why. The audit model is the plan model's value only while the file lacks it: once completed, it holds that
+  value and no longer follows a later change of the plan model.
 - The file is read with every request, so a change counts at once in every open session of the repo.
 - Because the file is committed, everyone who works in a clone runs with its values, `auto_run`, `auto_approve` and
-  `scoring` included (the user's choice, 2026-11-16). The variables keep the older rule: `KIT_SCORING`, `KIT_AUTO_RUN`
+  `scoring` included (the user's choice, 2026-11-16). The variables keep the older rule, for a file that lacks the name: `KIT_SCORING`, `KIT_AUTO_RUN`
   and `KIT_AUTO_APPROVE` count only from a file that is not committed - `.claude/settings.local.json` or `~/.claude/settings.json` - and the
   script ignores one in `.claude/settings.json`. The other six variables may go in any settings file; the sync
   leaves a repo's `env` block alone.
@@ -136,7 +161,7 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit 
   any other goes to an agent with that model, and the closing report names the model each step actually ran on.
 - Claude Code applies a new or changed variable to sessions that are already open, but a deleted one stays set in
   them until they restart: to switch `KIT_AUTO_RUN` or `KIT_SCORING` back at once, set its other value instead of
-  deleting the line - or save the value in the kit's file, which outranks it.
+  deleting the line - or save the value in the kit's file, which outranks it (and, once complete, always does).
 - A value meant for one run only - 'grade this one to 95' - goes into that run's `run.md`, not into the file, so a
   compaction keeps it and the next run does not inherit it.
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { KIT_FILE, REAL_KIT, agentFile, cannotLockFolders, kitFileExists, makeHookRepo, makeTempDir, promptInput, readKitFile, runHook, runHookScript } from './support.mjs';
+import { DEFAULT_FILE, KIT_FILE, REAL_KIT, agentFile, assertSavedInFile, cannotLockFolders, kitFileExists, makeHookRepo, makeTempDir, promptInput, readKitFile, runHook, runHookScript } from './support.mjs';
 
 const contextOf = (output) => output.hookSpecificOutput.additionalContext;
 
@@ -16,13 +16,14 @@ test('with nothing set it shows the user one line with the defaults and gives Cl
     assert.equal(output.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
     assert.equal(
         contextOf(output),
-        "kit status (.claude/kit/status-hook.mjs): auto_run=off (default); scoring=on (default); pass_score=90 (default); auto_approve=off (default); plan_model=opus (the audit-planner agent's own); audit_model=opus (plan_model); review_model=opus (the plan-grader agent's own); implement_model=sonnet (the audit-editor agent's own); search_model=haiku (default);",
+        `kit status (.claude/kit/status-hook.mjs): auto_run=off (${KIT_FILE}); scoring=on (${KIT_FILE}); pass_score=90 (${KIT_FILE}); auto_approve=off (${KIT_FILE}); plan_model=opus (${KIT_FILE}); audit_model=opus (${KIT_FILE}); review_model=opus (${KIT_FILE}); implement_model=sonnet (${KIT_FILE}); search_model=haiku (${KIT_FILE});`,
     );
 });
 
-test("the settings variables change the line, and only Claude's values name them as the source", (t) =>
+test("the settings variables fill a file that lacks the names: the line shows their values and Claude's values name the file as the source", (t) =>
 {
-    const { output } = runHook(makeHookRepo(t), promptInput(), {
+    const repo = makeHookRepo(t);
+    const { output } = runHook(repo, promptInput(), {
         KIT_AUTO_RUN: 'on',
         KIT_SCORING: 'off',
         KIT_AUTO_APPROVE: 'on',
@@ -33,8 +34,10 @@ test("the settings variables change the line, and only Claude's values name them
     });
 
     assert.equal(output.systemMessage, 'kit: auto-run on | scoring off | auto-approve on | plan fable | audit fable | review opus | implement haiku | search sonnet');
-    for (const part of ['auto_run=on (KIT_AUTO_RUN)', 'scoring=off (KIT_SCORING)', 'auto_approve=on (KIT_AUTO_APPROVE)', 'pass_score=95 (KIT_PASS_SCORE)'])
+    for (const part of [`auto_run=on (${KIT_FILE})`, `scoring=off (${KIT_FILE})`, `auto_approve=on (${KIT_FILE})`, `pass_score=95 (${KIT_FILE})`])
         assert.ok(contextOf(output).includes(part), `${part} missing from: ${contextOf(output)}`);
+    assert.equal(contextOf(output).includes('KIT_'), false);
+    assert.deepEqual(readKitFile(repo), { ...DEFAULT_FILE, auto_run: 'on', scoring: 'off', auto_approve: 'on', pass_score: 95, plan_model: 'fable', audit_model: 'fable', implement_model: 'haiku', search_model: 'sonnet' });
 });
 
 test("scoring that KIT_SCORING turns on shows its pass score on the user's line, never the variable's name", (t) =>
@@ -42,7 +45,7 @@ test("scoring that KIT_SCORING turns on shows its pass score on the user's line,
     const { output } = runHook(makeHookRepo(t), promptInput(), { KIT_SCORING: 'on' });
 
     assert.match(output.systemMessage, /\| scoring on \(pass 90\) \|/);
-    assert.ok(contextOf(output).includes('scoring=on (KIT_SCORING)'));
+    assert.ok(contextOf(output).includes(`scoring=on (${KIT_FILE})`));
 });
 
 test("the kit's file outranks the variables, names itself in Claude's values and shows no source on the user's line", (t) =>
@@ -85,11 +88,12 @@ test('a switch in the committed settings file is ignored here too, unless the ki
 {
     const committed = { '.claude/settings.json': { env: { KIT_AUTO_RUN: 'on', KIT_SCORING: 'off' } } };
 
-    const ignored = runHook(makeHookRepo(t, committed), promptInput(), { KIT_AUTO_RUN: 'on' }).output;
+    const ignoredRepo = makeHookRepo(t, committed);
+    const ignored = runHook(ignoredRepo, promptInput(), { KIT_AUTO_RUN: 'on' }).output;
     const kept = runHook(makeHookRepo(t, { ...committed, [KIT_FILE]: { auto_run: 'on' } }), promptInput(), { KIT_AUTO_RUN: 'on' }).output;
 
     assert.match(ignored.systemMessage, /^kit: auto-run off \|/);
-    assert.ok(contextOf(ignored).includes('KIT_AUTO_RUN in .claude/settings.json is ignored'));
+    assert.equal(readKitFile(ignoredRepo).auto_run, 'off');
     assert.match(kept.systemMessage, /^kit: auto-run on \|/);
     assert.ok(contextOf(kept).includes(`auto_run=on (${KIT_FILE});`));
 });
@@ -135,7 +139,7 @@ for (const [prompt, setting, value, shown] of [
         const { status, output } = runHook(repo, promptInput(prompt), { KIT_AUTO_RUN: opposite, KIT_SCORING: opposite, KIT_AUTO_APPROVE: opposite });
 
         assert.equal(status, 0);
-        assert.deepEqual(readKitFile(repo), { [setting]: value });
+        assertSavedInFile(repo, { [setting]: value });
         assert.ok(output.systemMessage.includes(shown), output.systemMessage);
         assert.ok(contextOf(output).includes(`${setting}=${value} (${KIT_FILE});`), contextOf(output));
         assert.ok(contextOf(output).endsWith(` saved: ${setting}=${value} in ${KIT_FILE};`), contextOf(output));
@@ -185,7 +189,7 @@ for (const prompt of [
 
         const { output } = runHook(repo, promptInput(prompt));
 
-        assert.equal(kitFileExists(repo), false);
+        assert.deepEqual(readKitFile(repo), DEFAULT_FILE);
         assert.equal(contextOf(output).includes('saved'), false);
     });
 }
@@ -231,7 +235,7 @@ test("a save keeps the file's other keys", (t) =>
 
     runHook(repo, promptInput('stop scoring'));
 
-    assert.deepEqual(readKitFile(repo), { search_model: 'sonnet', note: 'kept', scoring: 'off' });
+    assert.deepEqual(readKitFile(repo), { ...DEFAULT_FILE, search_model: 'sonnet', note: 'kept', scoring: 'off' });
 });
 
 for (const prompt of ['auto run on', 'plan model fable'])
@@ -278,7 +282,7 @@ test('the hook takes nothing from a scratchpad and creates nothing in one', (t) 
 
     assert.equal(status, 0);
     assert.deepEqual(fs.readdirSync(scratchpad), []);
-    assert.deepEqual(readKitFile(repo), { scoring: 'off' });
+    assert.deepEqual(readKitFile(repo), { ...DEFAULT_FILE, scoring: 'off' });
     assert.equal(contextOf(output).includes('session'), false);
 });
 
@@ -307,7 +311,7 @@ test("adds the communication rule's reminder on a line after the status, and a n
     const [statusLine, reminderLine] = contextOf(output).split('\n');
 
     assert.equal(status, 0);
-    assert.match(statusLine, /^kit status \(\.claude\/kit\/status-hook\.mjs\): auto_run=off \(default\);/);
+    assert.match(statusLine, /^kit status \(\.claude\/kit\/status-hook\.mjs\): auto_run=off \(\.claude\/kit\/settings\.json\);/);
     assert.match(reminderLine, /^Reply limits \(\.claude\/rules\/communication\.md\): at most 900 characters\. Last reply: 999 characters/);
 });
 

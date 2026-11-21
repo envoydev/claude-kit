@@ -8,9 +8,11 @@
 //   - every file in a folder under shared/ (rules/, skills/, agents/) at the same path under <repo>/.claude/, overwritten;
 //   - <repo>/.claude/kit/lock.json (the kit commit and a sha256 per managed file) and check.mjs, which the
 //     repo runs (npm run kit:check) to fail on a local edit of a managed file;
-//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the four role
-//     models and the two switches the repo's .claude/kit/settings.json and the KIT_* variables carry, printed and saved
+//   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the five role
+//     models and the three switches the repo's .claude/kit/settings.json carries, printed and saved
 //     for the skills that read them and added to every request by the UserPromptSubmit hook;
+//   - <repo>/.claude/kit/settings.json completed: every one of the nine names it lacks is added, from the defaults and the
+//     repo's agent files, with an empty environment; the values it holds stay;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
 //     plugins switched on beside the repo's own, the kit's hooks added after the repo's own for each event, every
 //     other key the base carries taken from it and the rest the repo's;
@@ -33,6 +35,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { completeKitSettings } from './kit-settings.mjs';
 
 type Lock = { kit: string; files: Record<string, string> };
 type RepoVars = Readonly<Record<string, string | readonly string[]>>;
@@ -186,6 +189,18 @@ function without<T>(record: Readonly<Record<string, T>>, names: readonly string[
     return Object.fromEntries(Object.entries(record).filter(([name]) => !names.includes(name)));
 }
 
+// The repo's .claude/kit/settings.json holds all nine settings (the owner's ruling, 2026-11-21): a name it lacks is added with
+// the value the defaults and the repo's agent files give it. The environment is empty, so a maintainer's KIT_* variables never
+// land in a committed file. A file that does not parse is kept and named; the values a repo's own file holds are never changed.
+function syncKitSettings(repo: string, check: boolean, notes: string[]): void
+{
+    const rel = '.claude/kit/settings.json';
+    const existed = fs.existsSync(path.join(repo, rel));
+    const result = completeKitSettings(repo, {}, { check });
+    if (!result.ok) notes.push(`kept ${result.error}`);
+    else if (result.changed) notes.push(`${existed ? 'update' : 'add'} ${rel}`);
+}
+
 function syncRepo(repo: string, check: boolean, kit: string): string[]
 {
     const notes: string[] = [];
@@ -228,6 +243,8 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     }
 
     for (const [shipped, source] of KIT_FILES) write(`.claude/kit/${shipped}`, fs.readFileSync(path.join(KIT, 'bin', source)));
+
+    syncKitSettings(repo, check, notes);
 
     syncSettings(repo, write);
 

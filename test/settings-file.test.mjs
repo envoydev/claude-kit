@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { setKitSetting, setKitSettings, unsetKitSetting } from '../bin/kit-settings.mjs';
-import { AGENTS, KIT_FILE, REAL_KIT, cannotLockFolders, makeSettingsRepo, makeTempDir, printSettings, runNode, runSettings, writeFiles } from './support.mjs';
+import { AGENTS, DEFAULT_FILE, KIT_FILE, REAL_KIT, cannotLockFolders, makeSettingsRepo, makeTempDir, printSettings, runNode, runSettings, writeFiles } from './support.mjs';
 
 const kitFilePath = (repo) => path.join(repo, KIT_FILE);
 const MODEL_REASON = 'is not one of sonnet, opus, haiku, fable';
@@ -135,7 +135,7 @@ test('set writes the value, prints where it went and outranks the variable at on
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, `plan_model: fable (${KIT_FILE})\n`);
-    assert.equal(fs.readFileSync(kitFilePath(repo), 'utf8'), `${JSON.stringify({ plan_model: 'fable' }, null, 2)}\n`);
+    assert.equal(fs.readFileSync(kitFilePath(repo), 'utf8'), `${JSON.stringify({ ...DEFAULT_FILE, plan_model: 'fable', audit_model: 'fable' }, null, 2)}\n`);
     assert.equal(printSettings(repo, { KIT_PLAN_MODEL: 'haiku' }).lines.plan_model, `fable (${KIT_FILE})`);
 });
 
@@ -155,7 +155,7 @@ for (const [name, value, variables] of [
 
         assert.equal(result.status, 0, result.stderr);
         assert.equal(result.stdout, `${name}: ${value} (${KIT_FILE})\n`);
-        assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { [name]: value });
+        assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, ...(variables.KIT_AUTO_RUN === undefined ? {} : { auto_run: 'on' }), ...(variables.KIT_AUTO_APPROVE === undefined ? {} : { auto_approve: 'on' }), [name]: value });
     });
 }
 
@@ -167,7 +167,7 @@ test('set keeps every other key already in the file, unknown ones too, and store
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, `pass_score: 95 (${KIT_FILE})\n`);
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { search_model: 'sonnet', note: { kept: true }, pass_score: 95 });
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { search_model: 'sonnet', note: { kept: true }, pass_score: 95, ...Object.fromEntries(Object.entries(DEFAULT_FILE).filter(([name]) => !['search_model', 'pass_score'].includes(name))) });
 });
 
 for (const [label, args, existing] of [
@@ -224,8 +224,8 @@ test('unset removes the name and prints the line it falls back to', (t) =>
     const result = runSettings(repo, ['unset', 'plan_model']);
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, "plan_model: opus (the audit-planner agent's own)\n");
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { search_model: 'sonnet' });
+    assert.equal(result.stdout, `plan_model: opus (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, search_model: 'sonnet' });
 });
 
 test('set audit_model saves it beside the plan model, and unset removes it so it follows the plan model again', (t) =>
@@ -238,8 +238,8 @@ test('set audit_model saves it beside the plan model, and unset removes it so it
     assert.equal(saved.status, 0, saved.stderr);
     assert.equal(saved.stdout, `audit_model: opus (${KIT_FILE})\n`);
     assert.equal(removed.status, 0, removed.stderr);
-    assert.equal(removed.stdout, 'audit_model: fable (plan_model)\n');
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { plan_model: 'fable' });
+    assert.equal(removed.stdout, `audit_model: fable (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, plan_model: 'fable', audit_model: 'fable' });
 });
 
 test('unset auto_run removes the switch and prints what it falls back to', (t) =>
@@ -248,29 +248,29 @@ test('unset auto_run removes the switch and prints what it falls back to', (t) =
 
     const result = runSettings(repo, ['unset', 'auto_run'], { KIT_AUTO_RUN: 'on' });
 
-    assert.equal(result.stdout, 'auto_run: on (KIT_AUTO_RUN)\n');
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { scoring: 'off' });
+    assert.equal(result.stdout, `auto_run: on (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, scoring: 'off', auto_run: 'on' });
 });
 
-test('unset leaves {} when it removes the last name', (t) =>
+test('unset of the only name keeps the file full, the name back with its variable value', (t) =>
 {
     const repo = makeSettingsRepo(t, { ...AGENTS, [KIT_FILE]: { plan_model: 'fable' } });
 
     const result = runSettings(repo, ['unset', 'plan_model'], { KIT_PLAN_MODEL: 'haiku' });
 
-    assert.equal(result.stdout, 'plan_model: haiku (KIT_PLAN_MODEL)\n');
-    assert.equal(fs.readFileSync(kitFilePath(repo), 'utf8'), '{}\n');
+    assert.equal(result.stdout, `plan_model: haiku (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), { ...DEFAULT_FILE, plan_model: 'haiku', audit_model: 'haiku' });
 });
 
-test('unset of a name that is not in the file succeeds and writes nothing', (t) =>
+test('unset of a name that is not in the file completes the file with its default', (t) =>
 {
     const repo = makeSettingsRepo(t);
 
     const result = runSettings(repo, ['unset', 'pass_score']);
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, 'pass_score: 90 (default)\n');
-    assert.equal(fs.existsSync(kitFilePath(repo)), false);
+    assert.equal(result.stdout, `pass_score: 90 (${KIT_FILE})\n`);
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(repo), 'utf8')), DEFAULT_FILE);
 });
 
 for (const args of [['frobnicate'], ['set'], ['set', 'plan_model'], ['set', 'plan_model', 'fable', 'now'], ['unset'], ['unset', 'plan_model', 'search_model']])
@@ -292,7 +292,7 @@ test('setKitSetting creates the folder the file lives in when it is missing', (t
     const result = setKitSetting(root, 'search_model', 'opus');
 
     assert.deepEqual(result, { ok: true });
-    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(root), 'utf8')), { search_model: 'opus' });
+    assert.deepEqual(JSON.parse(fs.readFileSync(kitFilePath(root), 'utf8')), { search_model: 'opus', pass_score: 90, scoring: 'on', auto_run: 'off', auto_approve: 'off' });
 });
 
 test('setKitSetting returns the failure when the file cannot be written, and unsetKitSetting does too', (t) =>
@@ -347,7 +347,7 @@ test('setKitSettings writes every pair at once, or none when one of them is unus
     assert.equal(refused.ok, false);
     assert.match(refused.error, /review_model="gpt"/);
     assert.equal(fs.readFileSync(kitFilePath(root), 'utf8'), before);
-    assert.deepEqual(JSON.parse(before), { plan_model: 'fable', review_model: 'opus' });
+    assert.deepEqual(JSON.parse(before), { plan_model: 'fable', review_model: 'opus', audit_model: 'fable', search_model: 'haiku', pass_score: 90, scoring: 'on', auto_run: 'off', auto_approve: 'off' });
 });
 
 test('setKitSettings writes nothing, and creates no file, when the first pair is the unusable one', (t) =>

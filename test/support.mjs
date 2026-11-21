@@ -134,6 +134,18 @@ export const promptInput = (prompt = 'fix the lint') => ({
 
 export const KIT_FILE = '.claude/kit/settings.json';
 export const readKitFile = (repo) => JSON.parse(fs.readFileSync(path.join(repo, KIT_FILE), 'utf8'));
+// What a completed file holds with nothing set and the three agent files of AGENTS: every name, the default for each.
+export const DEFAULT_FILE = Object.freeze({
+    plan_model: 'opus', audit_model: 'opus', review_model: 'opus', implement_model: 'sonnet', search_model: 'haiku',
+    pass_score: 90, scoring: 'on', auto_run: 'off', auto_approve: 'off',
+});
+// The file holds all nine names, and the names `saved` names hold the values `saved` gives; the rest came from variables or defaults.
+export function assertSavedInFile(repo, saved)
+{
+    const file = readKitFile(repo);
+    assert.deepEqual(Object.fromEntries(Object.keys(saved).map((name) => [name, file[name]])), saved);
+    assert.deepEqual(Object.keys(DEFAULT_FILE).filter((name) => !Object.hasOwn(file, name)), []);
+}
 export const kitFileExists = (repo) => fs.existsSync(path.join(repo, KIT_FILE));
 
 // A sibling repo of `repo`, the folder `<repo>/../<name>`, with the files the test names. The name is unique to the repo.

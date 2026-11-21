@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { KIT_FILE, kitFileExists, makeHookRepo, promptInput, readKitFile, runHook } from './support.mjs';
+import { DEFAULT_FILE, KIT_FILE, assertSavedInFile, makeHookRepo, promptInput, readKitFile, runHook } from './support.mjs';
 
 const MODEL_VARIABLES = ['KIT_PLAN_MODEL', 'KIT_AUDIT_MODEL', 'KIT_REVIEW_MODEL', 'KIT_IMPLEMENT_MODEL', 'KIT_SEARCH_MODEL'];
 const LABELS = { plan_model: 'plan', audit_model: 'audit', review_model: 'review', implement_model: 'implement', search_model: 'search' };
@@ -58,7 +58,7 @@ for (const [prompt, saved] of [
         const { status, output } = runHook(repo, promptInput(prompt), variables);
 
         assert.equal(status, 0);
-        assert.deepEqual(readKitFile(repo), saved);
+        assertSavedInFile(repo, saved);
         for (const [setting, value] of Object.entries(saved))
         {
             assert.ok(output.systemMessage.includes(`${LABELS[setting]} ${value}`), output.systemMessage);
@@ -116,7 +116,7 @@ for (const prompt of [
 
         const { output } = runHook(repo, promptInput(prompt));
 
-        assert.equal(kitFileExists(repo), false);
+        assert.deepEqual(readKitFile(repo), DEFAULT_FILE);
         assert.equal(contextOf(output).includes('saved'), false);
     });
 }
@@ -139,7 +139,8 @@ test("a model choice keeps the file's other keys, and a later choice replaces th
     runHook(repo, promptInput('plan model fable'));
     runHook(repo, promptInput('plan model opus'));
 
-    assert.deepEqual(readKitFile(repo), { auto_run: 'on', note: 'kept', plan_model: 'opus' });
+    // The first choice completed the file, so the audit model holds the plan model it followed then.
+    assert.deepEqual(readKitFile(repo), { ...DEFAULT_FILE, auto_run: 'on', note: 'kept', plan_model: 'opus', audit_model: 'fable' });
 });
 
 test('a saved model holds for the next request, which names no model', (t) =>
