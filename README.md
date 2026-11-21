@@ -154,7 +154,8 @@ kit: auto-run off | scoring on (pass 90) | auto-approve off | plan opus | audit 
 
 The `kit status` line that the status hook (`bin/status-hook.mjs`) adds to each request is a contract alfred-mods
 reads: the marker `kit status (` and the head end `):`, then items of the shape `name=value (source);` with no blank
-in a value and no `;` in a source, then an optional note that starts `saved:` or `not saved -`. It reads the settings
+in a value and no `;` in a source, then an optional note that starts `saved:` or `not saved -`. A second line may follow:
+the communication rule's reminder (`Reply limits (`), with no `;` in it, since the note ends at the text's last `;`. It reads the settings
 by their names in `SETTING` and the value `on` (`bin/constants.mjs`). A change to any of these is made with a note to
 alfred-mods.
 

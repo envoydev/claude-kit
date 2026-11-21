@@ -106,7 +106,7 @@ export function makeHookRepo(t, files = {})
 {
     const repo = makeTempDir(t, 'hook');
     writeFiles(repo, { ...AGENTS, ...files });
-    copyScripts(repo, ['status-hook.mjs', 'kit-settings.mjs', 'constants.mjs']);
+    copyScripts(repo, ['status-hook.mjs', 'kit-settings.mjs', 'constants.mjs', 'reply-budget.mjs']);
     return repo;
 }
 

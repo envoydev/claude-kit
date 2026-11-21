@@ -195,7 +195,7 @@ test('a hook that sits outside a repo\'s .claude/kit saves nothing, says so and 
     const outer = makeTempDir(t, 'outer');
     const scripts = path.join(outer, 'inner', 'bin');
     fs.mkdirSync(scripts, { recursive: true });
-    for (const script of ['status-hook.mjs', 'kit-settings.mjs', 'constants.mjs'])
+    for (const script of ['status-hook.mjs', 'kit-settings.mjs', 'constants.mjs', 'reply-budget.mjs'])
         fs.copyFileSync(path.join(REAL_KIT, 'bin', script), path.join(scripts, script));
 
     const { status, output } = runHookScript(path.join(scripts, 'status-hook.mjs'), promptInput('stop scoring'));
@@ -292,3 +292,31 @@ for (const [label, stdin] of [['not JSON', 'not json at all'], ['empty', ''], ['
         assert.match(output.systemMessage, /^kit: auto-run off \| scoring on \(pass 90\)/);
     });
 }
+
+test("adds the communication rule's reminder on a line after the status, and a note when the last reply went over", (t) =>
+{
+    const repo = makeHookRepo(t, { '.claude/rules/communication.md': '# Rule\n- Each request carries this reminder: at most 900 characters.\n' });
+    const transcriptFile = path.join(makeTempDir(t, 'transcript'), 'session.jsonl');
+    const entries = [
+        { type: 'user', origin: { kind: 'human' }, message: { content: 'fix it' } },
+        { type: 'assistant', message: { content: [{ type: 'text', text: 'word '.repeat(200) }] } },
+    ];
+    fs.writeFileSync(transcriptFile, entries.map((entry) => JSON.stringify(entry)).join('\n'));
+
+    const { status, output } = runHook(repo, { ...promptInput(), transcript_path: transcriptFile });
+    const [statusLine, reminderLine] = contextOf(output).split('\n');
+
+    assert.equal(status, 0);
+    assert.match(statusLine, /^kit status \(\.claude\/kit\/status-hook\.mjs\): auto_run=off \(default\);/);
+    assert.match(reminderLine, /^Reply limits \(\.claude\/rules\/communication\.md\): at most 900 characters\. Last reply: 999 characters/);
+});
+
+test('a missing transcript still sends the reminder, with no note', (t) =>
+{
+    const repo = makeHookRepo(t, { '.claude/rules/communication.md': '- Each request carries this reminder: short.\n' });
+
+    const { status, output } = runHook(repo, { ...promptInput(), transcript_path: path.join(repo, 'missing.jsonl') });
+
+    assert.equal(status, 0);
+    assert.equal(contextOf(output).split('\n')[1], 'Reply limits (.claude/rules/communication.md): short.');
+});
