@@ -11,7 +11,7 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 
 | Path | What it is |
 |---|---|
-| `shared/rules/` | `auto-run`, `cleanup`, `commits`, `communication`, `execution` (a template), `javascript`, `typescript`, `plan-approval`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `superpowers-location`, `windows-vm` |
+| `shared/rules/` | `auto-run`, `cleanup`, `commits`, `communication`, `execution` (a template), `javascript`, `typescript`, `plan-approval`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `superpowers-location`, `update-command`, `windows-vm` |
 | `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), `ts-convert`, the ten `repo-audit-<kind>` audits and `repo-audit-plugin`, which holds the flow they run through and runs them together |
 | `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
 | `shared/defaults.json` | the kit's own value for a template key - `plan_model` (opus), `review_model` (opus), `implement_model` (sonnet), the model each agent file is written with. A project changes a seat's model in its settings (below), not here |

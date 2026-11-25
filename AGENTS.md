@@ -86,7 +86,7 @@ Node's type stripping, and no TypeScript is installed here, so it is type-checke
 
 ## Rules and skills
 
-Nine rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
+Ten rules load in every session of all four repos and govern how work runs - edited under `shared/rules/`, loaded
 from `.claude/rules/`:
 
 - `shared/rules/execution.md.tmpl` - one agent or several, the short plan, the check tiers and the close.
@@ -98,6 +98,7 @@ from `.claude/rules/`:
 - `shared/rules/communication.md` - how replies read and how the user is asked.
 - `shared/rules/cleanup.md` - when the work ends, the run removes or stops what it made or started that nothing needs any more.
 - `shared/rules/windows-vm.md` - everything a run makes in the Windows VM lives under `C:\Claude-MacOs`, and the user can see the run - its window, a live log and chat updates.
+- `shared/rules/update-command.md` - a fix or a feature that changes what an earlier version left on a user's machine ships its step in the plugin's update command.
 
 The other four rules there attach by path, and each exists to load its skills when a matching file is touched.
 
