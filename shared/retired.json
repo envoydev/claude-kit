@@ -6,5 +6,8 @@
     "skill-creator@claude-plugins-official",
     "pr-review-toolkit@claude-plugins-official"
   ],
-  "mcpServers": []
+  "mcpServers": [],
+  "kitFiles": [
+    "communication-hook.mjs"
+  ]
 }

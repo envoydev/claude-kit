@@ -106,7 +106,7 @@ export function makeHookRepo(t, files = {})
 {
     const repo = makeTempDir(t, 'hook');
     writeFiles(repo, { ...AGENTS, ...files });
-    copyScripts(repo, ['status-hook.mjs', 'communication-hook.mjs', 'kit-settings.mjs', 'constants.mjs', 'reply-budget.mjs']);
+    copyScripts(repo, ['status-hook.mjs', 'agent-reminders.mjs', 'kit-settings.mjs', 'constants.mjs', 'reply-budget.mjs']);
     return repo;
 }
 
@@ -122,7 +122,7 @@ export function runHookScript(script, hookInput, variables = {})
 }
 
 export const runHook = (repo, hookInput, variables = {}) => runHookScript(path.join(repo, '.claude/kit/status-hook.mjs'), hookInput, variables);
-export const runCommunicationHook = (repo, hookInput) => runHookScript(path.join(repo, '.claude/kit/communication-hook.mjs'), hookInput);
+export const runRemindersHook = (repo, hookInput) => runHookScript(path.join(repo, '.claude/kit/agent-reminders.mjs'), hookInput);
 
 // A folder cannot be made read-only on Windows, and root writes into one anyway.
 export const cannotLockFolders = () => process.platform === 'win32' || process.getuid?.() === 0;

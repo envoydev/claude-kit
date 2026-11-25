@@ -1,8 +1,10 @@
-// bin/reply-budget.mjs: the communication rule's reminder line and the size of Claude's last reply, from plain text.
+// bin/reply-budget.mjs: the reminder line of each rule in the list and the size of Claude's last reply, from plain text.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { reminderContextOf, reminderOf, replyCheckOf } from '../bin/reply-budget.mjs';
 
+const COMMUNICATION_FILE = '.claude/rules/communication.md';
+const CLEANUP_FILE = '.claude/rules/cleanup.md';
 const RULE = '# Rule\n\n- Length: something.\n- Each request carries this reminder: at most 900 characters. Lead with 3 sentences.\n- Other.\n';
 const transcript = (...entries) => entries.map((entry) => JSON.stringify(entry)).join('\n');
 const typed = (text) => ({ type: 'user', origin: { kind: 'human' }, message: { content: text } });
@@ -74,7 +76,7 @@ test('only the last reply counts, and a cut first line from the tail read is ski
 
 test('the context joins the head, the reminder and the note, and holds no ;', () =>
 {
-    const context = reminderContextOf(RULE, 'Last reply: 999 characters of prose, lead sentences: 1 - over the limit. Make this one fit.');
+    const context = reminderContextOf({ [COMMUNICATION_FILE]: RULE }, 'Last reply: 999 characters of prose, lead sentences: 1 - over the limit. Make this one fit.');
 
     assert.match(context, /^Reply limits \(\.claude\/rules\/communication\.md\): at most 900 characters\. Lead with 3 sentences\. Last reply: 999/);
     assert.ok(!context.includes(';'), context);
@@ -82,17 +84,35 @@ test('the context joins the head, the reminder and the note, and holds no ;', ()
 
 test('no reminder line means no context, even with a note', () =>
 {
-    assert.equal(reminderContextOf('# Rule\n', 'a note'), null);
+    assert.equal(reminderContextOf({ [COMMUNICATION_FILE]: '# Rule\n', [CLEANUP_FILE]: '' }, 'a note'), null);
 });
 
 test('a context with no note is the head and the reminder alone', () =>
 {
-    assert.equal(reminderContextOf(RULE, null), 'Reply limits (.claude/rules/communication.md): at most 900 characters. Lead with 3 sentences.');
+    assert.equal(reminderContextOf({ [COMMUNICATION_FILE]: RULE }, null), 'Reply limits (.claude/rules/communication.md): at most 900 characters. Lead with 3 sentences.');
+});
+
+test("the context holds each present rule's line in list order, and only the communication line takes the note", () =>
+{
+    const rules = { [CLEANUP_FILE]: '- Each request carries this reminder: clean up.\n', [COMMUNICATION_FILE]: RULE };
+
+    assert.equal(reminderContextOf(rules, 'a note'), [
+        'Reply limits (.claude/rules/communication.md): at most 900 characters. Lead with 3 sentences. a note',
+        'Cleanup (.claude/rules/cleanup.md): clean up.',
+    ].join('\n'));
+});
+
+test('a rule with no text or no reminder line adds no line, and no note goes to the cleanup line', () =>
+{
+    const rules = { [CLEANUP_FILE]: '- Each request carries this reminder: clean up.\n', [COMMUNICATION_FILE]: '' };
+
+    assert.equal(reminderContextOf(rules, 'a note'), 'Cleanup (.claude/rules/cleanup.md): clean up.');
+    assert.equal(reminderContextOf({}, 'a note'), null);
 });
 
 test('a reminder line longer than the shown limit is cut with the cut mark, so the context stays small', () =>
 {
-    const context = reminderContextOf(`- Each request carries this reminder: ${'x'.repeat(20000)}\n`, null);
+    const context = reminderContextOf({ [COMMUNICATION_FILE]: `- Each request carries this reminder: ${'x'.repeat(20000)}\n` }, null);
 
     assert.ok(context.endsWith(`${'x'.repeat(400)}...`), context.slice(-40));
     assert.ok(context.length < 1000, `${context.length}`);

@@ -50,7 +50,7 @@ test('ships the check, settings, status-hook, prove-plan and audit-scope scripts
         ['kit-settings.mjs', 'kit-settings.mjs'],
         ['constants.mjs', 'constants.mjs'],
         ['status-hook.mjs', 'status-hook.mjs'],
-        ['communication-hook.mjs', 'communication-hook.mjs'],
+        ['agent-reminders.mjs', 'agent-reminders.mjs'],
         ['reply-budget.mjs', 'reply-budget.mjs'],
         ['prove-plan.mjs', 'prove-plan.mjs'],
         ['plan-replay.mjs', 'plan-replay.mjs'],
@@ -343,4 +343,53 @@ test('a repo with no hooks and a kit with none gets no hooks key', (t) =>
     sync(kit, repo);
 
     assert.equal('hooks' in settingsOf(repo), false);
+});
+
+const OLD_HOOK_GROUP = { hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/.claude/kit/communication-hook.mjs"', timeout: 10 }] };
+
+test('a kit script the kit retired is removed from .claude/kit, and --check names it without removing it', (t) =>
+{
+    const kit = makeKit(t, { ...SHARED, 'retired.json': { kitFiles: ['old-script.mjs'] } });
+    const repo = makeRepo(t, { ...REPO_VARS, '.claude/kit/old-script.mjs': '// old\n', '.claude/kit/own-script.mjs': '// own\n' });
+
+    const checked = sync(kit, '--check', repo);
+    const written = sync(kit, repo);
+
+    assert.match(checked.stdout, /remove \.claude\/kit\/old-script\.mjs/);
+    assert.match(written.stdout, /remove \.claude\/kit\/old-script\.mjs/);
+    assert.equal(exists(repo, '.claude/kit/old-script.mjs'), false);
+    assert.equal(exists(repo, '.claude/kit/own-script.mjs'), true);
+    assert.match(sync(kit, repo).stdout, /: current$/m);
+});
+
+test('a retired kit name that is a shipped script, a dot path or a folder is skipped, and the sync still finishes', (t) =>
+{
+    const kit = makeKit(t, { ...SHARED, 'retired.json': { kitFiles: ['status-hook.mjs', '..', '.', '', 'a-folder'] } });
+    const repo = makeRepo(t, { ...REPO_VARS, '.claude/kit/a-folder/keep.txt': 'kept\n' });
+
+    const written = sync(kit, repo);
+
+    assert.equal(written.status, 0);
+    assert.equal(exists(repo, '.claude/kit/status-hook.mjs'), true);
+    assert.equal(exists(repo, '.claude/kit/a-folder/keep.txt'), true);
+    assert.doesNotMatch(written.stdout, /remove \.claude\/kit\/(?:status-hook\.mjs|\.\.?|a-folder)?$/m);
+    assert.match(sync(kit, repo).stdout, /: current$/m);
+});
+
+test('the real kit takes the old communication hook script and its settings entry out of a repo synced before the rename', (t) =>
+{
+    const repo = makeRepo(t, {
+        '.claude/kit/communication-hook.mjs': '// the old hook\n',
+        '.claude/settings.json': { hooks: { UserPromptSubmit: [OLD_HOOK_GROUP] } },
+    });
+    fs.copyFileSync(path.join(REAL_KIT, '.claude/kit/repo.json'), path.join(repo, '.claude/kit/repo.json'));
+
+    const result = sync(REAL_KIT, repo);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(exists(repo, '.claude/kit/communication-hook.mjs'), false);
+    assert.equal(exists(repo, '.claude/kit/agent-reminders.mjs'), true);
+    const commands = settingsOf(repo).hooks.UserPromptSubmit.flatMap((group) => group.hooks.map((hook) => hook.command));
+    assert.equal(commands.some((command) => command.includes('communication-hook')), false);
+    assert.equal(commands.some((command) => command.includes('agent-reminders.mjs')), true);
 });

@@ -11,8 +11,9 @@
 //   - <repo>/.claude/kit/settings.mjs, kit-settings.mjs, constants.mjs and status-hook.mjs: the pass score, the five role
 //     models and the three switches the repo's .claude/kit/settings.json carries, printed and saved
 //     for the skills that read them and added to every request by the UserPromptSubmit hook;
-//   - <repo>/.claude/kit/communication-hook.mjs and reply-budget.mjs: the second UserPromptSubmit hook, which sends the
-//     communication rule's reminder line and a note when the last reply went over;
+//   - <repo>/.claude/kit/agent-reminders.mjs and reply-budget.mjs: the second UserPromptSubmit hook, which sends the
+//     reminder line of each rule in its list (communication, then cleanup) and a note on the communication line when
+//     the last reply went over;
 //   - <repo>/.claude/kit/settings.json completed: every one of the nine names it lacks is added, from the defaults and the
 //     repo's agent files, with an empty environment; the values it holds stay;
 //   - shared/settings.base.json merged into <repo>/.claude/settings.json: the deny list joined, the base
@@ -22,6 +23,7 @@
 //     servers and keys are kept. The file is machine-local and git-ignored in every repo, so each machine syncs.
 //   - shared/retired.json names the plugins and MCP servers the kit shared once and dropped: both merges only add,
 //     so each sync takes those out of the project's settings and .mcp.json. An install record is left to the CLI.
+//     It names too the scripts under <repo>/.claude/kit/ the kit shipped once and dropped (kitFiles): a sync removes them.
 // The kit's own dir (.) takes the same files, so a session in it loads the rules and skills it shares. They are
 // copies of shared/ and git-ignored there; only its settings, its .claude/kit/repo.json and its .claude/kit/settings.json
 // are tracked.
@@ -42,7 +44,7 @@ import { completeKitSettings } from './kit-settings.mjs';
 type Lock = { kit: string; files: Record<string, string> };
 type RepoVars = Readonly<Record<string, string | readonly string[]>>;
 type McpConfig = Record<string, unknown> & { mcpServers?: Record<string, unknown> };
-type Retired = { plugins?: readonly string[]; mcpServers?: readonly string[] };
+type Retired = { plugins?: readonly string[]; mcpServers?: readonly string[]; kitFiles?: readonly string[] };
 type HookGroup = Record<string, unknown> & { hooks?: readonly { command?: unknown }[] };
 type HookMap = Record<string, readonly HookGroup[]>;
 type Settings = Record<string, unknown> & {
@@ -126,7 +128,7 @@ const KIT_FILES: readonly (readonly [shipped: string, source: string])[] = [
     ['kit-settings.mjs', 'kit-settings.mjs'],
     ['constants.mjs', 'constants.mjs'],
     ['status-hook.mjs', 'status-hook.mjs'],
-    ['communication-hook.mjs', 'communication-hook.mjs'],
+    ['agent-reminders.mjs', 'agent-reminders.mjs'],
     ['reply-budget.mjs', 'reply-budget.mjs'],
     ['prove-plan.mjs', 'prove-plan.mjs'],
     ['plan-replay.mjs', 'plan-replay.mjs'],
@@ -185,6 +187,28 @@ function syncSettings(repo: string, write: Write): void
     const kitMcp = readJson<McpConfig>(path.join(SHARED, 'mcp.json'), {});
     const servers = without({ ...mcp.mcpServers, ...kitMcp.mcpServers }, retired.mcpServers ?? []);
     write('.mcp.json', `${JSON.stringify({ ...mcp, mcpServers: servers }, null, 2)}\n`);
+}
+
+// A script the kit shipped once and dropped stays in .claude/kit when nothing takes it out - the lock holds only the files
+// under shared/ - so retired.json names it and each sync removes it. A name that holds a path, a name the kit still
+// ships and anything but a plain file are skipped, so a slip in retired.json never removes a live script or a folder.
+function isRetiredKitFile(name: string, target: string): boolean
+{
+    if (name !== path.basename(name) || KIT_FILES.some(([shipped]) => shipped === name)) return false;
+    try { return fs.statSync(target).isFile(); }
+    catch { return false; }
+}
+
+function removeRetiredKitFiles(repo: string, check: boolean, notes: string[]): void
+{
+    const retired = readJson<Retired>(path.join(SHARED, 'retired.json'), {});
+    for (const name of retired.kitFiles ?? [])
+    {
+        const target = path.join(repo, '.claude', 'kit', name);
+        if (!isRetiredKitFile(name, target)) continue;
+        notes.push(`remove .claude/kit/${name}`);
+        if (!check) fs.rmSync(target);
+    }
 }
 
 function without<T>(record: Readonly<Record<string, T>>, names: readonly string[]): Record<string, T>
@@ -246,6 +270,7 @@ function syncRepo(repo: string, check: boolean, kit: string): string[]
     }
 
     for (const [shipped, source] of KIT_FILES) write(`.claude/kit/${shipped}`, fs.readFileSync(path.join(KIT, 'bin', source)));
+    removeRetiredKitFiles(repo, check, notes);
 
     syncKitSettings(repo, check, notes);
 

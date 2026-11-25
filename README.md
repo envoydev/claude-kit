@@ -15,9 +15,9 @@ It is maintainer tooling: nothing here ships to the people who install the plugi
 | `shared/skills/` | `auto-run`, `javascript`, `typescript`, `ts-js-testing`, `npm`, `markdown-style`, `code-comments`, `plugin-packaging`, `project-structure` (a template), `refining-plans`, `skill-authoring`, `solve-task` (a template), `ts-convert`, the ten `repo-audit-<kind>` audits and `repo-audit-plugin`, which holds the flow they run through and runs them together |
 | `shared/agents/` | templates, each one's model a kit default: `audit-planner` (reads, scores and writes an audit's edit plan), `audit-editor` (applies that plan and decides nothing), `plan-grader` (grades a spec or plan against the `refining-plans` rubric; that skill does not dispatch it yet - it still uses a general-purpose reviewer until the two are compared) |
 | `shared/defaults.json` | the kit's own value for a template key - `plan_model` (opus), `review_model` (opus), `implement_model` (sonnet), the model each agent file is written with. A project changes a seat's model in its settings (below), not here |
-| `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow`, the `attribution` block that keeps Claude Code's own trailer, PR line and session link out of commits and PRs, and the two kit hooks, status and communication - merged into each repo's `.claude/settings.json`, the repo's own hooks kept |
+| `shared/settings.base.json` | the secret-file deny list, the plugins every repo enables, `autoCompactWindow`, the `attribution` block that keeps Claude Code's own trailer, PR line and session link out of commits and PRs, and the two kit hooks, status and agent-reminders - merged into each repo's `.claude/settings.json`, the repo's own hooks kept |
 | `shared/mcp.json` | the MCP servers every repo gets (`context7`) - merged into each repo's `.mcp.json` by name, the repo's own servers kept; the file is machine-local and git-ignored, so each machine runs the sync |
-| `shared/retired.json` | the plugins and MCP servers the kit shared once and dropped - both merges only add, so each sync takes these out of every repo's settings and `.mcp.json`; to drop a shared plugin, delete it from `settings.base.json` and name it here |
+| `shared/retired.json` | the plugins and MCP servers the kit shared once and dropped - both merges only add, so each sync takes these out of every repo's settings and `.mcp.json` - and the scripts under `.claude/kit/` it shipped once and dropped (`kitFiles`), which each sync removes; to drop a shared plugin, delete it from `settings.base.json` and name it here |
 
 A shared file ending in `.tmpl` is a template: it lands without the suffix, each `{{key}}` filled from the repo's own
 `.claude/kit/repo.json` (a string, or an array of lines). That is how `solve-task` and `execution.md` stay one flow
@@ -181,9 +181,9 @@ A complete file, the names a user set first and the rest after them in the fixed
 The `kit status` line that the status hook (`bin/status-hook.mjs`) adds to each request has this shape: the marker
 `kit status (` and the head end `):`, then items of the shape `name=value (source);` with no blank in a value and no
 `;` in a source, then an optional note that starts `saved:` or `not saved -`. alfred-mods no longer parses it: since
-its cf456bd it reads the values from `.claude/kit/settings.json`. The communication rule's reminder (`Reply limits (`)
-comes from its own hook, `bin/communication-hook.mjs`, and holds no `;`, so a reader that joins the two hooks' texts
-still finds where the note ends.
+its cf456bd it reads the values from `.claude/kit/settings.json`. The reminder lines of the rules in its list
+(`Reply limits (` for the communication rule, `Cleanup (` for the cleanup rule) come from their own hook,
+`bin/agent-reminders.mjs`, and hold no `;`, so a reader that joins the two hooks' texts still finds where the note ends.
 
 ## Use
 
@@ -206,7 +206,7 @@ applied; with `--check` it writes nothing and compares the replay with the files
 `.claude/kit/audit-scope.mjs` keeps, under `docs/superpowers/audits/state/`, each audited item's grade beside the
 hashes of its files: `scope` tells an audit which items to read, and `record` saves the grades once they are final.
 
-`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status and communication hooks, the plan
+`npm test` runs the tests of the scripts under `bin/` - the sync, the check, the settings, the status and agent-reminders hooks, the plan
 prover and the audit scope - against throwaway kits and repos in temp folders. They use Node's own test runner, start no Claude session and
 cost nothing.
 
